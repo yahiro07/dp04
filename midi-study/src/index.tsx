@@ -19,9 +19,11 @@ import { CommandItem, SmfReader } from "@/smf-reader";
 const store = createStore<{
   commandItems: CommandItem[];
   errorMessage: string | null;
+  commandIndex: number;
 }>({
   commandItems: [],
   errorMessage: null,
+  commandIndex: 0,
 });
 
 function decorateCommandItems(commandItems: CommandItem[]) {
@@ -41,6 +43,8 @@ function decorateCommandItems(commandItems: CommandItem[]) {
           return `ch ${ch} note off ${data1}`;
         }
         return `ch ${ch} note on ${data1} ${data2} `;
+      } else if (op === 0x80) {
+        return `ch ${ch} note off ${data1}`;
       }
     })();
     if (comment) {
@@ -139,12 +143,22 @@ const Button = ({
   );
 };
 const CommandListView = () => {
-  const { commandItems, errorMessage } = store.useSnapshot();
+  const { commandItems, errorMessage, commandIndex } = store.useSnapshot();
   return (
     <div className="flex-v border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-y-scroll p-2">
       {errorMessage && <div css={{ color: "#b42318" }}>{errorMessage}</div>}
       {commandItems.map((item, index) => (
-        <div key={index.toString()} className="flex-ha gap-4">
+        <div
+          key={index.toString()}
+          className="flex-ha gap-4"
+          onClick={() => {
+            store.mutations.setCommandIndex(index);
+          }}
+          css={{
+            cursor: "pointer",
+            backgroundColor: commandIndex === index ? "#ccffcc" : "#fff",
+          }}
+        >
           <span>{item.trackIndex}</span>
           <span className="min-w-[40px] text-[#666]">
             {item.tick.toString().padStart(6, " ")}

@@ -24,8 +24,6 @@ export const HeadlessFileDropArea = ({
           event.currentTarget.value = "";
         }}
       />
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: drag&drop area */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: drag&drop area */}
       <div
         onClick={() => inputRef.current?.click()}
         onDragOver={(event) => {
