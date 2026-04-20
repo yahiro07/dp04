@@ -5,6 +5,12 @@ import { createStore } from "snap-store";
 
 const maxStep = 64;
 
+const synth = new (
+  window as unknown as {
+    WebAudioTinySynth: new () => { send: (data: number[]) => void };
+  }
+).WebAudioTinySynth();
+
 const store = createStore<{ cursorPos: number; cursorDuration: number }>({
   cursorPos: 0,
   cursorDuration: 2,
@@ -114,10 +120,10 @@ const RightControlArea = () => {
       <div className="flex-v">
         <Button text="edit" onClick={() => actions.dummy()} />
         <div className="h-[40px]" />
-        <Button text="rest" onClick={() => actions.dummy()} />
+        <Button text="rest" onClick={() => synth.send([0x99, 36, 100])} />
       </div>
       <div>
-        <Button text="tie" onClick={() => actions.dummy()} />
+        <Button text="tie" onClick={() => synth.send([0x89, 36, 0])} />
       </div>
     </div>
   );
