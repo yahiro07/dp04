@@ -1,9 +1,10 @@
 import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { createStore } from "snap-store";
 import { FileDataPersistence } from "@/file-data-persistence";
+import { HeadlessFileDropArea } from "@/headless-file-drop-area";
 import { CommandItem, SmfReader } from "@/smf-reader";
 
 //used later
@@ -127,75 +128,43 @@ const CommandListView = () => {
   );
 };
 
-const FileDropArea = () => {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+const MidiFileDropAreaView = ({ isDragging }: { isDragging: boolean }) => (
+  <div
+    className="flex-vc gap-2 border border-[#888] p-10 border-dashed"
+    css={{
+      minHeight: 140,
+      cursor: "pointer",
+      backgroundColor: isDragging ? "#eef6ff" : "#fff",
+      transition: "background-color 120ms ease",
+    }}
+  >
+    <div>drop midi file here</div>
+    <div css={{ fontSize: 12, color: "#666" }}>
+      or click to choose a `.mid` / `.midi` file
+    </div>
+  </div>
+);
 
+const MidiFileDropArea = () => {
   const loadFile = (file: File | null | undefined) => {
     if (!file) {
       return;
     }
     void actions.loadSmfFile(file);
   };
-
   return (
-    <>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".mid,.midi,audio/midi,audio/x-midi"
-        hidden
-        onChange={(event) => {
-          loadFile(event.target.files?.[0]);
-          event.currentTarget.value = "";
-        }}
-      />
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: drag&drop area */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: drag&drop area */}
-      <div
-        className="flex-c border border-[#888] p-10 border-dashed"
-        css={{
-          minHeight: 140,
-          cursor: "pointer",
-          backgroundColor: isDragging ? "#eef6ff" : "#fff",
-          transition: "background-color 120ms ease",
-        }}
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setIsDragging(true);
-        }}
-        onDragEnter={(event) => {
-          event.preventDefault();
-          setIsDragging(true);
-        }}
-        onDragLeave={(event) => {
-          event.preventDefault();
-          if (event.currentTarget === event.target) {
-            setIsDragging(false);
-          }
-        }}
-        onDrop={(event) => {
-          event.preventDefault();
-          setIsDragging(false);
-          loadFile(event.dataTransfer.files?.[0]);
-        }}
-      >
-        <div className="flex-vc gap-2">
-          <div>drop midi file here</div>
-          <div css={{ fontSize: 12, color: "#666" }}>
-            or click to choose a `.mid` / `.midi` file
-          </div>
-        </div>
-      </div>
-    </>
+    <HeadlessFileDropArea
+      accept=".mid,.midi,audio/midi,audio/x-midi"
+      onDrop={loadFile}
+      renderContent={MidiFileDropAreaView}
+    />
   );
 };
 
 const ControlPanel = () => {
   return (
     <div className="flex-vl gap-2">
-      <FileDropArea />
+      <MidiFileDropArea />
       <Button onClick={() => actions.clearCommands()} text="clear" />
     </div>
   );
