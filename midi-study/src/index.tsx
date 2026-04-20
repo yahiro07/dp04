@@ -145,6 +145,7 @@ const CommandListView = () => {
       {errorMessage && <div css={{ color: "#b42318" }}>{errorMessage}</div>}
       {commandItems.map((item, index) => (
         <div key={index.toString()} className="flex-ha gap-4">
+          <span>{item.trackIndex}</span>
           <span className="min-w-[40px] text-[#666]">
             {item.tick.toString().padStart(6, " ")}
           </span>

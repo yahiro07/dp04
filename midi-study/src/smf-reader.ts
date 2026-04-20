@@ -1,4 +1,5 @@
 export type CommandItem = {
+  trackIndex: number;
   tick: number;
   bytes: number[];
   comment?: string;
@@ -92,7 +93,10 @@ export namespace SmfReader {
     return 0;
   }
 
-  function parseTrack(trackBytes: Uint8Array): CommandItem[] {
+  function parseTrack(
+    trackBytes: Uint8Array,
+    trackIndex: number,
+  ): CommandItem[] {
     const reader = new ByteReader(trackBytes);
     const commands: CommandItem[] = [];
     let tick = 0;
@@ -117,7 +121,7 @@ export namespace SmfReader {
         runningStatus = null;
         const length = reader.readVariableLengthQuantity();
         const data = reader.readBytes(length);
-        commands.push({ tick, bytes: [firstByte, ...data] });
+        commands.push({ trackIndex, tick, bytes: [firstByte, ...data] });
         continue;
       }
 
@@ -148,6 +152,7 @@ export namespace SmfReader {
       }
 
       commands.push({
+        trackIndex,
         tick,
         bytes: [statusByte, ...dataBytes],
       });
@@ -187,10 +192,13 @@ export namespace SmfReader {
       }
       const trackLength = reader.readUint32();
       const trackBytes = reader.readBytes(trackLength);
-      allCommands.push(...parseTrack(trackBytes));
+      // console.log(trackIndex, trackLength, trackBytes);
+
+      allCommands.push(...parseTrack(trackBytes, trackIndex));
     }
 
-    return allCommands.sort((a, b) => a.tick - b.tick);
+    return allCommands;
+    // return allCommands.sort((a, b) => a.tick - b.tick);
   }
 
   export async function loadFromFile(file: File): Promise<CommandItem[]> {
