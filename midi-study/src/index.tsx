@@ -24,6 +24,31 @@ const store = createStore<{
   errorMessage: null,
 });
 
+function decorateCommandItems(commandItems: CommandItem[]) {
+  commandItems.forEach((item) => {
+    const status = item.bytes[0];
+    const data1 = item.bytes[1] ?? 0;
+    const data2 = item.bytes[2] ?? 0;
+    const ch = status & 0x0f;
+    const op = status & 0xf0;
+    const comment = (() => {
+      if (op === 0xb0) {
+        return `ch ${ch} CC#${data1} ${data2} `;
+      } else if (op === 0xc0) {
+        return `ch ${ch} prog ${data1}`;
+      } else if (op === 0x90) {
+        if (data2 === 0) {
+          return `ch ${ch} note off ${data1}`;
+        }
+        return `ch ${ch} note on ${data1} ${data2} `;
+      }
+    })();
+    if (comment) {
+      item.comment = comment;
+    }
+  });
+}
+
 const actions = {
   async loadSmfFile(droppedFile: File) {
     try {
@@ -42,6 +67,7 @@ const actions = {
       const fileBytes = new Uint8Array(await droppedFile.arrayBuffer());
       const commands = SmfReader.loadFromArrayBuffer(fileBytes.buffer);
       FileDataPersistence.saveFileBytes(fileBytes);
+      decorateCommandItems(commands);
       store.mutations.setCommandItems(commands);
       store.mutations.setErrorMessage(null);
     } catch (error) {
@@ -64,6 +90,7 @@ const actions = {
           fileBytes.byteOffset + fileBytes.byteLength,
         ),
       );
+      decorateCommandItems(commands);
       store.mutations.setCommandItems(commands);
       store.mutations.setErrorMessage(null);
     } catch (error) {
@@ -117,11 +144,14 @@ const CommandListView = () => {
     <div className="flex-v border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-y-scroll p-2">
       {errorMessage && <div css={{ color: "#b42318" }}>{errorMessage}</div>}
       {commandItems.map((item, index) => (
-        <div key={index.toString()}>
-          <span css={{ color: "#666", marginRight: 8 }}>
+        <div key={index.toString()} className="flex-ha gap-4">
+          <span className="min-w-[40px] text-[#666]">
             {item.tick.toString().padStart(6, " ")}
           </span>
-          {item.bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ")}
+          <div className="min-w-[100px]">
+            {item.bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ")}
+          </div>
+          <div>{item.comment}</div>
         </div>
       ))}
     </div>

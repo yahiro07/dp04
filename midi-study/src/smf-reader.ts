@@ -1,6 +1,7 @@
 export type CommandItem = {
   tick: number;
   bytes: number[];
+  comment?: string;
 };
 
 export namespace SmfReader {
