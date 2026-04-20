@@ -16,7 +16,7 @@ export const Button = ({
       className="min-w-[60px] h-[40px]"
       css={{
         border: "solid 1px #888",
-        backgroundColor: active ? "#ddd" : "#fff",
+        backgroundColor: active ? "#ccffcc" : "#fff",
         borderRadius: "999px",
         cursor: "pointer",
       }}

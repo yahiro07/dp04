@@ -197,8 +197,8 @@ export namespace SmfReader {
       allCommands.push(...parseTrack(trackBytes, trackIndex));
     }
 
-    return allCommands;
-    // return allCommands.sort((a, b) => a.tick - b.tick);
+    // return allCommands;
+    return allCommands.sort((a, b) => a.tick - b.tick);
   }
 
   export async function loadFromFile(file: File): Promise<CommandItem[]> {

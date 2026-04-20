@@ -6,26 +6,22 @@ import { createStore } from "snap-store";
 import { Button } from "@/button";
 import { FileDataPersistence } from "@/file-data-persistence";
 import { HeadlessFileDropArea } from "@/headless-file-drop-area";
+import { createSmfPlayer } from "@/smf-player";
 import { CommandItem, SmfReader } from "@/smf-reader";
-
-//used later
-// const synth = new (
-//   window as unknown as {
-//     WebAudioTinySynth: new () => { send: (data: number[]) => void };
-//   }
-// ).WebAudioTinySynth();
-//usage
-//synth.send([0x90, 36, 100])
 
 const store = createStore<{
   commandItems: CommandItem[];
   errorMessage: string | null;
   commandIndex: number;
+  playing: boolean;
 }>({
   commandItems: [],
   errorMessage: null,
   commandIndex: 0,
+  playing: false,
 });
+
+const smfPlayer = createSmfPlayer();
 
 function decorateCommandItems(commandItems: CommandItem[]) {
   commandItems.forEach((item) => {
@@ -113,6 +109,29 @@ const actions = {
     store.mutations.setCommandItems([]);
     store.mutations.setErrorMessage(null);
   },
+  togglePlayState() {
+    const { playing } = store.state;
+    if (!playing) {
+      store.mutations.setPlaying(true);
+      smfPlayer.play(store.state.commandItems);
+    } else {
+      store.mutations.setPlaying(false);
+      smfPlayer.stop();
+    }
+  },
+};
+
+const PlayControlPart = () => {
+  const { playing } = store.useSnapshot();
+  return (
+    <div>
+      <Button
+        active={playing}
+        text="play"
+        onClick={() => actions.togglePlayState()}
+      />
+    </div>
+  );
 };
 
 const CommandListView = () => {
@@ -195,7 +214,10 @@ const App = () => {
 
   return (
     <div className="flex-c gap-4" css={{ width: "100vw", height: "100vh" }}>
-      <CommandListView />
+      <div className="flex-v gap-2">
+        <PlayControlPart />
+        <CommandListView />
+      </div>
       <ControlPanel />
     </div>
   );
