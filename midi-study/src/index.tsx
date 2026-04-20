@@ -1,7 +1,7 @@
 import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createStore } from "snap-store";
 
 //used later
@@ -25,6 +25,43 @@ const store = createStore<{
   commandItems: [],
   errorMessage: null,
 });
+
+namespace FileDataPersistence {
+  const STORAGE_KEY = "midi-study:file-bytes";
+
+  function uint8ArrayToBase64(bytes: Uint8Array) {
+    let binary = "";
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+    return btoa(binary);
+  }
+
+  function base64ToUint8Array(base64: string) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (const [index, char] of Array.from(binary).entries()) {
+      bytes[index] = char.charCodeAt(0);
+    }
+    return bytes;
+  }
+
+  export function saveFileBytes(bytes: Uint8Array) {
+    sessionStorage.setItem(STORAGE_KEY, uint8ArrayToBase64(bytes));
+  }
+
+  export function loadFileBytes() {
+    const encoded = sessionStorage.getItem(STORAGE_KEY);
+    if (!encoded) {
+      return null;
+    }
+    return base64ToUint8Array(encoded);
+  }
+
+  export function clearFileBytes() {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+}
 
 namespace SmfReader {
   const TRACK_HEADER = "MTrk";
@@ -236,7 +273,9 @@ const actions = {
         throw new Error("Please choose a MIDI file (.mid or .midi)");
       }
 
-      const commands = await SmfReader.loadFromFile(droppedFile);
+      const fileBytes = new Uint8Array(await droppedFile.arrayBuffer());
+      const commands = SmfReader.loadFromArrayBuffer(fileBytes.buffer);
+      FileDataPersistence.saveFileBytes(fileBytes);
       store.mutations.setCommandItems(commands);
       store.mutations.setErrorMessage(null);
     } catch (error) {
@@ -246,7 +285,33 @@ const actions = {
       store.mutations.setErrorMessage(message);
     }
   },
+  restoreSmfFileFromSession() {
+    try {
+      const fileBytes = FileDataPersistence.loadFileBytes();
+      if (!fileBytes) {
+        return;
+      }
+
+      const commands = SmfReader.loadFromArrayBuffer(
+        fileBytes.buffer.slice(
+          fileBytes.byteOffset,
+          fileBytes.byteOffset + fileBytes.byteLength,
+        ),
+      );
+      store.mutations.setCommandItems(commands);
+      store.mutations.setErrorMessage(null);
+    } catch (error) {
+      FileDataPersistence.clearFileBytes();
+      store.mutations.setCommandItems([]);
+      store.mutations.setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to restore MIDI file from sessionStorage",
+      );
+    }
+  },
   clearCommands() {
+    FileDataPersistence.clearFileBytes();
     store.mutations.setCommandItems([]);
     store.mutations.setErrorMessage(null);
   },
@@ -372,6 +437,10 @@ const ControlPanel = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    actions.restoreSmfFileFromSession();
+  }, []);
+
   return (
     <div className="flex-c gap-4" css={{ width: "100vw", height: "100vh" }}>
       <CommandListView />
