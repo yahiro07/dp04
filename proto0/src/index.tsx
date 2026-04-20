@@ -2,8 +2,9 @@ import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
 import { createStore } from "snap-store";
+import { seqNumbers } from "@/utils/array-utils";
 
-const maxStep = 64;
+const maxStep = 16 * 16;
 
 const synth = new (
   window as unknown as {
@@ -86,9 +87,35 @@ const EditorArea = () => {
         border: "solid 1px #888",
       }}
     >
-      <div>pos: {st.cursorPos}</div>
-      <div>duration: {st.cursorDuration}</div>
-      <div>durationStr: {durationToString(st.cursorDuration)}</div>
+      <svg viewBox="0 0 200 200">
+        <g>
+          {seqNumbers(16).map((iy) => {
+            return seqNumbers(16).map((ix) => {
+              return (
+                <rect
+                  key={`${ix},${iy}`}
+                  x={ix * 12.5}
+                  y={iy * 12.5}
+                  width="12.5"
+                  height="12.5"
+                  fill="transparent"
+                  stroke="#ddd"
+                />
+              );
+            });
+          })}
+        </g>
+        <g>
+          <rect
+            x={(st.cursorPos % 16) * 12.5}
+            y={((st.cursorPos / 16) >>> 0) * 12.5}
+            width={(st.cursorDuration / 16) * 200}
+            height="12.5"
+            fill="transparent"
+            stroke="#0d0"
+          />
+        </g>
+      </svg>
     </div>
   );
 };
@@ -120,10 +147,10 @@ const RightControlArea = () => {
       <div className="flex-v">
         <Button text="edit" onClick={() => actions.dummy()} />
         <div className="h-[40px]" />
-        <Button text="rest" onClick={() => synth.send([0x99, 36, 100])} />
+        <Button text="rest" onClick={() => synth.send([0x90, 36, 100])} />
       </div>
       <div>
-        <Button text="tie" onClick={() => synth.send([0x89, 36, 0])} />
+        <Button text="tie" onClick={() => synth.send([0x80, 36, 0])} />
       </div>
     </div>
   );
@@ -139,9 +166,21 @@ const PanelBody = () => {
   );
 };
 
+const DebugSection = () => {
+  const st = store.useSnapshot();
+  return (
+    <div>
+      <div>pos: {st.cursorPos}</div>
+      <div>duration: {st.cursorDuration}</div>
+      <div>durationStr: {durationToString(st.cursorDuration)}</div>
+    </div>
+  );
+};
+
 const App = () => {
   return (
-    <div className="flex-c" css={{ width: "100vw", height: "100vh" }}>
+    <div className="flex-vc" css={{ width: "100vw", height: "100vh" }}>
+      <DebugSection />
       <PanelBody />
     </div>
   );
