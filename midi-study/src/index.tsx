@@ -6,49 +6,54 @@ import { createStore } from "snap-store";
 import { Button } from "@/button";
 import { FileDataPersistence } from "@/file-data-persistence";
 import { HeadlessFileDropArea } from "@/headless-file-drop-area";
+import { SmfDataDecorator } from "@/smf-data-decorator";
 import { createSmfPlayer } from "@/smf-player";
-import { CommandItem, SmfReader } from "@/smf-reader";
+import { CommandItem, SmfReader, SmfSong, SmfSongMeta } from "@/smf-reader";
 
 const store = createStore<{
   commandItems: CommandItem[];
+  songMeta: SmfSongMeta | null;
   errorMessage: string | null;
   commandIndex: number;
   playing: boolean;
+  defaultTempo: number | null;
 }>({
   commandItems: [],
+  songMeta: null,
   errorMessage: null,
   commandIndex: 0,
   playing: false,
+  defaultTempo: null,
 });
 
 const smfPlayer = createSmfPlayer();
 
-function decorateCommandItems(commandItems: CommandItem[]) {
-  commandItems.forEach((item) => {
-    const status = item.bytes[0];
-    const data1 = item.bytes[1] ?? 0;
-    const data2 = item.bytes[2] ?? 0;
-    const ch = status & 0x0f;
-    const op = status & 0xf0;
-    const comment = (() => {
-      if (op === 0xb0) {
-        return `ch ${ch} CC#${data1} ${data2} `;
-      } else if (op === 0xc0) {
-        return `ch ${ch} prog ${data1}`;
-      } else if (op === 0x90) {
-        if (data2 === 0) {
-          return `ch ${ch} note off ${data1}`;
-        }
-        return `ch ${ch} note on ${data1} ${data2} `;
-      } else if (op === 0x80) {
-        return `ch ${ch} note off ${data1}`;
-      }
-    })();
-    if (comment) {
-      item.comment = comment;
-    }
-  });
-}
+const actionsInternal = {
+  loadSong(song: SmfSong) {
+    SmfDataDecorator.decorateCommandItems(song.commands);
+    const defaultTempo = SmfDataDecorator.extractDefaultTempo(song);
+    store.mutations.assigns({
+      commandItems: song.commands,
+      songMeta: song.meta,
+      errorMessage: null,
+      defaultTempo,
+    });
+  },
+  loadFailed(message: string) {
+    store.mutations.assigns({
+      commandItems: [],
+      songMeta: null,
+      errorMessage: message,
+    });
+  },
+  clearCommands() {
+    store.mutations.assigns({
+      commandItems: [],
+      songMeta: null,
+      errorMessage: null,
+    });
+  },
+};
 
 const actions = {
   async loadSmfFile(droppedFile: File) {
@@ -66,16 +71,13 @@ const actions = {
       }
 
       const fileBytes = new Uint8Array(await droppedFile.arrayBuffer());
-      const commands = SmfReader.loadFromArrayBuffer(fileBytes.buffer);
+      const song = SmfReader.loadFromArrayBuffer(fileBytes.buffer);
       FileDataPersistence.saveFileBytes(fileBytes);
-      decorateCommandItems(commands);
-      store.mutations.setCommandItems(commands);
-      store.mutations.setErrorMessage(null);
+      actionsInternal.loadSong(song);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to parse MIDI file";
-      store.mutations.setCommandItems([]);
-      store.mutations.setErrorMessage(message);
+      actionsInternal.loadFailed(message);
     }
   },
   restoreSmfFileFromSession() {
@@ -84,36 +86,36 @@ const actions = {
       if (!fileBytes) {
         return;
       }
-
-      const commands = SmfReader.loadFromArrayBuffer(
+      const song = SmfReader.loadFromArrayBuffer(
         fileBytes.buffer.slice(
           fileBytes.byteOffset,
           fileBytes.byteOffset + fileBytes.byteLength,
         ),
       );
-      decorateCommandItems(commands);
-      store.mutations.setCommandItems(commands);
-      store.mutations.setErrorMessage(null);
+      actionsInternal.loadSong(song);
     } catch (error) {
       FileDataPersistence.clearFileBytes();
-      store.mutations.setCommandItems([]);
-      store.mutations.setErrorMessage(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to restore MIDI file from sessionStorage",
-      );
+          : "Failed to restore MIDI file from sessionStorage";
+      actionsInternal.loadFailed(errorMessage);
     }
   },
-  clearCommands() {
+  clearSong() {
     FileDataPersistence.clearFileBytes();
-    store.mutations.setCommandItems([]);
-    store.mutations.setErrorMessage(null);
+    actionsInternal.clearCommands();
   },
   togglePlayState() {
-    const { playing } = store.state;
+    const { playing, commandItems, songMeta, defaultTempo } = store.state;
+    if (!songMeta) return;
     if (!playing) {
       store.mutations.setPlaying(true);
-      smfPlayer.play(store.state.commandItems);
+      smfPlayer.play({
+        commands: commandItems,
+        timeDivision: songMeta.timeDivision,
+        defaultTempo: defaultTempo ?? 120,
+      });
     } else {
       store.mutations.setPlaying(false);
       smfPlayer.stop();
@@ -122,14 +124,16 @@ const actions = {
 };
 
 const PlayControlPart = () => {
-  const { playing } = store.useSnapshot();
+  const { playing, songMeta, defaultTempo } = store.useSnapshot();
   return (
-    <div>
+    <div className="flex-ha gap-2">
       <Button
         active={playing}
         text="play"
+        disabled={!songMeta}
         onClick={() => actions.togglePlayState()}
       />
+      <div>tempo: {defaultTempo ?? "unknown"}</div>
     </div>
   );
 };
@@ -202,7 +206,7 @@ const ControlPanel = () => {
   return (
     <div className="flex-vl gap-2">
       <MidiFileDropArea />
-      <Button onClick={() => actions.clearCommands()} text="clear" />
+      <Button onClick={() => actions.clearSong()} text="clear" />
     </div>
   );
 };

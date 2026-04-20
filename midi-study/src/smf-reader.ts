@@ -5,6 +5,17 @@ export type CommandItem = {
   comment?: string;
 };
 
+export type SmfSongMeta = {
+  format: number;
+  trackCount: number;
+  timeDivision: number;
+};
+
+export type SmfSong = {
+  commands: CommandItem[];
+  meta: SmfSongMeta;
+};
+
 export namespace SmfReader {
   const TRACK_HEADER = "MTrk";
   const HEADER_CHUNK = "MThd";
@@ -12,7 +23,7 @@ export namespace SmfReader {
   class ByteReader {
     private offset = 0;
 
-    constructor(private readonly bytes: Uint8Array) {}
+    constructor(private readonly bytes: Uint8Array) { }
 
     get position() {
       return this.offset;
@@ -110,7 +121,16 @@ export namespace SmfReader {
         runningStatus = null;
         const metaType = reader.readUint8();
         const length = reader.readVariableLengthQuantity();
-        reader.skip(length);
+        const data = reader.readBytes(length);
+
+        if ([0x51, 0x54, 0x58, 0x59].includes(metaType)) {
+          commands.push({
+            trackIndex,
+            tick,
+            bytes: [firstByte, metaType, ...data],
+          });
+        }
+
         if (metaType === 0x2f) {
           break;
         }
@@ -161,7 +181,7 @@ export namespace SmfReader {
     return commands;
   }
 
-  export function loadFromArrayBuffer(buffer: ArrayBuffer): CommandItem[] {
+  export function loadFromArrayBuffer(buffer: ArrayBuffer): SmfSong {
     const reader = new ByteReader(new Uint8Array(buffer));
     const chunkType = reader.readString(4);
     if (chunkType !== HEADER_CHUNK) {
@@ -175,7 +195,7 @@ export namespace SmfReader {
 
     const formatType = reader.readUint16();
     const trackCount = reader.readUint16();
-    reader.readUint16();
+    const timeDivision = reader.readUint16();
     if (headerLength > 6) {
       reader.skip(headerLength - 6);
     }
@@ -197,11 +217,19 @@ export namespace SmfReader {
       allCommands.push(...parseTrack(trackBytes, trackIndex));
     }
 
-    // return allCommands;
-    return allCommands.sort((a, b) => a.tick - b.tick);
+    return {
+      meta: {
+        format: formatType,
+        trackCount,
+        timeDivision,
+      },
+      commands: allCommands.sort(
+        (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex,
+      ),
+    };
   }
 
-  export async function loadFromFile(file: File): Promise<CommandItem[]> {
+  export async function loadFromFile(file: File): Promise<SmfSong> {
     const buffer = await file.arrayBuffer();
     return loadFromArrayBuffer(buffer);
   }
