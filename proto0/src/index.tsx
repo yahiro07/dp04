@@ -12,6 +12,9 @@ const synth = new (
   }
 ).WebAudioTinySynth();
 
+//usage
+//synth.send([0x90, 36, 100])
+
 const store = createStore<{ cursorPos: number; cursorDuration: number }>({
   cursorPos: 0,
   cursorDuration: 2,
@@ -38,6 +41,12 @@ const actions = {
     const idx = durationValues.indexOf(cursorDuration);
     const newIdx = (idx + dir + durationValues.length) % durationValues.length;
     store.mutations.setCursorDuration(durationValues[newIdx]);
+  },
+  putTie() {
+    actions.shiftCursorPos(1);
+  },
+  putRest() {
+    actions.shiftCursorPos(1);
   },
 };
 
@@ -147,10 +156,10 @@ const RightControlArea = () => {
       <div className="flex-v">
         <Button text="edit" onClick={() => actions.dummy()} />
         <div className="h-[40px]" />
-        <Button text="rest" onClick={() => synth.send([0x90, 36, 100])} />
+        <Button text="rest" onClick={() => actions.putRest()} />
       </div>
       <div>
-        <Button text="tie" onClick={() => synth.send([0x80, 36, 0])} />
+        <Button text="tie" onClick={() => actions.putTie()} />
       </div>
     </div>
   );
