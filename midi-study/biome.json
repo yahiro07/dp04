@@ -11,6 +11,9 @@
       "style": {
         "useImportType": "off"
       },
+      "correctness": {
+        "noConstantCondition": "off"
+      },
       "a11y": {
         "noSvgWithoutTitle": "off",
         "noStaticElementInteractions": "off",
