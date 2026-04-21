@@ -1,6 +1,6 @@
 import {
   HeadlessFileDropArea,
-  HeadlessFileDropArea_DropOnly,
+  HeadlessFileDropArea_WindowCovered,
 } from "@/headless-file-drop-area";
 
 const MidiFileDropAreaView = ({ isDragging }: { isDragging: boolean }) => (
@@ -53,7 +53,7 @@ export const FullScreenMidiFileDropArea = ({
   onFileDrop: (file: File) => void;
 }) => {
   return (
-    <HeadlessFileDropArea_DropOnly
+    <HeadlessFileDropArea_WindowCovered
       className="absolute left-0 top-0 w-full h-full"
       onDropFile={onFileDrop}
       renderContent={FullScreenDropAreaView}
