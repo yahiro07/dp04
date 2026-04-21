@@ -23,7 +23,7 @@ export namespace SmfReader {
   class ByteReader {
     private offset = 0;
 
-    constructor(private readonly bytes: Uint8Array) { }
+    constructor(private readonly bytes: Uint8Array) {}
 
     get position() {
       return this.offset;
@@ -217,15 +217,19 @@ export namespace SmfReader {
       allCommands.push(...parseTrack(trackBytes, trackIndex));
     }
 
+    if (0) {
+      allCommands.sort(
+        (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex,
+      );
+    }
+
     return {
       meta: {
         format: formatType,
         trackCount,
         timeDivision,
       },
-      commands: allCommands.sort(
-        (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex,
-      ),
+      commands: allCommands,
     };
   }
 
