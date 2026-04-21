@@ -134,6 +134,7 @@ const PlayControlPart = () => {
         onClick={() => actions.togglePlayState()}
       />
       <div>tempo: {defaultTempo ?? "unknown"}</div>
+      <Button onClick={() => actions.clearSong()} text="clear" />
     </div>
   );
 };
@@ -171,15 +172,6 @@ const CommandListView = () => {
   );
 };
 
-const ControlPanel = () => {
-  return (
-    <div className="flex-vl gap-2">
-      {/* <MidiFileDropArea onFileDrop={actions.loadSmfFile} /> */}
-      <Button onClick={() => actions.clearSong()} text="clear" />
-    </div>
-  );
-};
-
 const App = () => {
   useEffect(() => {
     actions.restoreSmfFileFromSession();
@@ -192,7 +184,6 @@ const App = () => {
         <PlayControlPart />
         <CommandListView />
       </div>
-      <ControlPanel />
     </div>
   );
 };
