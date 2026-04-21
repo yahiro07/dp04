@@ -217,7 +217,7 @@ export namespace SmfReader {
       allCommands.push(...parseTrack(trackBytes, trackIndex));
     }
 
-    if (0) {
+    if (1) {
       allCommands.sort(
         (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex,
       );

@@ -155,7 +155,9 @@ const CommandListView = () => {
             backgroundColor: commandIndex === index ? "#ccffcc" : "#fff",
           }}
         >
-          <span>{item.trackIndex}</span>
+          <span className="min-w-[20px]">
+            {item.trackIndex.toString().padStart(2, "0")}
+          </span>
           <span className="min-w-[40px] text-[#666]">
             {item.tick.toString().padStart(6, " ")}
           </span>
