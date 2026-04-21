@@ -9,6 +9,7 @@ import { FullScreenMidiFileDropArea } from "@/midi-file-drop-area";
 import { SmfDataDecorator } from "@/smf-data-decorator";
 import { createSmfPlayer } from "@/smf-player";
 import { CommandItem, SmfReader, SmfSong, SmfSongMeta } from "@/smf-reader";
+import { openFilePicker } from "@/utils/file-picker-utils";
 
 const store = createStore<{
   commandItems: CommandItem[];
@@ -81,16 +82,10 @@ const actions = {
     }
   },
   loadSfmFileWithDialog() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".mid,.midi,audio/midi,audio/x-midi";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        actions.loadSmfFile(file);
-      }
-    };
-    input.click();
+    openFilePicker({
+      accept: ".mid,.midi,audio/midi,audio/x-midi",
+      onFileSelect: actions.loadSmfFile,
+    });
   },
   restoreSmfFileFromSession() {
     try {
