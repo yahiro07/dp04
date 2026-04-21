@@ -2,11 +2,11 @@ import { useRef, useState } from "react";
 
 export const HeadlessFileDropArea = ({
   accept,
-  onDrop,
+  onDropFile,
   renderContent,
 }: {
   accept: string;
-  onDrop: (file: File | null | undefined) => void;
+  onDropFile: (file: File) => void;
   renderContent: ({ isDragging }: { isDragging: boolean }) => React.ReactNode;
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -20,8 +20,10 @@ export const HeadlessFileDropArea = ({
         accept={accept}
         hidden
         onChange={(event) => {
-          onDrop(event.target.files?.[0]);
           event.currentTarget.value = "";
+          const file = event.target.files?.[0];
+          if (!file) return;
+          onDropFile(file);
         }}
       />
       <div
@@ -43,11 +45,54 @@ export const HeadlessFileDropArea = ({
         onDrop={(event) => {
           event.preventDefault();
           setIsDragging(false);
-          onDrop(event.dataTransfer.files?.[0]);
+          const file = event.dataTransfer.files?.[0];
+          if (!file) return;
+          onDropFile(file);
         }}
       >
         {renderContent({ isDragging })}
       </div>
     </>
+  );
+};
+
+export const HeadlessFileDropArea_DropOnly = ({
+  className,
+  onDropFile,
+  renderContent,
+}: {
+  className?: string;
+  onDropFile: (file: File) => void;
+  renderContent: ({ isDragging }: { isDragging: boolean }) => React.ReactNode;
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  return (
+    <div
+      className={className}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragEnter={(event) => {
+        event.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={(event) => {
+        event.preventDefault();
+        if (event.currentTarget === event.target) {
+          setIsDragging(false);
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setIsDragging(false);
+        const file = event.dataTransfer.files?.[0];
+        if (!file) return;
+        onDropFile(file);
+      }}
+    >
+      {renderContent({ isDragging })}
+    </div>
   );
 };

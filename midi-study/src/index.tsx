@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { createStore } from "snap-store";
 import { Button } from "@/button";
 import { FileDataPersistence } from "@/file-data-persistence";
-import { HeadlessFileDropArea } from "@/headless-file-drop-area";
+import { FullScreenMidiFileDropArea } from "@/midi-file-drop-area";
 import { SmfDataDecorator } from "@/smf-data-decorator";
 import { createSmfPlayer } from "@/smf-player";
 import { CommandItem, SmfReader, SmfSong, SmfSongMeta } from "@/smf-reader";
@@ -171,43 +171,10 @@ const CommandListView = () => {
   );
 };
 
-const MidiFileDropAreaView = ({ isDragging }: { isDragging: boolean }) => (
-  <div
-    className="flex-vc gap-2 border border-[#888] p-10 border-dashed"
-    css={{
-      minHeight: 140,
-      cursor: "pointer",
-      backgroundColor: isDragging ? "#eef6ff" : "#fff",
-      transition: "background-color 120ms ease",
-    }}
-  >
-    <div>drop midi file here</div>
-    <div css={{ fontSize: 12, color: "#666" }}>
-      or click to choose a `.mid` / `.midi` file
-    </div>
-  </div>
-);
-
-const MidiFileDropArea = () => {
-  const loadFile = (file: File | null | undefined) => {
-    if (!file) {
-      return;
-    }
-    void actions.loadSmfFile(file);
-  };
-  return (
-    <HeadlessFileDropArea
-      accept=".mid,.midi,audio/midi,audio/x-midi"
-      onDrop={loadFile}
-      renderContent={MidiFileDropAreaView}
-    />
-  );
-};
-
 const ControlPanel = () => {
   return (
     <div className="flex-vl gap-2">
-      <MidiFileDropArea />
+      {/* <MidiFileDropArea onFileDrop={actions.loadSmfFile} /> */}
       <Button onClick={() => actions.clearSong()} text="clear" />
     </div>
   );
@@ -219,7 +186,8 @@ const App = () => {
   }, []);
 
   return (
-    <div className="flex-c gap-4" css={{ width: "100vw", height: "100vh" }}>
+    <div className="flex-c gap-4" css={{ width: "100dvw", height: "100dvh" }}>
+      <FullScreenMidiFileDropArea onFileDrop={actions.loadSmfFile} />
       <div className="flex-v gap-2">
         <PlayControlPart />
         <CommandListView />
