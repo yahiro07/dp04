@@ -80,6 +80,18 @@ const actions = {
       actionsInternal.loadFailed(message);
     }
   },
+  loadSfmFileWithDialog() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".mid,.midi,audio/midi,audio/x-midi";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        actions.loadSmfFile(file);
+      }
+    };
+    input.click();
+  },
   restoreSmfFileFromSession() {
     try {
       const fileBytes = FileDataPersistence.loadFileBytes();
@@ -134,6 +146,7 @@ const PlayControlPart = () => {
         onClick={() => actions.togglePlayState()}
       />
       <div>tempo: {defaultTempo ?? "unknown"}</div>
+      <Button onClick={() => actions.loadSfmFileWithDialog()} text="load" />
       <Button onClick={() => actions.clearSong()} text="clear" />
     </div>
   );
