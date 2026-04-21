@@ -4,12 +4,11 @@ import "./styling/utility-classes.css";
 import { useEffect } from "react";
 import { createStore } from "snap-store";
 import { Button } from "@/button";
-import { FileDataPersistence } from "@/file-data-persistence";
 import { FullScreenMidiFileDropArea } from "@/midi-file-drop-area";
 import { SmfDataDecorator } from "@/smf-data-decorator";
+import { createSmfFileDataManager } from "@/smf-file-data-manager";
 import { createSmfPlayer } from "@/smf-player";
-import { CommandItem, SmfReader, SmfSong, SmfSongMeta } from "@/smf-reader";
-import { openFilePicker } from "@/utils/file-picker-utils";
+import { CommandItem, SmfSong, SmfSongMeta } from "@/smf-reader";
 
 const store = createStore<{
   commandItems: CommandItem[];
@@ -29,7 +28,7 @@ const store = createStore<{
 
 const smfPlayer = createSmfPlayer();
 
-const actionsInternal = {
+const storeActions = {
   loadSong(song: SmfSong) {
     SmfDataDecorator.decorateCommandItems(song.commands);
     const defaultTempo = SmfDataDecorator.extractDefaultTempo(song);
@@ -56,63 +55,13 @@ const actionsInternal = {
   },
 };
 
-const actions = {
-  async loadSmfFile(droppedFile: File) {
-    try {
-      const lowerName = droppedFile.name.toLowerCase();
-      const isMidiFile =
-        lowerName.endsWith(".mid") ||
-        lowerName.endsWith(".midi") ||
-        droppedFile.type === "audio/midi" ||
-        droppedFile.type === "audio/x-midi" ||
-        droppedFile.type === "";
+const smfFileDataManager = createSmfFileDataManager({
+  songLoadedCallback: storeActions.loadSong,
+  loadFailureCallback: storeActions.loadFailed,
+  clearCallback: storeActions.clearCommands,
+});
 
-      if (!isMidiFile) {
-        throw new Error("Please choose a MIDI file (.mid or .midi)");
-      }
-
-      const fileBytes = new Uint8Array(await droppedFile.arrayBuffer());
-      const song = SmfReader.loadFromArrayBuffer(fileBytes.buffer);
-      FileDataPersistence.saveFileBytes(fileBytes);
-      actionsInternal.loadSong(song);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to parse MIDI file";
-      actionsInternal.loadFailed(message);
-    }
-  },
-  loadSfmFileWithDialog() {
-    openFilePicker({
-      accept: ".mid,.midi,audio/midi,audio/x-midi",
-      onFileSelect: actions.loadSmfFile,
-    });
-  },
-  restoreSmfFileFromSession() {
-    try {
-      const fileBytes = FileDataPersistence.loadFileBytes();
-      if (!fileBytes) {
-        return;
-      }
-      const song = SmfReader.loadFromArrayBuffer(
-        fileBytes.buffer.slice(
-          fileBytes.byteOffset,
-          fileBytes.byteOffset + fileBytes.byteLength,
-        ),
-      );
-      actionsInternal.loadSong(song);
-    } catch (error) {
-      FileDataPersistence.clearFileBytes();
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to restore MIDI file from sessionStorage";
-      actionsInternal.loadFailed(errorMessage);
-    }
-  },
-  clearSong() {
-    FileDataPersistence.clearFileBytes();
-    actionsInternal.clearCommands();
-  },
+const uiActions = {
   togglePlayState() {
     const { playing, commandItems, songMeta, defaultTempo } = store.state;
     if (!songMeta) return;
@@ -138,11 +87,17 @@ const PlayControlPart = () => {
         active={playing}
         text="play"
         disabled={!songMeta}
-        onClick={() => actions.togglePlayState()}
+        onClick={() => uiActions.togglePlayState()}
       />
       <div>tempo: {defaultTempo ?? "unknown"}</div>
-      <Button onClick={() => actions.loadSfmFileWithDialog()} text="load" />
-      <Button onClick={() => actions.clearSong()} text="clear" />
+      <Button
+        onClick={() => smfFileDataManager.loadSfmFileWithDialog()}
+        text="load"
+      />
+      <Button
+        onClick={() => smfFileDataManager.clearSmfFileLoaded()}
+        text="clear"
+      />
     </div>
   );
 };
@@ -182,12 +137,12 @@ const CommandListView = () => {
 
 const App = () => {
   useEffect(() => {
-    actions.restoreSmfFileFromSession();
+    smfFileDataManager.restoreSmfFileFromSession();
   }, []);
 
   return (
     <div className="flex-c gap-4" css={{ width: "100dvw", height: "100dvh" }}>
-      <FullScreenMidiFileDropArea onFileDrop={actions.loadSmfFile} />
+      <FullScreenMidiFileDropArea onFileDrop={smfFileDataManager.loadSmfFile} />
       <div className="flex-v gap-2">
         <PlayControlPart />
         <CommandListView />
