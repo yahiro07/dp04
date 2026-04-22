@@ -220,6 +220,41 @@ const OutlineView = () => {
   );
 };
 
+const BlockNodeListColumn = () => {
+  const st = store.useSnapshot();
+  const blockNodes = st.blockNodes ?? [];
+  return (
+    <div className="flex-v border border-[#888] min-w-[200px] min-h-[100px] max-h-[600px] overflow-y-scroll p-2">
+      {blockNodes.map((item, index) => (
+        <div
+          key={index.toString()}
+          className="flex-ha gap-4"
+          // onClick={() => {
+          //   store.mutations.setCommandIndex(index);
+          // }}
+          // css={{
+          //   cursor: "pointer",
+          //   backgroundColor: commandIndex === index ? "#ccffcc" : "#fff",
+          // }}
+        >
+          <span className="min-w-[20px]">
+            {item.trackIndex.toString().padStart(2, "0")}
+          </span>
+          <span className="min-w-[40px] text-[#666]">
+            {item.stepPosition.toFixed(2).padStart(2, "0")}
+          </span>
+          <div className="min-w-[100px]">
+            {item.type === "command" &&
+              item.bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ")}
+            {item.type === "note" &&
+              `note ch:${item.channel} ni:${item.noteNumber} v:${item.velocity} p:${item.stepPosition.toFixed(2)} d:${item.stepDuration.toFixed(2)}`}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const BlockView = () => {
   const { blockNodes } = store.useSnapshot();
   return (
@@ -270,6 +305,7 @@ const App = () => {
         <div className="flex-h">
           <CommandListView />
           <OutlineView />
+          <BlockNodeListColumn />
           <BlockView />
         </div>
       </div>
