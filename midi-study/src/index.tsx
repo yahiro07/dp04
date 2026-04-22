@@ -22,6 +22,7 @@ const store = createStore<{
   defaultTempo: number | null;
   outlineViewNodes: FlowNode[];
   blockNodes: FlowNode[] | null;
+  blockNodeSelectionIndex: number;
 }>({
   commandItems: [],
   songMeta: null,
@@ -31,6 +32,7 @@ const store = createStore<{
   defaultTempo: null,
   outlineViewNodes: [],
   blockNodes: null,
+  blockNodeSelectionIndex: -1,
 });
 
 const smfPlayer = createSmfPlayer();
@@ -47,6 +49,7 @@ const storeActions = {
       defaultTempo,
       outlineViewNodes,
       blockNodes: null,
+      blockNodeSelectionIndex: -1,
     });
   },
   loadFailed(message: string) {
@@ -56,6 +59,7 @@ const storeActions = {
       errorMessage: message,
       outlineViewNodes: [],
       blockNodes: null,
+      blockNodeSelectionIndex: -1,
     });
   },
   clearCommands() {
@@ -65,6 +69,7 @@ const storeActions = {
       errorMessage: null,
       outlineViewNodes: [],
       blockNodes: null,
+      blockNodeSelectionIndex: -1,
     });
   },
 };
@@ -229,13 +234,14 @@ const BlockNodeListColumn = () => {
         <div
           key={index.toString()}
           className="flex-ha gap-4"
-          // onClick={() => {
-          //   store.mutations.setCommandIndex(index);
-          // }}
-          // css={{
-          //   cursor: "pointer",
-          //   backgroundColor: commandIndex === index ? "#ccffcc" : "#fff",
-          // }}
+          onClick={() => {
+            store.mutations.setBlockNodeSelectionIndex(index);
+          }}
+          css={{
+            cursor: "pointer",
+            backgroundColor:
+              st.blockNodeSelectionIndex === index ? "#ccffcc" : "#fff",
+          }}
         >
           <span className="min-w-[20px]">
             {item.trackIndex.toString().padStart(2, "0")}
@@ -256,7 +262,7 @@ const BlockNodeListColumn = () => {
 };
 
 const BlockView = () => {
-  const { blockNodes } = store.useSnapshot();
+  const { blockNodes, blockNodeSelectionIndex } = store.useSnapshot();
   return (
     <div className="border border-[#888] min-w-[300px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
       {blockNodes?.map((node, index) => {
@@ -270,6 +276,7 @@ const BlockView = () => {
           node.type === "command"
             ? node.bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ")
             : undefined;
+        const selected = blockNodeSelectionIndex === index;
         return (
           <div
             key={index.toString()}
@@ -281,8 +288,13 @@ const BlockView = () => {
               height: npx(qh),
               border: "1px solid #ccc",
               fontSize: "8px",
+              backgroundColor: selected ? "#ccffcc" : "#fff0",
+              cursor: "pointer",
             }}
             title={hint}
+            onClick={() => {
+              store.mutations.setBlockNodeSelectionIndex(index);
+            }}
           >
             {text}
           </div>
