@@ -23,6 +23,7 @@ const store = createStore<{
   outlineViewNodes: FlowNode[];
   blockNodes: FlowNode[] | null;
   blockNodeSelectionIndex: number;
+  uiPage: number;
 }>({
   commandItems: [],
   songMeta: null,
@@ -33,6 +34,7 @@ const store = createStore<{
   outlineViewNodes: [],
   blockNodes: null,
   blockNodeSelectionIndex: -1,
+  uiPage: 0,
 });
 
 const smfPlayer = createSmfPlayer();
@@ -96,6 +98,21 @@ const uiActions = {
       smfPlayer.stop();
     }
   },
+};
+
+const UiPageButtonsPart = () => {
+  return (
+    <div className="fixed top-0 left-0 flex-ha">
+      {seqNumbers(2).map((i) => (
+        <Button
+          key={i.toString()}
+          text={`UI ${i}`}
+          active={store.state.uiPage === i}
+          onClick={() => store.mutations.setUiPage(i)}
+        />
+      ))}
+    </div>
+  );
 };
 
 const PlayControlPart = () => {
@@ -304,23 +321,40 @@ const BlockView = () => {
   );
 };
 
+const UiPage0 = () => {
+  return (
+    <div className="flex-v gap-2">
+      <PlayControlPart />
+      <div className="flex-h">
+        <CommandListView />
+        <OutlineView />
+        <BlockNodeListColumn />
+        <BlockView />
+      </div>
+    </div>
+  );
+};
+
+const UiPage1 = () => {
+  return (
+    <div className="flex-v gap-2">
+      <PlayControlPart />
+      <div className="flex-h"></div>
+    </div>
+  );
+};
+
 const App = () => {
+  const { uiPage } = store.useSnapshot();
   useEffect(() => {
     smfFileDataManager.restoreSmfFileFromSession();
   }, []);
-
   return (
     <div className="flex-c gap-4" css={{ width: "100dvw", height: "100dvh" }}>
       <FullScreenMidiFileDropArea onFileDrop={smfFileDataManager.loadSmfFile} />
-      <div className="flex-v gap-2">
-        <PlayControlPart />
-        <div className="flex-h">
-          <CommandListView />
-          <OutlineView />
-          <BlockNodeListColumn />
-          <BlockView />
-        </div>
-      </div>
+      <UiPageButtonsPart />
+      {uiPage === 0 && <UiPage0 />}
+      {uiPage === 1 && <UiPage1 />}
     </div>
   );
 };
