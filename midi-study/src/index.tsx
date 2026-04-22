@@ -24,6 +24,8 @@ const store = createStore<{
   blockNodes: FlowNode[] | null;
   blockNodeSelectionIndex: number;
   uiPage: number;
+  trackIndices: number[] | null;
+  trackSelectionIndex: number;
 }>({
   commandItems: [],
   songMeta: null,
@@ -35,6 +37,8 @@ const store = createStore<{
   blockNodes: null,
   blockNodeSelectionIndex: -1,
   uiPage: 1,
+  trackIndices: null,
+  trackSelectionIndex: 0,
 });
 
 const smfPlayer = createSmfPlayer();
@@ -44,6 +48,9 @@ const storeActions = {
     SmfDataDecorator.decorateCommandItems(song.commands);
     const defaultTempo = SmfDataDecorator.extractDefaultTempo(song);
     const outlineViewNodes = buildFlowNodes(song);
+
+    const trackIndices = SmfDataDecorator.extractNoteTrackIndices(song);
+    const trackSelectionIndex = trackIndices[0] ?? 0;
     store.mutations.assigns({
       commandItems: song.commands,
       songMeta: song.meta,
@@ -52,34 +59,28 @@ const storeActions = {
       outlineViewNodes,
       blockNodes: null,
       blockNodeSelectionIndex: -1,
+      trackIndices,
+      trackSelectionIndex,
     });
   },
-  loadFailed(message: string) {
+  clearSong(message?: string) {
     store.mutations.assigns({
       commandItems: [],
       songMeta: null,
-      errorMessage: message,
+      errorMessage: message ?? null,
       outlineViewNodes: [],
       blockNodes: null,
       blockNodeSelectionIndex: -1,
-    });
-  },
-  clearCommands() {
-    store.mutations.assigns({
-      commandItems: [],
-      songMeta: null,
-      errorMessage: null,
-      outlineViewNodes: [],
-      blockNodes: null,
-      blockNodeSelectionIndex: -1,
+      trackIndices: null,
+      trackSelectionIndex: 0,
     });
   },
 };
 
 const smfFileDataManager = createSmfFileDataManager({
   songLoadedCallback: storeActions.loadSong,
-  loadFailureCallback: storeActions.loadFailed,
-  clearCallback: storeActions.clearCommands,
+  loadFailureCallback: storeActions.clearSong,
+  clearCallback: storeActions.clearSong,
 });
 
 const uiActions = {
@@ -196,7 +197,7 @@ const OutlineView = () => {
     store.mutations.setBlockNodes(sameBlockNodes);
   };
   return (
-    <div className="border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
+    <div className="grow border border-[#888] min-w-[400px] min-h-[100px] overflow-scroll p-2 relative">
       {seqNumbers(numTracks).map((trackIndex) => (
         <div
           key={trackIndex.toString()}
@@ -335,8 +336,24 @@ const UiPage0 = () => {
   );
 };
 
+const TrackSelectorButtonsPart = () => {
+  const { trackSelectionIndex, trackIndices } = store.useSnapshot();
+  return (
+    <div className="flex-ha">
+      {trackIndices?.map((trackIndex) => (
+        <Button
+          key={trackIndex}
+          text={trackIndex.toString()}
+          active={trackSelectionIndex === trackIndex}
+          onClick={() => store.mutations.setTrackSelectionIndex(trackIndex)}
+        />
+      ))}
+    </div>
+  );
+};
+
 const VerticalScoreView = () => {
-  const { outlineViewNodes } = store.useSnapshot();
+  const { outlineViewNodes, trackSelectionIndex } = store.useSnapshot();
   const handleClick = (node: FlowNode) => {
     console.log(node.trackIndex, node.stepPosition, node.type);
     const blockIndex = (node.stepPosition / 64) >>> 0;
@@ -356,7 +373,10 @@ const VerticalScoreView = () => {
   return (
     <div className="border border-[#888] min-w-[700px] min-h-[700px] max-h-[600px] overflow-scroll p-2 relative">
       {outlineViewNodes
-        .filter((node) => node.trackIndex === 2)
+        .filter(
+          (node) =>
+            node.trackIndex === trackSelectionIndex && node.type === "note",
+        )
         .map((node, index) => {
           const stepsPerRow = 64; //4bars
           const px = (node.stepPosition % stepsPerRow) >>> 0;
@@ -392,10 +412,13 @@ const VerticalScoreView = () => {
 
 const UiPage1 = () => {
   return (
-    <div className="flex-v gap-2">
-      <PlayControlPart />
-      <div className="flex-h">
+    <div className="flex-h min-h-[700px] item-stretch">
+      <div className="flex-v gap-2">
+        <PlayControlPart />
         <OutlineView />
+      </div>
+      <div className="flex-v gap-2 h-full">
+        <TrackSelectorButtonsPart />
         <VerticalScoreView />
       </div>
     </div>

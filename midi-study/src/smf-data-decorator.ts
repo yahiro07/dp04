@@ -152,4 +152,19 @@ export namespace SmfDataDecorator {
     }
     return 120;
   }
+
+  export function extractNoteTrackIndices(song: SmfSong): number[] {
+    const indices = new Set<number>();
+    for (const item of song.commands) {
+      const status = item.bytes[0];
+      if (status === 0xff) {
+        continue;
+      }
+      const op = status & 0xf0;
+      if (op === 0x90 || op === 0x80) {
+        indices.add(item.trackIndex);
+      }
+    }
+    return Array.from(indices).sort((a, b) => a - b);
+  }
 }
