@@ -20,6 +20,12 @@ export type FlowNode = {
   trackIndex: number;
   stepPosition: number; // 1/16th note based
 } & (
-  | { type: "note"; noteNumber: number; velocity: number; stepDuration: number }
+  | {
+      type: "note";
+      channel: number;
+      noteNumber: number;
+      velocity: number;
+      stepDuration: number;
+    }
   | { type: "command"; bytes: number[] }
 );

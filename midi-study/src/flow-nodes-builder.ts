@@ -63,6 +63,7 @@ export function buildFlowNodes(song: SmfSong): FlowNode[] {
           type: "note",
           trackIndex: activeNote.trackIndex,
           stepPosition: activeNote.stepPosition,
+          channel: status & 0x0f,
           noteNumber: activeNote.noteNumber,
           velocity: activeNote.velocity,
           stepDuration: stepPosition - activeNote.stepPosition,
