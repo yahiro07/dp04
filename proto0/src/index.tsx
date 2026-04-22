@@ -51,7 +51,7 @@ const uiActions = {
       return (prev + dir * amount + maxStep) % maxStep;
     });
   },
-  shiftDuration(dir: -1 | 1) {
+  shiftDuration(dir: -1 | 1 = 1) {
     const { cursorDuration } = store.state;
     const idx = durationValues.indexOf(cursorDuration);
     const newIdx = (idx + dir + durationValues.length) % durationValues.length;
@@ -195,15 +195,15 @@ const LeftControlArea = () => {
   return (
     <div className="flex-ha">
       <div>
-        <Button text="←" onClick={() => uiActions.shiftCursorPos(-1)} />
+        <Button text="←" onClick={uiActions.stepBack} />
       </div>
       <div className="flex-v">
-        <Button text="↑" onClick={() => uiActions.shiftCursorPosV(-1)} />
+        <Button text="↑" onClick={uiActions.stepUp} />
         <div className="h-[40px]" />
-        <Button text="↓" onClick={() => uiActions.shiftCursorPosV(1)} />
+        <Button text="↓" onClick={uiActions.stepDown} />
       </div>
       <div>
-        <Button text="→" onClick={() => uiActions.shiftCursorPos(1)} />
+        <Button text="→" onClick={uiActions.stepForward} />
       </div>
     </div>
   );
@@ -220,13 +220,13 @@ const RightControlArea = () => {
         <Button
           text="edit"
           active={editMode}
-          onClick={() => uiActions.toggleEditMode()}
+          onClick={uiActions.toggleEditMode}
         />
         <div className="h-[40px]" />
-        <Button text="rest" onClick={() => uiActions.putRest()} />
+        <Button text="rest" onClick={uiActions.putRest} />
       </div>
       <div>
-        <Button text="tie" onClick={() => uiActions.putTie()} />
+        <Button text="tie" onClick={uiActions.putTie} />
       </div>
     </div>
   );
