@@ -17,8 +17,14 @@ const synth = new (
   }
 ).WebAudioTinySynth();
 
-//usage
-//synth.send([0x90, 36, 100])
+const synthActions = {
+  noteOn(noteNumber: number, velocity: number) {
+    synth.send([0x90, noteNumber, velocity]);
+  },
+  noteOff(noteNumber: number) {
+    synth.send([0x80, noteNumber, 0]);
+  },
+};
 
 const store = createStore<{
   cursorPos: number;
@@ -32,7 +38,7 @@ const store = createStore<{
 
 const durationValues = [4, 2, 1];
 
-const actions = {
+const uiActions = {
   dummy() {},
   shiftCursorPos(dir: -1 | 1) {
     const { cursorDuration } = store.state;
@@ -52,34 +58,56 @@ const actions = {
     const newIdx = (idx + dir + durationValues.length) % durationValues.length;
     store.mutations.setCursorDuration(durationValues[newIdx]);
   },
+  stepForward() {
+    uiActions.shiftCursorPos(1);
+  },
+  stepBack() {
+    uiActions.shiftCursorPos(-1);
+  },
+  stepUp() {
+    uiActions.shiftCursorPosV(-1);
+  },
+  stepDown() {
+    uiActions.shiftCursorPosV(1);
+  },
   putTie() {
-    actions.shiftCursorPos(1);
+    uiActions.shiftCursorPos(1);
   },
   putRest() {
-    actions.shiftCursorPos(1);
+    uiActions.shiftCursorPos(1);
   },
   toggleEditMode() {
     store.mutations.toggleEditMode();
   },
   handleMidiInput(e: MidiKeyboardInputEvent) {
+    const { editMode } = store.state;
     if (e.type === "note") {
       const isOn = e.velocity > 0;
       if (isOn) {
         const ni = e.noteNumber;
         console.log("note", ni);
         if (1) {
-          if (ni === 48) {
-            actions.shiftCursorPos(-1);
-          } else if (ni === 50) {
-            actions.shiftCursorPos(1);
-          } else if (ni === 78) {
-            actions.toggleEditMode();
-          } else if (ni === 77) {
-            actions.putRest();
-          } else if (ni === 79) {
-            actions.putTie();
+          const shortCuts: Record<number, () => void> = {
+            48: uiActions.stepBack,
+            50: uiActions.stepForward,
+            78: uiActions.toggleEditMode,
+            77: uiActions.putRest,
+            79: uiActions.putTie,
+          };
+          const shortcut = shortCuts[ni];
+          if (shortcut) {
+            shortcut();
+            return;
+          } else {
+            if (editMode) {
+              //insert note here
+              uiActions.shiftCursorPos(1);
+            }
           }
         }
+        synthActions.noteOn(ni, e.velocity);
+      } else {
+        synthActions.noteOff(e.noteNumber);
       }
     }
   },
@@ -168,15 +196,15 @@ const LeftControlArea = () => {
   return (
     <div className="flex-ha">
       <div>
-        <Button text="←" onClick={() => actions.shiftCursorPos(-1)} />
+        <Button text="←" onClick={() => uiActions.shiftCursorPos(-1)} />
       </div>
       <div className="flex-v">
-        <Button text="↑" onClick={() => actions.shiftCursorPosV(-1)} />
+        <Button text="↑" onClick={() => uiActions.shiftCursorPosV(-1)} />
         <div className="h-[40px]" />
-        <Button text="↓" onClick={() => actions.shiftCursorPosV(1)} />
+        <Button text="↓" onClick={() => uiActions.shiftCursorPosV(1)} />
       </div>
       <div>
-        <Button text="→" onClick={() => actions.shiftCursorPos(1)} />
+        <Button text="→" onClick={() => uiActions.shiftCursorPos(1)} />
       </div>
     </div>
   );
@@ -187,19 +215,19 @@ const RightControlArea = () => {
   return (
     <div className="flex-ha">
       <div>
-        <Button text="dur" onClick={() => actions.shiftDuration(1)} />
+        <Button text="dur" onClick={() => uiActions.shiftDuration(1)} />
       </div>
       <div className="flex-v">
         <Button
           text="edit"
           active={editMode}
-          onClick={() => actions.toggleEditMode()}
+          onClick={() => uiActions.toggleEditMode()}
         />
         <div className="h-[40px]" />
-        <Button text="rest" onClick={() => actions.putRest()} />
+        <Button text="rest" onClick={() => uiActions.putRest()} />
       </div>
       <div>
-        <Button text="tie" onClick={() => actions.putTie()} />
+        <Button text="tie" onClick={() => uiActions.putTie()} />
       </div>
     </div>
   );
@@ -228,7 +256,7 @@ const DebugSection = () => {
 
 const App = () => {
   useEffect(() => {
-    void setupMidiKeyboardInput(actions.handleMidiInput);
+    void setupMidiKeyboardInput(uiActions.handleMidiInput);
   }, []);
   return (
     <div className="flex-vc" css={{ width: "100vw", height: "100vh" }}>
