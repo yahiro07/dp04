@@ -1,7 +1,12 @@
 import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
+import { useEffect } from "react";
 import { createStore } from "snap-store";
+import {
+  MidiKeyboardInputEvent,
+  setupMidiKeyboardInput,
+} from "@/midi-keyboard-input";
 import { seqNumbers } from "@/utils/array-utils";
 
 const maxStep = 16 * 16;
@@ -15,9 +20,14 @@ const synth = new (
 //usage
 //synth.send([0x90, 36, 100])
 
-const store = createStore<{ cursorPos: number; cursorDuration: number }>({
+const store = createStore<{
+  cursorPos: number;
+  cursorDuration: number;
+  editMode: boolean;
+}>({
   cursorPos: 0,
   cursorDuration: 2,
+  editMode: false,
 });
 
 const durationValues = [4, 2, 1];
@@ -48,6 +58,31 @@ const actions = {
   putRest() {
     actions.shiftCursorPos(1);
   },
+  toggleEditMode() {
+    store.mutations.toggleEditMode();
+  },
+  handleMidiInput(e: MidiKeyboardInputEvent) {
+    if (e.type === "note") {
+      const isOn = e.velocity > 0;
+      if (isOn) {
+        const ni = e.noteNumber;
+        console.log("note", ni);
+        if (1) {
+          if (ni === 48) {
+            actions.shiftCursorPos(-1);
+          } else if (ni === 50) {
+            actions.shiftCursorPos(1);
+          } else if (ni === 78) {
+            actions.toggleEditMode();
+          } else if (ni === 77) {
+            actions.putRest();
+          } else if (ni === 79) {
+            actions.putTie();
+          }
+        }
+      }
+    }
+  },
 };
 
 function durationToString(d: number) {
@@ -75,7 +110,7 @@ const Button = ({
       className="min-w-[40px] h-[40px]"
       css={{
         border: "solid 1px #888",
-        backgroundColor: active ? "#ddd" : "#fff",
+        backgroundColor: active ? "#cfc" : "#fff",
         borderRadius: "50%",
         cursor: "pointer",
       }}
@@ -148,13 +183,18 @@ const LeftControlArea = () => {
 };
 
 const RightControlArea = () => {
+  const { editMode } = store.useSnapshot();
   return (
     <div className="flex-ha">
       <div>
         <Button text="dur" onClick={() => actions.shiftDuration(1)} />
       </div>
       <div className="flex-v">
-        <Button text="edit" onClick={() => actions.dummy()} />
+        <Button
+          text="edit"
+          active={editMode}
+          onClick={() => actions.toggleEditMode()}
+        />
         <div className="h-[40px]" />
         <Button text="rest" onClick={() => actions.putRest()} />
       </div>
@@ -187,6 +227,9 @@ const DebugSection = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    void setupMidiKeyboardInput(actions.handleMidiInput);
+  }, []);
   return (
     <div className="flex-vc" css={{ width: "100vw", height: "100vh" }}>
       <DebugSection />
