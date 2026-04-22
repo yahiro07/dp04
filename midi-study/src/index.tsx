@@ -152,14 +152,19 @@ const OutlineView = () => {
   const baseY = 32;
 
   const handleClick = (node: FlowNode) => {
-    // console.log(node.trackIndex, node.stepPosition, node.type);
-    const blockIndex = (node.stepPosition / 256) >>> 0;
-    const sameBlockNodes = outlineViewNodes.filter((n) => {
-      return (
-        n.trackIndex === node.trackIndex &&
-        (n.stepPosition / 256) >>> 0 === blockIndex
-      );
-    });
+    console.log(node.trackIndex, node.stepPosition, node.type);
+    const blockIndex = (node.stepPosition / 64) >>> 0;
+    const sameBlockNodes = outlineViewNodes
+      .filter((n) => {
+        return (
+          n.trackIndex === node.trackIndex &&
+          (n.stepPosition / 64) >>> 0 === blockIndex
+        );
+      })
+      .map((node) => {
+        const head = blockIndex * 64;
+        return { ...node, stepPosition: node.stepPosition - head };
+      });
     // console.log({ sameBlockNodes });
     store.mutations.setBlockNodes(sameBlockNodes);
   };
@@ -210,6 +215,38 @@ const OutlineView = () => {
   );
 };
 
+const BlockView = () => {
+  const { blockNodes } = store.useSnapshot();
+  return (
+    <div className="border border-[#888] min-w-[300px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
+      {blockNodes?.map((node, index) => {
+        const uw = 16;
+        const uh = 8;
+        const qx = node.type === "note" ? (node.noteNumber / 127) * 200 : 0;
+        const qy = node.stepPosition * uh;
+        const qh = node.type === "note" ? node.stepDuration * uh : uh;
+        const text = node.type === "note" ? node.noteNumber : undefined;
+        return (
+          <div
+            key={index.toString()}
+            css={{
+              position: "absolute",
+              left: npx(qx),
+              top: npx(qy),
+              width: npx(uw),
+              height: npx(qh),
+              border: "1px solid #ccc",
+              fontSize: "8px",
+            }}
+          >
+            {text}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const App = () => {
   useEffect(() => {
     smfFileDataManager.restoreSmfFileFromSession();
@@ -223,6 +260,7 @@ const App = () => {
         <div className="flex-h">
           <CommandListView />
           <OutlineView />
+          <BlockView />
         </div>
       </div>
     </div>
