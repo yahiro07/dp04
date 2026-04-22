@@ -39,7 +39,6 @@ const store = createStore<{
 const durationValues = [4, 2, 1];
 
 const uiActions = {
-  dummy() {},
   shiftCursorPos(dir: -1 | 1) {
     const { cursorDuration } = store.state;
     store.mutations.setCursorPos((prev) => {
