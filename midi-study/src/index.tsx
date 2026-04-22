@@ -370,42 +370,48 @@ const VerticalScoreView = () => {
       });
     store.mutations.setBlockNodes(sameBlockNodes);
   };
+  const filteredNodes = outlineViewNodes.filter(
+    (node) => node.trackIndex === trackSelectionIndex && node.type === "note",
+  ) as Extract<FlowNode, { type: "note" }>[];
+
   return (
     <div className="border border-[#888] min-w-[700px] min-h-[700px] max-h-[600px] overflow-scroll p-2 relative">
-      {outlineViewNodes
-        .filter(
-          (node) =>
-            node.trackIndex === trackSelectionIndex && node.type === "note",
-        )
-        .map((node, index) => {
-          const stepsPerRow = 64; //4bars
-          const px = (node.stepPosition % stepsPerRow) >>> 0;
-          const py = (node.stepPosition / stepsPerRow) >>> 0;
+      {filteredNodes.map((node, index) => {
+        const stepsPerRow = 64; //4bars
+        const px = (node.stepPosition % stepsPerRow) >>> 0;
+        const py = (node.stepPosition / stepsPerRow) >>> 0;
 
-          const cw = 10;
-          const ch = 20;
-          const yStride = 40;
-          const qx = px * cw;
-          const qy = py * yStride;
-          const qw = (node.type === "note" ? node.stepDuration : 0.1) * cw;
-          const qh = ch;
+        let yDir = 0;
+        if (index > 0) {
+          const prevNote = filteredNodes[index - 1];
+          yDir = -Math.sign(node.noteNumber - prevNote.noteNumber);
+        }
 
-          return (
-            <div
-              key={index.toString()}
-              css={{
-                position: "absolute",
-                left: npx(qx),
-                top: npx(qy),
-                width: npx(qw),
-                height: npx(qh),
-                border: "1px solid #aaa4",
-                fontSize: "8px",
-              }}
-              onClick={() => handleClick(node)}
-            ></div>
-          );
-        })}
+        const baseY = 10;
+        const cw = 10;
+        const ch = 20;
+        const yStride = 40;
+        const qx = px * cw;
+        const qy = baseY + py * yStride + yDir * 2;
+        const qw = (node.type === "note" ? node.stepDuration : 0.1) * cw;
+        const qh = ch;
+
+        return (
+          <div
+            key={index.toString()}
+            css={{
+              position: "absolute",
+              left: npx(qx),
+              top: npx(qy),
+              width: npx(qw),
+              height: npx(qh),
+              border: "1px solid #aaa4",
+              fontSize: "8px",
+            }}
+            onClick={() => handleClick(node)}
+          ></div>
+        );
+      })}
     </div>
   );
 };
