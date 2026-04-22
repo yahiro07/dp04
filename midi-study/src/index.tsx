@@ -11,6 +11,7 @@ import { createSmfFileDataManager } from "@/smf-file-data-manager";
 import { createSmfPlayer } from "@/smf-player";
 import { npx } from "@/styling/styling-utils";
 import { CommandItem, FlowNode, SmfSong, SmfSongMeta } from "@/types";
+import { seqNumbers } from "@/utils/array-utils";
 
 const store = createStore<{
   commandItems: CommandItem[];
@@ -143,13 +144,33 @@ const CommandListView = () => {
 
 const OutlineView = () => {
   const { outlineViewNodes } = store.useSnapshot();
+  const numTracks =
+    outlineViewNodes.reduce((max, node) => Math.max(max, node.trackIndex), 0) +
+    1;
   return (
     <div className="border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
+      {seqNumbers(numTracks).map((trackIndex) => (
+        <div
+          key={trackIndex.toString()}
+          css={{
+            position: "absolute",
+            left: npx(trackIndex * 32),
+            top: npx(0),
+            width: npx(32),
+            height: npx(2),
+            border: "1px solid #ccc",
+            fontSize: "8px",
+          }}
+        >
+          {trackIndex}
+        </div>
+      ))}
       {outlineViewNodes.map((node, index) => {
         const uw = 32;
         const uh = 2;
+        const baseY = 32;
         const qx = node.trackIndex * uw;
-        const qy = node.stepPosition * uh;
+        const qy = baseY + node.stepPosition * uh;
         const qh = node.type === "note" ? node.stepDuration * uh : uh;
         const text = node.type === "note" ? node.noteNumber : undefined;
         return (
