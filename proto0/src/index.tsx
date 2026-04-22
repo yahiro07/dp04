@@ -9,7 +9,7 @@ import {
 } from "@/midi-keyboard-input";
 import { seqNumbers } from "@/utils/array-utils";
 
-const maxStep = 16 * 16;
+const MAX_STEP = 16 * 16;
 
 const synth = new (
   window as unknown as {
@@ -26,14 +26,27 @@ const synthActions = {
   },
 };
 
+const NI_NONE = 128;
+const NI_TIE = 129;
+
+type Note = {
+  noteNumber: number;
+  stepPosition: number;
+  stepDuration: number;
+};
+
 const store = createStore<{
   cursorPos: number;
   cursorDuration: number;
   editMode: boolean;
+  stepCells: number[];
+  notes: Note[];
 }>({
   cursorPos: 0,
   cursorDuration: 2,
   editMode: false,
+  stepCells: Array(MAX_STEP).fill(NI_NONE),
+  notes: [],
 });
 
 const durationValues = [4, 2, 1];
@@ -42,13 +55,13 @@ const uiActions = {
   shiftCursorPos(dir: -1 | 1) {
     const { cursorDuration } = store.state;
     store.mutations.setCursorPos((prev) => {
-      return (prev + dir * cursorDuration + maxStep) % maxStep;
+      return (prev + dir * cursorDuration + MAX_STEP) % MAX_STEP;
     });
   },
   shiftCursorPosV(dir: -1 | 1) {
     const amount = 16;
     store.mutations.setCursorPos((prev) => {
-      return (prev + dir * amount + maxStep) % maxStep;
+      return (prev + dir * amount + MAX_STEP) % MAX_STEP;
     });
   },
   shiftDuration(dir: -1 | 1 = 1) {
@@ -149,6 +162,51 @@ const Button = ({
 };
 
 const EditorArea = () => {
+  //draw notes based on stepCells
+  const st = store.useSnapshot();
+  return (
+    <div
+      css={{
+        width: "200px",
+        height: "200px",
+        border: "solid 1px #888",
+      }}
+    >
+      <svg viewBox="0 0 200 200">
+        <g>
+          {seqNumbers(16).map((iy) => {
+            return seqNumbers(16).map((ix) => {
+              return (
+                <rect
+                  key={`${ix},${iy}`}
+                  x={ix * 12.5}
+                  y={iy * 12.5}
+                  width="12.5"
+                  height="12.5"
+                  fill="transparent"
+                  stroke="#ddd"
+                />
+              );
+            });
+          })}
+        </g>
+        <g>
+          <rect
+            x={(st.cursorPos % 16) * 12.5}
+            y={((st.cursorPos / 16) >>> 0) * 12.5}
+            width={(st.cursorDuration / 16) * 200}
+            height="12.5"
+            fill="transparent"
+            stroke="#0d0"
+          />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
+const EditorArea2 = () => {
+  //draw notes based on notes array
   const st = store.useSnapshot();
   return (
     <div
@@ -261,6 +319,7 @@ const App = () => {
     <div className="flex-vc" css={{ width: "100vw", height: "100vh" }}>
       <DebugSection />
       <PanelBody />
+      <EditorArea2 />
     </div>
   );
 };
