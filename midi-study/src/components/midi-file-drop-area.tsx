@@ -1,7 +1,7 @@
 import {
   HeadlessFileDropArea,
   HeadlessFileDropArea_WindowCovered,
-} from "@/headless-file-drop-area";
+} from "@/components/headless-file-drop-area";
 
 const MidiFileDropAreaView = ({ isDragging }: { isDragging: boolean }) => (
   <div
