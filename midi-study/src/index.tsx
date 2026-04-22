@@ -231,6 +231,10 @@ const BlockView = () => {
         const qy = node.stepPosition * uh;
         const qh = node.type === "note" ? node.stepDuration * uh : uh;
         const text = node.type === "note" ? node.noteNumber : undefined;
+        const hint =
+          node.type === "command"
+            ? node.bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ")
+            : undefined;
         return (
           <div
             key={index.toString()}
@@ -243,6 +247,7 @@ const BlockView = () => {
               border: "1px solid #ccc",
               fontSize: "8px",
             }}
+            title={hint}
           >
             {text}
           </div>
