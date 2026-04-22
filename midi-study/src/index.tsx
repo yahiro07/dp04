@@ -34,7 +34,7 @@ const store = createStore<{
   outlineViewNodes: [],
   blockNodes: null,
   blockNodeSelectionIndex: -1,
-  uiPage: 0,
+  uiPage: 1,
 });
 
 const smfPlayer = createSmfPlayer();
@@ -335,11 +335,69 @@ const UiPage0 = () => {
   );
 };
 
+const VerticalScoreView = () => {
+  const { outlineViewNodes } = store.useSnapshot();
+  const handleClick = (node: FlowNode) => {
+    console.log(node.trackIndex, node.stepPosition, node.type);
+    const blockIndex = (node.stepPosition / 64) >>> 0;
+    const sameBlockNodes = outlineViewNodes
+      .filter((n) => {
+        return (
+          n.trackIndex === node.trackIndex &&
+          (n.stepPosition / 64) >>> 0 === blockIndex
+        );
+      })
+      .map((node) => {
+        const head = blockIndex * 64;
+        return { ...node, stepPosition: node.stepPosition - head };
+      });
+    store.mutations.setBlockNodes(sameBlockNodes);
+  };
+  return (
+    <div className="border border-[#888] min-w-[700px] min-h-[700px] max-h-[600px] overflow-scroll p-2 relative">
+      {outlineViewNodes
+        .filter((node) => node.trackIndex === 2)
+        .map((node, index) => {
+          const stepsPerRow = 64; //4bars
+          const px = (node.stepPosition % stepsPerRow) >>> 0;
+          const py = (node.stepPosition / stepsPerRow) >>> 0;
+
+          const cw = 10;
+          const ch = 20;
+          const yStride = 40;
+          const qx = px * cw;
+          const qy = py * yStride;
+          const qw = (node.type === "note" ? node.stepDuration : 0.1) * cw;
+          const qh = ch;
+
+          return (
+            <div
+              key={index.toString()}
+              css={{
+                position: "absolute",
+                left: npx(qx),
+                top: npx(qy),
+                width: npx(qw),
+                height: npx(qh),
+                border: "1px solid #aaa4",
+                fontSize: "8px",
+              }}
+              onClick={() => handleClick(node)}
+            ></div>
+          );
+        })}
+    </div>
+  );
+};
+
 const UiPage1 = () => {
   return (
     <div className="flex-v gap-2">
       <PlayControlPart />
-      <div className="flex-h"></div>
+      <div className="flex-h">
+        <OutlineView />
+        <VerticalScoreView />
+      </div>
     </div>
   );
 };
