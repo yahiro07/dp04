@@ -21,6 +21,7 @@ const store = createStore<{
   playing: boolean;
   defaultTempo: number | null;
   outlineViewNodes: FlowNode[];
+  blockNodes: FlowNode[] | null;
 }>({
   commandItems: [],
   songMeta: null,
@@ -29,6 +30,7 @@ const store = createStore<{
   playing: false,
   defaultTempo: null,
   outlineViewNodes: [],
+  blockNodes: null,
 });
 
 const smfPlayer = createSmfPlayer();
@@ -147,6 +149,20 @@ const OutlineView = () => {
   const numTracks =
     outlineViewNodes.reduce((max, node) => Math.max(max, node.trackIndex), 0) +
     1;
+  const baseY = 32;
+
+  const handleClick = (node: FlowNode) => {
+    // console.log(node.trackIndex, node.stepPosition, node.type);
+    const blockIndex = (node.stepPosition / 256) >>> 0;
+    const sameBlockNodes = outlineViewNodes.filter((n) => {
+      return (
+        n.trackIndex === node.trackIndex &&
+        (n.stepPosition / 256) >>> 0 === blockIndex
+      );
+    });
+    // console.log({ sameBlockNodes });
+    store.mutations.setBlockNodes(sameBlockNodes);
+  };
   return (
     <div className="border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
       {seqNumbers(numTracks).map((trackIndex) => (
@@ -168,7 +184,6 @@ const OutlineView = () => {
       {outlineViewNodes.map((node, index) => {
         const uw = 32;
         const uh = 2;
-        const baseY = 32;
         const qx = node.trackIndex * uw;
         const qy = baseY + node.stepPosition * uh;
         const qh = node.type === "note" ? node.stepDuration * uh : uh;
@@ -185,6 +200,7 @@ const OutlineView = () => {
               border: "1px solid #ccc",
               fontSize: "8px",
             }}
+            onClick={() => handleClick(node)}
           >
             {text}
           </div>
