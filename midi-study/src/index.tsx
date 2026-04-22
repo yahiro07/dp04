@@ -8,7 +8,7 @@ import { FullScreenMidiFileDropArea } from "@/midi-file-drop-area";
 import { SmfDataDecorator } from "@/smf-data-decorator";
 import { createSmfFileDataManager } from "@/smf-file-data-manager";
 import { createSmfPlayer } from "@/smf-player";
-import { CommandItem, SmfSong, SmfSongMeta } from "@/smf-reader";
+import { CommandItem, SmfSong, SmfSongMeta } from "@/types";
 
 const store = createStore<{
   commandItems: CommandItem[];

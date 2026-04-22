@@ -1,4 +1,4 @@
-import { CommandItem } from "@/smf-reader";
+import { CommandItem } from "@/types";
 
 const CHANNEL_COUNT = 16;
 const ALL_SOUND_OFF = 120;
@@ -37,12 +37,16 @@ function getMillisPerTick(timeDivision: number, defaultTempo: number) {
       case 0xe2:
         return 29.97;
       default:
-        throw new Error(`Unsupported SMPTE time division: 0x${timeDivision.toString(16)}`);
+        throw new Error(
+          `Unsupported SMPTE time division: 0x${timeDivision.toString(16)}`,
+        );
     }
   })();
 
   if (ticksPerFrame === 0) {
-    throw new Error("Invalid SMPTE time division: ticks per frame must be greater than 0");
+    throw new Error(
+      "Invalid SMPTE time division: ticks per frame must be greater than 0",
+    );
   }
 
   return 1000 / (framesPerSecond * ticksPerFrame);

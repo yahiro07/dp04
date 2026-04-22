@@ -1,4 +1,4 @@
-import { CommandItem, SmfSong } from "@/smf-reader";
+import { CommandItem, SmfSong } from "@/types";
 
 export namespace SmfDataDecorator {
   function formatSignedInt8(value: number) {

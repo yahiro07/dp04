@@ -1,5 +1,6 @@
 import { FileDataPersistence } from "@/file-data-persistence";
-import { SmfReader, SmfSong } from "@/smf-reader";
+import { SmfReader } from "@/smf-reader";
+import { SmfSong } from "@/types";
 import { openFilePicker } from "@/utils/file-picker-utils";
 
 type SmfFileDataManager = {
