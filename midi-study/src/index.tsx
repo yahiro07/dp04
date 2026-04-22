@@ -46,6 +46,7 @@ const storeActions = {
       errorMessage: null,
       defaultTempo,
       outlineViewNodes,
+      blockNodes: null,
     });
   },
   loadFailed(message: string) {
@@ -53,6 +54,8 @@ const storeActions = {
       commandItems: [],
       songMeta: null,
       errorMessage: message,
+      outlineViewNodes: [],
+      blockNodes: null,
     });
   },
   clearCommands() {
@@ -60,6 +63,8 @@ const storeActions = {
       commandItems: [],
       songMeta: null,
       errorMessage: null,
+      outlineViewNodes: [],
+      blockNodes: null,
     });
   },
 };
