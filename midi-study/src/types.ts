@@ -15,3 +15,11 @@ export type SmfSong = {
   commands: CommandItem[];
   meta: SmfSongMeta;
 };
+
+export type FlowNode = {
+  trackIndex: number;
+  stepPosition: number; // 1/16th note based
+} & (
+  | { type: "note"; noteNumber: number; velocity: number; stepDuration: number }
+  | { type: "command"; bytes: number[] }
+);

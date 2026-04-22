@@ -5,10 +5,12 @@ import { useEffect } from "react";
 import { createStore } from "snap-store";
 import { Button } from "@/components/button";
 import { FullScreenMidiFileDropArea } from "@/components/midi-file-drop-area";
+import { buildFlowNodes } from "@/flow-nodes-builder";
 import { SmfDataDecorator } from "@/smf-data-decorator";
 import { createSmfFileDataManager } from "@/smf-file-data-manager";
 import { createSmfPlayer } from "@/smf-player";
-import { CommandItem, SmfSong, SmfSongMeta } from "@/types";
+import { npx } from "@/styling/styling-utils";
+import { CommandItem, FlowNode, SmfSong, SmfSongMeta } from "@/types";
 
 const store = createStore<{
   commandItems: CommandItem[];
@@ -17,6 +19,7 @@ const store = createStore<{
   commandIndex: number;
   playing: boolean;
   defaultTempo: number | null;
+  outlineViewNodes: FlowNode[];
 }>({
   commandItems: [],
   songMeta: null,
@@ -24,6 +27,7 @@ const store = createStore<{
   commandIndex: 0,
   playing: false,
   defaultTempo: null,
+  outlineViewNodes: [],
 });
 
 const smfPlayer = createSmfPlayer();
@@ -32,11 +36,13 @@ const storeActions = {
   loadSong(song: SmfSong) {
     SmfDataDecorator.decorateCommandItems(song.commands);
     const defaultTempo = SmfDataDecorator.extractDefaultTempo(song);
+    const outlineViewNodes = buildFlowNodes(song);
     store.mutations.assigns({
       commandItems: song.commands,
       songMeta: song.meta,
       errorMessage: null,
       defaultTempo,
+      outlineViewNodes,
     });
   },
   loadFailed(message: string) {
@@ -135,6 +141,38 @@ const CommandListView = () => {
   );
 };
 
+const OutlineView = () => {
+  const { outlineViewNodes } = store.useSnapshot();
+  return (
+    <div className="border border-[#888] min-w-[400px] min-h-[100px] max-h-[600px] overflow-scroll p-2 relative">
+      {outlineViewNodes.map((node, index) => {
+        const uw = 32;
+        const uh = 2;
+        const qx = node.trackIndex * uw;
+        const qy = node.stepPosition * uh;
+        const qh = node.type === "note" ? node.stepDuration * uh : uh;
+        const text = node.type === "note" ? node.noteNumber : undefined;
+        return (
+          <div
+            key={index.toString()}
+            css={{
+              position: "absolute",
+              left: npx(qx),
+              top: npx(qy),
+              width: npx(uw),
+              height: npx(qh),
+              border: "1px solid #ccc",
+              fontSize: "8px",
+            }}
+          >
+            {text}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const App = () => {
   useEffect(() => {
     smfFileDataManager.restoreSmfFileFromSession();
@@ -145,7 +183,10 @@ const App = () => {
       <FullScreenMidiFileDropArea onFileDrop={smfFileDataManager.loadSmfFile} />
       <div className="flex-v gap-2">
         <PlayControlPart />
-        <CommandListView />
+        <div className="flex-h">
+          <CommandListView />
+          <OutlineView />
+        </div>
       </div>
     </div>
   );
