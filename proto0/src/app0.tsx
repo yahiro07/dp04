@@ -9,7 +9,9 @@ import {
 } from "@/midi-keyboard-input";
 import { seqNumbers } from "@/utils/array-utils";
 
-const MAX_STEP = 16 * 16;
+const configs = {
+  maxStep: 16 * 16,
+};
 
 const synth = new (
   window as unknown as {
@@ -26,8 +28,10 @@ const synthActions = {
   },
 };
 
-const NI_NONE = 128;
-const NI_TIE = 129;
+enum SpecialNotes {
+  None = 128,
+  Tie = 129,
+}
 
 type Note = {
   noteNumber: number;
@@ -45,7 +49,7 @@ const store = createStore<{
   cursorPos: 0,
   cursorDuration: 2,
   editMode: false,
-  stepCells: Array(MAX_STEP).fill(NI_NONE),
+  stepCells: Array(configs.maxStep).fill(SpecialNotes.None),
   notes: [],
 });
 
@@ -53,15 +57,17 @@ const durationValues = [4, 2, 1];
 
 const uiActions = {
   shiftCursorPos(dir: -1 | 1) {
+    const { maxStep } = configs;
     const { cursorDuration } = store.state;
     store.mutations.setCursorPos((prev) => {
-      return (prev + dir * cursorDuration + MAX_STEP) % MAX_STEP;
+      return (prev + dir * cursorDuration + maxStep) % maxStep;
     });
   },
   shiftCursorPosV(dir: -1 | 1) {
     const amount = 16;
+    const { maxStep } = configs;
     store.mutations.setCursorPos((prev) => {
-      return (prev + dir * amount + MAX_STEP) % MAX_STEP;
+      return (prev + dir * amount + maxStep) % maxStep;
     });
   },
   shiftDuration(dir: -1 | 1 = 1) {
