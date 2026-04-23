@@ -12,10 +12,11 @@
       "vite/client"
     ],
     "jsx": "react-jsx",
-    "jsxImportSource": "@emotion/react",
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "paths": {
       "@/*": [
         "./src/*"
