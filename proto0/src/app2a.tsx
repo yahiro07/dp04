@@ -134,24 +134,21 @@ const uiActions = {
       if (isOn) {
         const ni = e.noteNumber;
         console.log("note", ni);
-        if (1) {
-          const shortCuts: Record<number, () => void> = {
-            48: uiActions.stepBack,
-            50: uiActions.stepForward,
-            78: uiActions.toggleEditMode,
-            77: uiActions.putRest,
-            79: uiActions.putTie,
-          };
-          const shortcut = shortCuts[ni];
-          if (shortcut) {
-            shortcut();
-            return;
-          } else {
-            if (editMode) {
-              editCoreActions.putNote(ni);
-              uiActions.shiftCursorPos(1);
-            }
-          }
+        const shortCuts: Record<number, () => void> = {
+          48: uiActions.stepBack,
+          50: uiActions.stepForward,
+          78: uiActions.toggleEditMode,
+          77: uiActions.putRest,
+          79: uiActions.putTie,
+        };
+        const shortcut = shortCuts[ni];
+        if (shortcut) {
+          shortcut();
+          return;
+        }
+        if (editMode) {
+          editCoreActions.putNote(ni);
+          uiActions.shiftCursorPos(1);
         }
         synthActions.noteOn(ni, e.velocity);
       } else {
