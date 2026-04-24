@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { SynthPatternNote } from "@/central/model-types";
 import { useCurrentSynthPatternPresenter } from "@/presenter/use-current-synth-pattern-presenter";
-import { npx } from "@/ui/styling/styling-utils";
 import { GridBackground } from "@/ui/organisms/grid-background";
+import { npx } from "@/ui/styling/styling-utils";
+import { startDragSession } from "@/utils/drag-session";
 
 const configs = {
   editorWidth: 320,
@@ -112,65 +113,47 @@ function useSynthPatternEditorViewPresenter() {
     });
   };
 
-  const editorPlanePointerHandlers = {
-    onPointerDown(event: React.PointerEvent) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const startStep = getStepIndexFromClientX(event.clientX, rect.left);
-      const relativeNoteNumber = getRelativeNoteNumberFromClientY(
-        event.clientY,
-        rect.top,
-      );
-      setDraftNote({
-        pointerId: event.pointerId,
-        startStep,
-        relativeNoteNumber,
-        stepDuration: 1,
-      });
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    onPointerMove(event: React.PointerEvent) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      updateDraftDuration(event.pointerId, event.clientX, rect);
-    },
-    onPointerUp(event: React.PointerEvent) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      updateDraftDuration(event.pointerId, event.clientX, rect);
-      setDraftNote((currentDraft) => {
-        if (!currentDraft || currentDraft.pointerId !== event.pointerId) {
-          return currentDraft;
-        }
-        commitNote({
-          relativeNoteNumber: currentDraft.relativeNoteNumber,
-          stepPosition: currentDraft.startStep,
-          stepDuration: currentDraft.stepDuration,
+  const handlePointerDown = (e0: React.PointerEvent) => {
+    const rect = e0.currentTarget.getBoundingClientRect();
+    const startStep = getStepIndexFromClientX(e0.clientX, rect.left);
+    const relativeNoteNumber = getRelativeNoteNumberFromClientY(
+      e0.clientY,
+      rect.top,
+    );
+    setDraftNote({
+      pointerId: e0.pointerId,
+      startStep,
+      relativeNoteNumber,
+      stepDuration: 1,
+    });
+    e0.currentTarget.setPointerCapture(e0.pointerId);
+
+    startDragSession(e0, {
+      onMove({ position }) {
+        updateDraftDuration(e0.pointerId, position.x, rect);
+      },
+      onUp({ position }) {
+        updateDraftDuration(e0.pointerId, position.x, rect);
+        setDraftNote((currentDraft) => {
+          if (!currentDraft || currentDraft.pointerId !== e0.pointerId) {
+            return currentDraft;
+          }
+          commitNote({
+            relativeNoteNumber: currentDraft.relativeNoteNumber,
+            stepPosition: currentDraft.startStep,
+            stepDuration: currentDraft.stepDuration,
+          });
+          return null;
         });
-        return null;
-      });
-    },
-    onPointerCancel(event: React.PointerEvent) {
-      setDraftNote((currentDraft) =>
-        currentDraft?.pointerId === event.pointerId ? null : currentDraft,
-      );
-    },
-    onPointerOut(event: React.PointerEvent) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      updateDraftDuration(event.pointerId, event.clientX, rect);
-      setDraftNote((currentDraft) => {
-        if (!currentDraft || currentDraft.pointerId !== event.pointerId) {
-          return currentDraft;
-        }
-        commitNote({
-          relativeNoteNumber: currentDraft.relativeNoteNumber,
-          stepPosition: currentDraft.startStep,
-          stepDuration: currentDraft.stepDuration,
-        });
-        return null;
-      });
-    },
+      },
+      onCancel() {
+        setDraftNote(null);
+      },
+    });
   };
 
   return {
-    editorPlanePointerHandlers,
+    handlePointerDown,
     draftNote,
     notes: presenter.notes,
     replaceNotes: presenter.replaceNotes,
@@ -179,7 +162,7 @@ function useSynthPatternEditorViewPresenter() {
 }
 
 export const SynthPatternEditorView = () => {
-  const { editorPlanePointerHandlers, draftNote, notes, deleteNote } =
+  const { handlePointerDown, draftNote, notes, deleteNote } =
     useSynthPatternEditorViewPresenter();
 
   return (
@@ -191,7 +174,7 @@ export const SynthPatternEditorView = () => {
         touchAction: "none",
         userSelect: "none",
       }}
-      {...editorPlanePointerHandlers}
+      onPointerDown={handlePointerDown}
     >
       <GridBackground
         width={configs.editorWidth}
@@ -212,6 +195,8 @@ export const SynthPatternEditorView = () => {
               width: npx(noteRect.width),
               height: npx(noteRect.height),
               backgroundColor: "#4682b4",
+              border: "solid 1px #008",
+              borderRadius: "2px",
               cursor: "pointer",
             }}
             onPointerDown={(event) => {
