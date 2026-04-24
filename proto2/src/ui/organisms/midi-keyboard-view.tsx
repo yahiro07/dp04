@@ -39,6 +39,7 @@ function useKeyboardPointerInput(
     activePointerRef.current = { pointerId, note };
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: synchronous to lifecycle
   useEffect(() => {
     const handlePointerEnd = (event: PointerEvent) => {
       if (activePointerRef.current?.pointerId !== event.pointerId) {
