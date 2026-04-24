@@ -6,8 +6,6 @@ import { appActions } from "@/central/app-actions";
 import { mountAppRoot } from "@/utils/mount-app-root";
 import { MidiKeyboardView } from "@/views/midi-keyboard-view";
 
-console.log("hello");
-
 const App = () => {
   useEffect(() => {
     setupMidiKeyboardInput({
