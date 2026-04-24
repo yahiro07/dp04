@@ -1,6 +1,7 @@
 import { CSSProperties, useState } from "react";
 import { createStore } from "snap-store";
 import { flexAligned, npx } from "@/ui/styling/styling-utils";
+import { startDragSession } from "@/utils/drag-session";
 import { mountAppRoot } from "@/utils/mount-app-root";
 
 export type Note = {
@@ -159,55 +160,29 @@ const LaneCell = ({ note }: { note: Note }) => {
   const [dragging, setDragging] = useState(false);
 
   const handlePointerDown = (e0: React.PointerEvent) => {
-    const el = e0.currentTarget as HTMLDivElement;
     const dragState = {
-      startY: e0.clientY,
       startPitch: note.relNoteNumber,
-      hasDragged: false,
     };
-    const onMove = (e: PointerEvent) => {
-      const deltaY = dragState.startY - e.clientY;
-      if (Math.abs(deltaY) >= configs.clickMoveThresholdPx) {
-        dragState.hasDragged = true;
-      }
-      const pitchOffset = Math.round(deltaY / configs.pitchDragStepPx);
-      actions.setNotePitch(note.id, dragState.startPitch + pitchOffset);
-    };
-    const cleanup = () => {
-      try {
-        el.releasePointerCapture(e0.pointerId);
-      } catch {
-        // ignore
-      }
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerCancel);
-      setDragging(false);
-    };
-    const onPointerUp = (e: PointerEvent) => {
-      if (e.pointerId !== e0.pointerId) {
-        return;
-      }
-      cleanup();
-      if (!dragState.hasDragged) {
-        actions.removeNote(note.id);
-      }
-    };
-    const onPointerCancel = (e: PointerEvent) => {
-      if (e.pointerId !== e0.pointerId) {
-        return;
-      }
-      cleanup();
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerCancel);
-    try {
-      el.setPointerCapture(e0.pointerId);
-    } catch {
-      // ignore
-    }
+    startDragSession(e0, {
+      onMove({ position, originalPosition }) {
+        const deltaY = originalPosition.y - position.y;
+        const pitchOffset = Math.round(deltaY / configs.pitchDragStepPx);
+        actions.setNotePitch(note.id, dragState.startPitch + pitchOffset);
+      },
+      onUp({ position, originalPosition }) {
+        const dist = Math.hypot(
+          originalPosition.x - position.x,
+          originalPosition.y - position.y,
+        );
+        if (dist < configs.clickMoveThresholdPx) {
+          actions.removeNote(note.id);
+        }
+        setDragging(false);
+      },
+      onCancel() {
+        setDragging(false);
+      },
+    });
     setDragging(true);
   };
 
@@ -240,11 +215,7 @@ const DummyLaneCell = ({
   const [dragging, setDragging] = useState(false);
 
   const handlePointerDown = (e0: React.PointerEvent) => {
-    const el = e0.currentTarget as HTMLDivElement;
     const maxDuration = getMaxDurationForPosition(notes, lane, position);
-    const dragState = {
-      startX: e0.clientX,
-    };
     const draftNoteId = crypto.randomUUID();
 
     actions.setDraftNote({
@@ -256,60 +227,33 @@ const DummyLaneCell = ({
       relNoteNumber: configs.defaultInsertedPitch,
     });
 
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerId !== e0.pointerId) {
-        return;
-      }
-      const deltaX = e.clientX - dragState.startX;
-      const duration = clamp(
-        Math.floor(deltaX / configs.cellWidthPx) + 1,
-        1,
-        maxDuration,
-      );
-      store.mutations.setDraftNote((currentDraft) => {
-        if (!currentDraft || currentDraft.pointerId !== e0.pointerId) {
-          return currentDraft;
-        }
-        return {
-          ...currentDraft,
-          duration,
-        };
-      });
-    };
-    const cleanup = () => {
-      try {
-        el.releasePointerCapture(e0.pointerId);
-      } catch {
-        // ignore
-      }
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerCancel);
-      setDragging(false);
-    };
-    const onPointerUp = (e: PointerEvent) => {
-      if (e.pointerId !== e0.pointerId) {
-        return;
-      }
-      cleanup();
-      actions.commitDraftNote();
-    };
-    const onPointerCancel = (e: PointerEvent) => {
-      if (e.pointerId !== e0.pointerId) {
-        return;
-      }
-      cleanup();
-      actions.setDraftNote(null);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerCancel);
-    try {
-      el.setPointerCapture(e0.pointerId);
-    } catch {
-      // ignore
-    }
+    startDragSession(e0, {
+      onMove({ position: currentPosition, originalPosition }) {
+        const deltaX = currentPosition.x - originalPosition.x;
+        const duration = clamp(
+          Math.floor(deltaX / configs.cellWidthPx) + 1,
+          1,
+          maxDuration,
+        );
+        store.mutations.setDraftNote((currentDraft) => {
+          if (!currentDraft || currentDraft.pointerId !== e0.pointerId) {
+            return currentDraft;
+          }
+          return {
+            ...currentDraft,
+            duration,
+          };
+        });
+      },
+      onUp() {
+        actions.commitDraftNote();
+        setDragging(false);
+      },
+      onCancel() {
+        actions.setDraftNote(null);
+        setDragging(false);
+      },
+    });
     setDragging(true);
   };
 
