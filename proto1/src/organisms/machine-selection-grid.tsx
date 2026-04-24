@@ -12,8 +12,8 @@ export function MachineSelectionGrid() {
   } = useGroovebox();
 
   return (
-    <section className="overflow-auto border-b border-stone-800 p-4">
-      <div className="grid h-full auto-rows-fr gap-3 md:grid-cols-4">
+    <section className="h-[360px] shrink-0 overflow-auto border-b border-stone-800 p-4">
+      <div className="grid auto-rows-fr gap-3 md:grid-cols-4">
         <MachineCard
           active={song.activeMachineId === "core"}
           description="ch2〜ch5 の GM プログラム割当"

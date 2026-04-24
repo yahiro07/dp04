@@ -20,7 +20,7 @@ export function PianoRoll({
   const steps = Array.from({ length: stepCount }, (_, stepIndex) => stepIndex);
 
   return (
-    <div className="overflow-auto rounded-xl border border-stone-800">
+    <div className="overflow-x-auto rounded-xl border border-stone-800">
       <div className="grid min-w-[960px] grid-cols-[64px_repeat(64,minmax(0,1fr))] gap-px bg-stone-900 p-px">
         <div className="bg-stone-950" />
         {steps.map((stepIndex) => (

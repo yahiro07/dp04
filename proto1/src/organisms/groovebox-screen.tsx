@@ -1,17 +1,21 @@
 import { GrooveboxDetailPanel } from "./groovebox-detail-panel";
 import { GrooveboxHeader } from "./groovebox-header";
+import { GrooveboxSidebar } from "./groovebox-sidebar";
 import { MachineSelectionGrid } from "./machine-selection-grid";
 
 export function GrooveboxScreen() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
-      <div className="mx-auto flex min-h-screen max-w-[1100px] items-center justify-center p-4">
-        <div className="flex aspect-[4/3] w-full max-w-[1024px] flex-col overflow-hidden rounded-[28px] border border-stone-700 bg-stone-900 shadow-2xl shadow-stone-950/40">
-          <GrooveboxHeader />
-          <div className="grid flex-1 grid-rows-[1fr_1fr] overflow-hidden">
+      <div className="min-h-screen p-4 lg:p-6">
+        <div className="grid min-h-[calc(100vh-2rem)] grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-stone-700 bg-stone-900 shadow-2xl shadow-stone-950/40 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_minmax(0,1fr)]">
+          <div className="lg:col-span-2">
+            <GrooveboxHeader />
+          </div>
+          <div className="flex min-h-0 flex-col overflow-hidden">
             <MachineSelectionGrid />
             <GrooveboxDetailPanel />
           </div>
+          <GrooveboxSidebar />
         </div>
       </div>
     </div>
