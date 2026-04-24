@@ -3,6 +3,7 @@ import { createStore } from "snap-store";
 import { flexAligned, npx } from "@/ui/styling/styling-utils";
 import { startDragSession } from "@/utils/drag-session";
 import { mountAppRoot } from "@/utils/mount-app-root";
+import { clamp } from "@/utils/number-utils";
 
 export type Note = {
   id: string;
@@ -27,9 +28,6 @@ const store = createStore<{ notes: Note[]; draftNote: DraftNote | null }>({
   notes: defaultNotes,
   draftNote: null,
 });
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
 
 const sortNotes = (notes: Note[]) =>
   [...notes].sort((a, b) => {

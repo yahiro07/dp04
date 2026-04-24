@@ -3,6 +3,7 @@ import { createStore } from "snap-store";
 import { flexHorizontal, npx } from "@/ui/styling/styling-utils";
 import { startDragSession } from "@/utils/drag-session";
 import { mountAppRoot } from "@/utils/mount-app-root";
+import { clamp } from "@/utils/number-utils";
 
 export type Note = {
   id: string;
@@ -27,9 +28,6 @@ const store = createStore<{ notes: Note[]; draftNote: DraftNote | null }>({
   draftNote: null,
 });
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
-
 const sortNotes = (notes: Note[]) =>
   [...notes].sort((a, b) => {
     if (a.position !== b.position) {
@@ -41,11 +39,10 @@ const sortNotes = (notes: Note[]) =>
 const configs = {
   minPitch: -12,
   maxPitch: 12,
-  pitchDragStepPx: 24,
+  pitchDragStepPx: 12,
   clickMoveThresholdPx: 6,
   stepCount: 16,
   cellWidthPx: 60,
-  defaultInsertedPitch: 0,
 };
 
 const actions = {
