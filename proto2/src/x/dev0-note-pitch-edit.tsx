@@ -45,6 +45,11 @@ const actions = {
       });
     });
   },
+  removeNote(id: string) {
+    store.mutations.setNotes((prev) => {
+      return prev.filter((note) => note.id !== id);
+    });
+  },
 };
 
 type LaneCellBox = {
