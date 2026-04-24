@@ -154,7 +154,6 @@ export function useGrooveboxController() {
     }),
     [
       currentScene,
-      playback,
       setActiveMachineId,
       setAutoAdvanceScenes,
       setBpm,
