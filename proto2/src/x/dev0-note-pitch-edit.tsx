@@ -215,6 +215,7 @@ const DummyLaneCell = ({
   const [dragging, setDragging] = useState(false);
 
   const handlePointerDown = (e0: React.PointerEvent) => {
+    const cellLeft = e0.currentTarget.getBoundingClientRect().left;
     const maxDuration = getMaxDurationForPosition(notes, lane, position);
     const draftNoteId = crypto.randomUUID();
 
@@ -228,10 +229,10 @@ const DummyLaneCell = ({
     });
 
     startDragSession(e0, {
-      onMove({ position: currentPosition, originalPosition }) {
-        const deltaX = currentPosition.x - originalPosition.x;
+      onMove({ position: currentPosition }) {
+        const localX = currentPosition.x - cellLeft;
         const duration = clamp(
-          Math.floor(deltaX / configs.cellWidthPx) + 1,
+          Math.floor(localX / configs.cellWidthPx) + 1,
           1,
           maxDuration,
         );
