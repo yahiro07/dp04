@@ -39,14 +39,14 @@ const sortNotes = (notes: Note[]) =>
   });
 
 const configs = {
-  minPitch: -18,
+  minPitch: -12,
   maxPitch: 18,
   pitchDragStepPx: 7,
   clickMoveThresholdPx: 6,
   stepCount: 16,
-  cellWidthPx: 40,
-  noteHeight: 40,
-  editAreaHeight: 220,
+  cellWidthPx: 30,
+  noteHeight: 32,
+  editAreaHeight: 180,
 };
 
 const actions = {
@@ -98,7 +98,7 @@ function styleLaneCell(
   return {
     width: npx(stepWidth * configs.cellWidthPx),
     height: npx(configs.noteHeight),
-    border: "solid 1px #ccc",
+    border: "solid 1px #aae",
     background,
     ...flexHorizontal(),
     paddingLeft: npx(8),
@@ -147,7 +147,7 @@ const LaneCell = ({ note }: { note: Note }) => {
         position: "absolute",
         left: npx(note.position * configs.cellWidthPx),
         top: npx(
-          configs.editAreaHeight / 2 -
+          configs.editAreaHeight * 0.575 -
             note.relNoteNumber * 5 -
             configs.noteHeight / 2,
         ),
