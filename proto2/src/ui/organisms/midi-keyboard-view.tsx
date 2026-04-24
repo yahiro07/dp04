@@ -1,15 +1,20 @@
 import { useEffect, useRef } from "react";
 import { useMidiKeyboardPresenter } from "@/presenter/use-midi-keyboard-presenter";
 
-const MIN_NOTE = 48;
-const NOTE_COUNT = 32;
-const KEYBOARD_WIDTH = 600;
-const KEYBOARD_HEIGHT = 100;
-const STATUS_WIDTH = 84;
-const KEY_AREA_WIDTH = KEYBOARD_WIDTH - STATUS_WIDTH - 8;
-const WHITE_KEY_HEIGHT = 84;
-const BLACK_KEY_HEIGHT = 50;
-const POINTER_VELOCITY = 100;
+const configs = {
+  minNote: 48,
+  noteCount: 32,
+  keyboardWidth: 600,
+  keyboardHeight: 100,
+  statusWidth: 84,
+  keyAreaGap: 8,
+  whiteKeyHeight: 84,
+  blackKeyHeight: 50,
+  pointerVelocity: 100,
+};
+
+const keyAreaWidth =
+  configs.keyboardWidth - configs.statusWidth - configs.keyAreaGap;
 
 function useKeyboardPointerInput(
   triggerUiMidiNote: (noteNumber: number, velocity: number) => void,
@@ -35,7 +40,7 @@ function useKeyboardPointerInput(
     if (activePointer?.pointerId === pointerId) {
       triggerUiMidiNote(activePointer.note, 0);
     }
-    triggerUiMidiNote(note, POINTER_VELOCITY);
+    triggerUiMidiNote(note, configs.pointerVelocity);
     activePointerRef.current = { pointerId, note };
   };
 
@@ -87,8 +92,8 @@ const KeyboardShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <div
       css={{
-        width: `${KEYBOARD_WIDTH}px`,
-        height: `${KEYBOARD_HEIGHT}px`,
+        width: `${configs.keyboardWidth}px`,
+        height: `${configs.keyboardHeight}px`,
         display: "flex",
         alignItems: "stretch",
         gap: "8px",
@@ -117,7 +122,7 @@ const StatusIndicator = ({
   return (
     <div
       css={{
-        width: `${STATUS_WIDTH}px`,
+        width: `${configs.statusWidth}px`,
         flexShrink: 0,
         borderRadius: "8px",
         background: "rgb(21 28 36)",
@@ -217,8 +222,8 @@ const KeyboardFrame = ({
     <div
       css={{
         position: "relative",
-        width: `${KEY_AREA_WIDTH}px`,
-        height: `${WHITE_KEY_HEIGHT}px`,
+        width: `${keyAreaWidth}px`,
+        height: `${configs.whiteKeyHeight}px`,
         alignSelf: "center",
         borderRadius: "10px",
         overflow: "hidden",
@@ -255,7 +260,7 @@ const WhiteKeyLayer = ({
   onNotePointerDown(pointerId: number, note: number): void;
   onNotePointerEnter(pointerId: number, note: number): void;
 }) => {
-  const whiteKeyWidth = KEY_AREA_WIDTH / whiteKeys.length;
+  const whiteKeyWidth = keyAreaWidth / whiteKeys.length;
 
   return (
     <>
@@ -373,7 +378,7 @@ const BlackKey = ({
         left: `${left}px`,
         top: 0,
         width: `${width}px`,
-        height: `${BLACK_KEY_HEIGHT}px`,
+        height: `${configs.blackKeyHeight}px`,
         borderRadius: "0 0 6px 6px",
         background: active
           ? "linear-gradient(180deg, #1f7a57 0%, #0f3f2d 100%)"
@@ -411,7 +416,11 @@ type BlackKeyData = {
 function getWhiteKeys(): WhiteKeyData[] {
   const keys: WhiteKeyData[] = [];
 
-  for (let note = MIN_NOTE; note < MIN_NOTE + NOTE_COUNT; note += 1) {
+  for (
+    let note = configs.minNote;
+    note < configs.minNote + configs.noteCount;
+    note += 1
+  ) {
     if (!isBlackKey(note)) {
       keys.push({ note });
     }
@@ -424,11 +433,15 @@ function getBlackKeys(whiteKeys: WhiteKeyData[]): BlackKeyData[] {
   const whiteIndexByNote = new Map(
     whiteKeys.map((key, index) => [key.note, index]),
   );
-  const whiteKeyWidth = KEY_AREA_WIDTH / whiteKeys.length;
+  const whiteKeyWidth = keyAreaWidth / whiteKeys.length;
   const blackKeyWidth = whiteKeyWidth * 0.62;
   const keys: BlackKeyData[] = [];
 
-  for (let note = MIN_NOTE; note < MIN_NOTE + NOTE_COUNT; note += 1) {
+  for (
+    let note = configs.minNote;
+    note < configs.minNote + configs.noteCount;
+    note += 1
+  ) {
     if (!isBlackKey(note)) {
       continue;
     }
