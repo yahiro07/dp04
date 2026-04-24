@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SynthPatternNote } from "@/central/model-types";
+import { uiActions } from "@/central/ui-actions";
 import { useCurrentSynthPatternPresenter } from "@/presenter/use-current-synth-pattern-presenter";
 import { GridBackground } from "@/ui/organisms/grid-background";
 import { npx } from "@/ui/styling/styling-utils";
@@ -11,6 +12,7 @@ const configs = {
   editorHeight: 320,
   stepCount: 16,
   noteRowCount: 25,
+  previewVelocity: 100,
 };
 
 const centerRowIndex = Math.floor(configs.noteRowCount / 2);
@@ -153,8 +155,35 @@ function useSynthPatternEditorViewPresenter() {
     });
   };
 
+  const handleKeysColumnPointerDown = (
+    e: React.PointerEvent,
+    index: number,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const relNote = 12 - index;
+    const noteNumber = 60 + relNote;
+
+    const noteOn = () =>
+      uiActions.triggerUiMidiNote(noteNumber, configs.previewVelocity);
+    const noteOff = () => uiActions.triggerUiMidiNote(noteNumber, 0);
+
+    noteOn();
+
+    startDragSession(e, {
+      onUp() {
+        noteOff();
+      },
+      onCancel() {
+        noteOff();
+      },
+    });
+  };
+
   return {
     handlePointerDown,
+    handleKeysColumnPointerDown,
     draftNote,
     notes: presenter.notes,
     replaceNotes: presenter.replaceNotes,
@@ -163,8 +192,13 @@ function useSynthPatternEditorViewPresenter() {
 }
 
 export const SynthPatternEditorView = () => {
-  const { handlePointerDown, draftNote, notes, deleteNote } =
-    useSynthPatternEditorViewPresenter();
+  const {
+    handlePointerDown,
+    handleKeysColumnPointerDown,
+    draftNote,
+    notes,
+    deleteNote,
+  } = useSynthPatternEditorViewPresenter();
 
   return (
     <div className="flex-h gap-2">
@@ -184,6 +218,7 @@ export const SynthPatternEditorView = () => {
                 height: npx(cellHeight),
                 border: "solid 1px #ccc",
               }}
+              onPointerDown={(e) => handleKeysColumnPointerDown(e, i)}
             >
               {12 - i}
             </div>
