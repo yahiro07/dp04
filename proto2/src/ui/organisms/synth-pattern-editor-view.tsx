@@ -6,14 +6,18 @@ const GridBackground = ({
   ny,
   width,
   height,
+  bgAlterStrideX,
 }: {
   nx: number;
   ny: number;
   width: number;
   height: number;
+  bgAlterStrideX?: number;
 }) => {
   const cellW = width / nx;
   const cellH = height / ny;
+
+  const bgAlterStride = bgAlterStrideX ?? 0;
 
   return (
     <div
@@ -30,6 +34,7 @@ const GridBackground = ({
         const yi = Math.floor(i / nx);
         const x = xi * cellW;
         const y = yi * cellH;
+        const bgAlter = xi % (bgAlterStride * 2) < bgAlterStride;
         return (
           <div
             key={`${xi}-${yi}`}
@@ -40,6 +45,7 @@ const GridBackground = ({
               width: npx(cellW),
               height: npx(cellH),
               border: "solid 1px #ddd",
+              backgroundColor: bgAlter ? "#fff" : "#f0f0f0",
             }}
           />
         );
@@ -53,15 +59,20 @@ export const SynthPatternEditorView = () => {
   return (
     <div
       css={{
-        width: "640px",
+        width: "320px",
         height: "320px",
-        border: "solid 1px #888",
         position: "relative",
       }}
     >
-      <GridBackground width={640} height={320} nx={32} ny={25} />
+      <GridBackground
+        width={320}
+        height={320}
+        nx={16}
+        ny={25}
+        bgAlterStrideX={4}
+      />
       {presenter.notes.map((note) => {
-        const cellW = 640 / 32;
+        const cellW = 320 / 16;
         const cellH = 320 / 25;
         const baseY = 160;
         const noteY = baseY - note.relativeNoteNumber * cellH;
