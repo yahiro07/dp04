@@ -1,7 +1,7 @@
 import { appStore } from "@/central/app-store";
 import { setupMidiKeyboardInput } from "@/central/periphery/midi-keyboard-input";
 
-export const appActions = {
+export const logicActions = {
   handleMidiConnectionStateChange(connected: boolean) {
     appStore.mutations.setMidiInputConnected(connected);
   },
