@@ -163,11 +163,14 @@ function useSynthPatternEditorViewPresenter() {
     e.stopPropagation();
 
     const relNote = 12 - index;
-    const noteNumber = 60 + relNote;
+    const noteNumber = 48 + relNote;
+
+    const ch = 0;
+    //ch=10
 
     const noteOn = () =>
-      uiActions.triggerUiMidiNote(noteNumber, configs.previewVelocity);
-    const noteOff = () => uiActions.triggerUiMidiNote(noteNumber, 0);
+      uiActions.triggerUiMidiNote(noteNumber, configs.previewVelocity, ch);
+    const noteOff = () => uiActions.triggerUiMidiNote(noteNumber, 0, ch);
 
     noteOn();
 

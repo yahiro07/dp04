@@ -6,11 +6,11 @@ export const logicActions = {
   handleMidiConnectionStateChange(connected: boolean) {
     storeMutations.setMidiInputConnected(connected);
   },
-  handleMidiNoteInput(noteNumber: number, velocity: number) {
+  handleMidiNoteInput(noteNumber: number, velocity: number, ch: number = 1) {
     if (velocity > 0) {
-      midiSoundEngine.noteOn(1, noteNumber, velocity);
+      midiSoundEngine.noteOn(ch, noteNumber, velocity);
     } else {
-      midiSoundEngine.noteOff(1, noteNumber);
+      midiSoundEngine.noteOff(ch, noteNumber);
     }
     storeMutations.updateMidiInputNotes(noteNumber, velocity);
   },
