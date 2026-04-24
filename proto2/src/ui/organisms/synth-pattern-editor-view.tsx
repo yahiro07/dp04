@@ -3,6 +3,7 @@ import type { SynthPatternNote } from "@/central/model-types";
 import { useCurrentSynthPatternPresenter } from "@/presenter/use-current-synth-pattern-presenter";
 import { GridBackground } from "@/ui/organisms/grid-background";
 import { npx } from "@/ui/styling/styling-utils";
+import { seqNumbers } from "@/utils/array-utils";
 import { startDragSession } from "@/utils/drag-session";
 
 const configs = {
@@ -166,66 +167,90 @@ export const SynthPatternEditorView = () => {
     useSynthPatternEditorViewPresenter();
 
   return (
-    <div
-      css={{
-        width: npx(configs.editorWidth),
-        height: npx(configs.editorHeight),
-        position: "relative",
-        touchAction: "none",
-        userSelect: "none",
-      }}
-      onPointerDown={handlePointerDown}
-    >
-      <GridBackground
-        width={configs.editorWidth}
-        height={configs.editorHeight}
-        nx={configs.stepCount}
-        ny={configs.noteRowCount}
-        bgAlterStrideX={4}
-      />
-      {notes.map((note) => {
-        const noteRect = getNoteRect(note);
-        return (
+    <div className="flex-h gap-2">
+      <div
+        css={{
+          width: npx(30),
+          height: npx(configs.editorHeight),
+          fontSize: "8px",
+        }}
+      >
+        {seqNumbers(25).map((i) => {
+          return (
+            <div
+              key={i}
+              className="flex-c"
+              css={{
+                height: npx(cellHeight),
+                border: "solid 1px #ccc",
+              }}
+            >
+              {12 - i}
+            </div>
+          );
+        })}
+      </div>
+      <div
+        css={{
+          width: npx(configs.editorWidth),
+          height: npx(configs.editorHeight),
+          position: "relative",
+          touchAction: "none",
+          userSelect: "none",
+        }}
+        onPointerDown={handlePointerDown}
+      >
+        <GridBackground
+          width={configs.editorWidth}
+          height={configs.editorHeight}
+          nx={configs.stepCount}
+          ny={configs.noteRowCount}
+          bgAlterStrideX={4}
+        />
+        {notes.map((note) => {
+          const noteRect = getNoteRect(note);
+          return (
+            <div
+              key={`${note.stepPosition}-${note.stepDuration}-${note.relativeNoteNumber}`}
+              css={{
+                position: "absolute",
+                left: npx(noteRect.x),
+                top: npx(noteRect.y),
+                width: npx(noteRect.width),
+                height: npx(noteRect.height),
+                backgroundColor: "#4682b4",
+                border: "solid 1px #008",
+                borderRadius: "2px",
+                cursor: "pointer",
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
+              onClick={() => {
+                deleteNote(note);
+              }}
+            />
+          );
+        })}
+        {draftNote ? (
           <div
-            key={`${note.stepPosition}-${note.stepDuration}-${note.relativeNoteNumber}`}
             css={{
               position: "absolute",
-              left: npx(noteRect.x),
-              top: npx(noteRect.y),
-              width: npx(noteRect.width),
-              height: npx(noteRect.height),
-              backgroundColor: "#4682b4",
-              border: "solid 1px #008",
-              borderRadius: "2px",
-              cursor: "pointer",
-            }}
-            onPointerDown={(event) => {
-              event.stopPropagation();
-            }}
-            onClick={() => {
-              deleteNote(note);
+              left: npx(draftNote.startStep * cellWidth),
+              top: npx(
+                configs.editorHeight / 2 -
+                  draftNote.relativeNoteNumber * cellHeight -
+                  cellHeight / 2,
+              ),
+              width: npx(draftNote.stepDuration * cellWidth),
+              height: npx(cellHeight),
+              backgroundColor: "rgb(70 130 180 / 0.45)",
+              border: "1px solid #4682b4",
+              pointerEvents: "none",
             }}
           />
-        );
-      })}
-      {draftNote ? (
-        <div
-          css={{
-            position: "absolute",
-            left: npx(draftNote.startStep * cellWidth),
-            top: npx(
-              configs.editorHeight / 2 -
-                draftNote.relativeNoteNumber * cellHeight -
-                cellHeight / 2,
-            ),
-            width: npx(draftNote.stepDuration * cellWidth),
-            height: npx(cellHeight),
-            backgroundColor: "rgb(70 130 180 / 0.45)",
-            border: "1px solid #4682b4",
-            pointerEvents: "none",
-          }}
-        />
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 };
