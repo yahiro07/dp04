@@ -29,6 +29,7 @@ const configs = {
   minPitch: -12,
   maxPitch: 12,
   pitchDragStepPx: 24,
+  clickMoveThresholdPx: 6,
 };
 
 const actions = {
@@ -102,23 +103,36 @@ const LaneCell = ({ note }: { note: Note }) => {
     const dragState = {
       startY: e0.clientY,
       startPitch: note.relNoteNumber,
+      hasDragged: false,
     };
     const onMove = (e: PointerEvent) => {
       const deltaY = dragState.startY - e.clientY;
+      if (Math.abs(deltaY) >= configs.clickMoveThresholdPx) {
+        dragState.hasDragged = true;
+      }
       const pitchOffset = Math.round(deltaY / configs.pitchDragStepPx);
       actions.setNotePitch(note.id, dragState.startPitch + pitchOffset);
     };
-    const onUpOrCancel = () => {
+    const cleanup = () => {
       el.releasePointerCapture(e0.pointerId);
       el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerup", onUpOrCancel);
-      el.removeEventListener("pointercancel", onUpOrCancel);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerCancel);
       setDragging(false);
+    };
+    const onPointerUp = () => {
+      cleanup();
+      if (!dragState.hasDragged) {
+        actions.removeNote(note.id);
+      }
+    };
+    const onPointerCancel = () => {
+      cleanup();
     };
 
     el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerup", onUpOrCancel);
-    el.addEventListener("pointercancel", onUpOrCancel);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerCancel);
     el.setPointerCapture(e0.pointerId);
     setDragging(true);
   };
