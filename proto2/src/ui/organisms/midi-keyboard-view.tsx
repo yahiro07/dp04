@@ -1,22 +1,83 @@
+import { useEffect, useRef } from "react";
 import { useMidiKeyboardPresenter } from "@/presenter/use-midi-keyboard-presenter";
 
 const MIN_NOTE = 48;
 const NOTE_COUNT = 32;
 const KEYBOARD_WIDTH = 600;
-1;
 const KEYBOARD_HEIGHT = 100;
 const STATUS_WIDTH = 84;
 const KEY_AREA_WIDTH = KEYBOARD_WIDTH - STATUS_WIDTH - 8;
 const WHITE_KEY_HEIGHT = 84;
 const BLACK_KEY_HEIGHT = 50;
+const POINTER_VELOCITY = 100;
+
+function useKeyboardPointerInput(
+  triggerUiMidiNote: (noteNumber: number, velocity: number) => void,
+) {
+  const activePointerRef = useRef<{ pointerId: number; note: number } | null>(
+    null,
+  );
+
+  const releaseActivePointerNote = () => {
+    const activePointer = activePointerRef.current;
+    if (!activePointer) {
+      return;
+    }
+    triggerUiMidiNote(activePointer.note, 0);
+    activePointerRef.current = null;
+  };
+
+  const playPointerNote = (pointerId: number, note: number) => {
+    const activePointer = activePointerRef.current;
+    if (activePointer?.pointerId === pointerId && activePointer.note === note) {
+      return;
+    }
+    if (activePointer?.pointerId === pointerId) {
+      triggerUiMidiNote(activePointer.note, 0);
+    }
+    triggerUiMidiNote(note, POINTER_VELOCITY);
+    activePointerRef.current = { pointerId, note };
+  };
+
+  useEffect(() => {
+    const handlePointerEnd = (event: PointerEvent) => {
+      if (activePointerRef.current?.pointerId !== event.pointerId) {
+        return;
+      }
+      releaseActivePointerNote();
+    };
+
+    window.addEventListener("pointerup", handlePointerEnd);
+    window.addEventListener("pointercancel", handlePointerEnd);
+    return () => {
+      window.removeEventListener("pointerup", handlePointerEnd);
+      window.removeEventListener("pointercancel", handlePointerEnd);
+    };
+  }, [triggerUiMidiNote]);
+
+  return {
+    playPointerNote,
+    releaseActivePointerNote,
+  };
+}
 
 export const MidiKeyboardView = () => {
-  const { connected, holdingNotes } = useMidiKeyboardPresenter();
+  const { connected, holdingNotes, triggerUiMidiNote } =
+    useMidiKeyboardPresenter();
   const holdingNoteSet = new Set(holdingNotes);
+
+  const { playPointerNote, releaseActivePointerNote } =
+    useKeyboardPointerInput(triggerUiMidiNote);
+
   return (
     <KeyboardShell>
       <StatusIndicator connected={connected} holdingNotes={holdingNotes} />
-      <KeyboardFrame holdingNotes={holdingNoteSet} />
+      <KeyboardFrame
+        holdingNotes={holdingNoteSet}
+        onNotePointerDown={playPointerNote}
+        onKeyboardPointerLeave={releaseActivePointerNote}
+        onNotePointerEnter={playPointerNote}
+      />
     </KeyboardShell>
   );
 };
@@ -137,7 +198,17 @@ const StatusIndicator = ({
   );
 };
 
-const KeyboardFrame = ({ holdingNotes }: { holdingNotes: Set<number> }) => {
+const KeyboardFrame = ({
+  holdingNotes,
+  onNotePointerDown,
+  onKeyboardPointerLeave,
+  onNotePointerEnter,
+}: {
+  holdingNotes: Set<number>;
+  onNotePointerDown(pointerId: number, note: number): void;
+  onKeyboardPointerLeave(): void;
+  onNotePointerEnter(pointerId: number, note: number): void;
+}) => {
   const whiteKeys = getWhiteKeys();
   const blackKeys = getBlackKeys(whiteKeys);
 
@@ -152,10 +223,22 @@ const KeyboardFrame = ({ holdingNotes }: { holdingNotes: Set<number> }) => {
         overflow: "hidden",
         background: "#c8d2dc",
         boxShadow: "inset 0 1px 2px rgb(15 23 42 / 0.18)",
+        touchAction: "none",
       }}
+      onPointerLeave={onKeyboardPointerLeave}
     >
-      <WhiteKeyLayer whiteKeys={whiteKeys} holdingNotes={holdingNotes} />
-      <BlackKeyLayer blackKeys={blackKeys} holdingNotes={holdingNotes} />
+      <WhiteKeyLayer
+        whiteKeys={whiteKeys}
+        holdingNotes={holdingNotes}
+        onNotePointerDown={onNotePointerDown}
+        onNotePointerEnter={onNotePointerEnter}
+      />
+      <BlackKeyLayer
+        blackKeys={blackKeys}
+        holdingNotes={holdingNotes}
+        onNotePointerDown={onNotePointerDown}
+        onNotePointerEnter={onNotePointerEnter}
+      />
     </div>
   );
 };
@@ -163,9 +246,13 @@ const KeyboardFrame = ({ holdingNotes }: { holdingNotes: Set<number> }) => {
 const WhiteKeyLayer = ({
   whiteKeys,
   holdingNotes,
+  onNotePointerDown,
+  onNotePointerEnter,
 }: {
   whiteKeys: WhiteKeyData[];
   holdingNotes: Set<number>;
+  onNotePointerDown(pointerId: number, note: number): void;
+  onNotePointerEnter(pointerId: number, note: number): void;
 }) => {
   const whiteKeyWidth = KEY_AREA_WIDTH / whiteKeys.length;
 
@@ -178,6 +265,8 @@ const WhiteKeyLayer = ({
           left={index * whiteKeyWidth}
           width={whiteKeyWidth}
           active={holdingNotes.has(key.note)}
+          onNotePointerDown={onNotePointerDown}
+          onNotePointerEnter={onNotePointerEnter}
         />
       ))}
     </>
@@ -187,9 +276,13 @@ const WhiteKeyLayer = ({
 const BlackKeyLayer = ({
   blackKeys,
   holdingNotes,
+  onNotePointerDown,
+  onNotePointerEnter,
 }: {
   blackKeys: BlackKeyData[];
   holdingNotes: Set<number>;
+  onNotePointerDown(pointerId: number, note: number): void;
+  onNotePointerEnter(pointerId: number, note: number): void;
 }) => {
   return (
     <>
@@ -200,6 +293,8 @@ const BlackKeyLayer = ({
           left={key.left}
           width={key.width}
           active={holdingNotes.has(key.note)}
+          onNotePointerDown={onNotePointerDown}
+          onNotePointerEnter={onNotePointerEnter}
         />
       ))}
     </>
@@ -211,11 +306,15 @@ const WhiteKey = ({
   left,
   width,
   active,
+  onNotePointerDown,
+  onNotePointerEnter,
 }: {
   note: number;
   left: number;
   width: number;
   active: boolean;
+  onNotePointerDown(pointerId: number, note: number): void;
+  onNotePointerEnter(pointerId: number, note: number): void;
 }) => {
   return (
     <div
@@ -234,6 +333,17 @@ const WhiteKey = ({
         boxShadow: active
           ? "inset 0 -8px 12px rgb(22 163 74 / 0.18)"
           : "inset 0 -10px 14px rgb(148 163 184 / 0.22)",
+        cursor: "pointer",
+      }}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        onNotePointerDown(event.pointerId, note);
+      }}
+      onPointerEnter={(event) => {
+        if ((event.buttons & 1) === 0) {
+          return;
+        }
+        onNotePointerEnter(event.pointerId, note);
       }}
       title={`Note ${note}`}
     />
@@ -245,11 +355,15 @@ const BlackKey = ({
   left,
   width,
   active,
+  onNotePointerDown,
+  onNotePointerEnter,
 }: {
   note: number;
   left: number;
   width: number;
   active: boolean;
+  onNotePointerDown(pointerId: number, note: number): void;
+  onNotePointerEnter(pointerId: number, note: number): void;
 }) => {
   return (
     <div
@@ -266,6 +380,17 @@ const BlackKey = ({
         boxShadow: active
           ? "0 2px 8px rgb(16 185 129 / 0.35)"
           : "0 2px 6px rgb(15 23 42 / 0.28)",
+        cursor: "pointer",
+      }}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        onNotePointerDown(event.pointerId, note);
+      }}
+      onPointerEnter={(event) => {
+        if ((event.buttons & 1) === 0) {
+          return;
+        }
+        onNotePointerEnter(event.pointerId, note);
       }}
       title={`Note ${note}`}
     />
