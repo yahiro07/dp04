@@ -1,4 +1,5 @@
 import { appStore } from "@/central/app-store";
+import { setupMidiKeyboardInput } from "@/central/periphery/midi-keyboard-input";
 
 export const appActions = {
   handleMidiConnectionStateChange(connected: boolean) {
@@ -11,6 +12,12 @@ export const appActions = {
       } else {
         return prev.filter((n) => n !== noteNumber);
       }
+    });
+  },
+  wrapSetupMidiKeyboardInput() {
+    return setupMidiKeyboardInput({
+      connectionStateCallback: this.handleMidiConnectionStateChange,
+      noteCallback: this.handleMidiNoteInput,
     });
   },
 };

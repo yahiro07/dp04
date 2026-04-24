@@ -1,8 +1,9 @@
-import { useMidiKeyboardPresenter } from "@/presenters/use-midi-keyboard-presenter";
+import { useMidiKeyboardPresenter } from "@/presenter/use-midi-keyboard-presenter";
 
 const MIN_NOTE = 48;
 const NOTE_COUNT = 32;
 const KEYBOARD_WIDTH = 600;
+1;
 const KEYBOARD_HEIGHT = 100;
 const STATUS_WIDTH = 84;
 const KEY_AREA_WIDTH = KEYBOARD_WIDTH - STATUS_WIDTH - 8;
