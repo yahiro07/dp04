@@ -95,46 +95,43 @@ function styleLaneCell(stepWidth: number, hasNote: boolean): CSSProperties {
 }
 
 const LaneCell = ({ note }: { note: Note }) => {
-  const [dragState, setDragState] = useState<{
-    pointerId: number;
-    startY: number;
-    startPitch: number;
-  } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const handlePointerDown = (e0: React.PointerEvent) => {
+    const el = e0.currentTarget as HTMLDivElement;
+    const dragState = {
+      startY: e0.clientY,
+      startPitch: note.relNoteNumber,
+    };
+    const onMove = (e: PointerEvent) => {
+      const deltaY = dragState.startY - e.clientY;
+      const pitchOffset = Math.round(deltaY / configs.pitchDragStepPx);
+      actions.setNotePitch(note.id, dragState.startPitch + pitchOffset);
+    };
+    const onUpOrCancel = () => {
+      el.releasePointerCapture(e0.pointerId);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUpOrCancel);
+      el.removeEventListener("pointercancel", onUpOrCancel);
+      setDragging(false);
+    };
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUpOrCancel);
+    el.addEventListener("pointercancel", onUpOrCancel);
+    el.setPointerCapture(e0.pointerId);
+    setDragging(true);
+  };
 
   return (
     <div
       style={{
         ...styleLaneCell(note.duration, true),
-        cursor: dragState ? "ns-resize" : "grab",
+        cursor: dragging ? "ns-resize" : "grab",
         touchAction: "none",
         userSelect: "none",
       }}
-      onPointerDown={(event) => {
-        setDragState({
-          pointerId: event.pointerId,
-          startY: event.clientY,
-          startPitch: note.relNoteNumber,
-        });
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        if (!dragState || dragState.pointerId !== event.pointerId) {
-          return;
-        }
-        const deltaY = dragState.startY - event.clientY;
-        const pitchOffset = Math.round(deltaY / configs.pitchDragStepPx);
-        actions.setNotePitch(note.id, dragState.startPitch + pitchOffset);
-      }}
-      onPointerUp={(event) => {
-        if (dragState?.pointerId === event.pointerId) {
-          setDragState(null);
-        }
-      }}
-      onPointerCancel={(event) => {
-        if (dragState?.pointerId === event.pointerId) {
-          setDragState(null);
-        }
-      }}
+      onPointerDown={handlePointerDown}
     >
       {note.relNoteNumber}
     </div>
