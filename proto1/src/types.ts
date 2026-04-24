@@ -73,8 +73,6 @@ export interface SongState {
 export interface PlaybackIntentState {
   isPlaying: boolean;
   queuedSceneIndex: number | null;
-  heldManualNotes: number[];
-  heldDirectNotes: number[];
 }
 
 export interface PlaybackRuntimeViewState {
@@ -82,6 +80,7 @@ export interface PlaybackRuntimeViewState {
   currentStepIndex: number;
   currentBarIndex: number;
   localStepIndex: number;
+  activeMidiNotes: number[];
 }
 
 export interface PlaybackState {

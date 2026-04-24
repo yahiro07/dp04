@@ -65,13 +65,15 @@ interface GrooveboxActions {
   togglePlaybackIntent: () => void;
   requestSceneChange: (sceneIndex: number) => void;
   setMidiAvailability: (midiAvailable: boolean) => void;
+  setMidiInputView: (payload: {
+    activeMidiNotes: number[];
+  }) => void;
   setTransportView: (payload: {
     currentStepIndex: number;
     currentBarIndex: number;
     localStepIndex: number;
   }) => void;
   commitPlaybackSceneAdvance: (sceneIndex: number) => void;
-  processMidiNote: (note: number, enabled: boolean) => void;
 }
 
 export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
@@ -82,14 +84,13 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
         intent: {
           isPlaying: false,
           queuedSceneIndex: null,
-          heldManualNotes: [],
-          heldDirectNotes: [],
         },
         runtimeView: {
           midiAvailable: false,
           currentStepIndex: -1,
           currentBarIndex: 0,
           localStepIndex: -1,
+          activeMidiNotes: [],
         },
       },
       setBpm: (bpm) =>
@@ -354,6 +355,28 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
             },
           },
         })),
+      setMidiInputView: ({ activeMidiNotes }) =>
+        set((state) => {
+          if (
+            state.playback.runtimeView.activeMidiNotes.length ===
+              activeMidiNotes.length &&
+            state.playback.runtimeView.activeMidiNotes.every(
+              (note, index) => note === activeMidiNotes[index],
+            )
+          ) {
+            return state;
+          }
+
+          return {
+            playback: {
+              ...state.playback,
+              runtimeView: {
+                ...state.playback.runtimeView,
+                activeMidiNotes,
+              },
+            },
+          };
+        }),
       setTransportView: ({
         currentStepIndex,
         currentBarIndex,
@@ -397,28 +420,6 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
             },
           },
         })),
-      processMidiNote: (note, enabled) =>
-        set((state) => {
-          const intentKey = note <= 60 ? "heldManualNotes" : "heldDirectNotes";
-          const currentNotes = state.playback.intent[intentKey];
-          const nextNotes = enabled
-            ? [...currentNotes.filter((value) => value !== note), note]
-            : currentNotes.filter((value) => value !== note);
-
-          if (nextNotes === currentNotes) {
-            return state;
-          }
-
-          return {
-            playback: {
-              ...state.playback,
-              intent: {
-                ...state.playback.intent,
-                [intentKey]: nextNotes,
-              },
-            },
-          };
-        }),
     }),
     {
       name: "groovebox-proto-song",

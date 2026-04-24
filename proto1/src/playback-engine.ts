@@ -144,26 +144,30 @@ class PlaybackEngine {
     this.queuedSceneIndex = sceneIndex;
   }
 
-  async setInputState(heldLowNotes: number[], heldHighNotes: number[]) {
+  async externalMidiNote(note: number, enabled: boolean) {
     this.init();
-    const previousRootNote = this.heldLowNotes.at(-1) ?? null;
-    const nextRootNote = heldLowNotes.at(-1) ?? null;
-    const addedHighNotes = heldHighNotes.filter(
-      (note) => !this.activeHighNotes.has(note),
-    );
-    const removedHighNotes = [...this.activeHighNotes.keys()].filter(
-      (note) => !heldHighNotes.includes(note),
-    );
+    const isLowNote = note <= 60;
 
-    if (
-      nextRootNote !== null ||
-      addedHighNotes.length > 0 ||
-      removedHighNotes.length > 0
-    ) {
+    if (isLowNote) {
+      await this.updateHeldLowNotes(note, enabled);
+      return;
+    }
+
+    await this.updateHeldHighNotes(note, enabled);
+  }
+
+  private async updateHeldLowNotes(note: number, enabled: boolean) {
+    const previousRootNote = this.heldLowNotes.at(-1) ?? null;
+    const nextHeldLowNotes = enabled
+      ? [...this.heldLowNotes.filter((value) => value !== note), note]
+      : this.heldLowNotes.filter((value) => value !== note);
+    const nextRootNote = nextHeldLowNotes.at(-1) ?? null;
+
+    if (nextRootNote !== null) {
       await this.synth.resumeAudio();
     }
 
-    this.heldLowNotes = [...heldLowNotes];
+    this.heldLowNotes = nextHeldLowNotes;
 
     if (nextRootNote !== previousRootNote && nextRootNote !== null) {
       this.manualStartMs = performance.now();
@@ -175,16 +179,26 @@ class PlaybackEngine {
     if (nextRootNote === null && this.heldLowNotes.length === 0) {
       this.lastStepIndex = -1;
       this.lastBarIndex = -1;
-      this.stopTimerIfIdle();
     }
 
-    for (const note of addedHighNotes) {
+    if (nextRootNote === null && this.activeHighNotes.size === 0) {
+      this.synth.allSoundOff();
+      this.stopTimerIfIdle();
+    }
+  }
+
+  private async updateHeldHighNotes(note: number, enabled: boolean) {
+    const hasNote = this.activeHighNotes.has(note);
+
+    if (enabled && !hasNote) {
+      await this.synth.resumeAudio();
       const shiftedNote = note + (this.snapshot?.melody.octaveShift ?? 0) * 12;
       this.activeHighNotes.set(note, shiftedNote);
       this.synth.noteOn(getMelodyChannel(), shiftedNote, 100);
+      return;
     }
 
-    for (const note of removedHighNotes) {
+    if (!enabled && hasNote) {
       const shiftedNote = this.activeHighNotes.get(note);
       this.activeHighNotes.delete(note);
       if (shiftedNote !== undefined) {
@@ -192,7 +206,7 @@ class PlaybackEngine {
       }
     }
 
-    if (nextRootNote === null && this.activeHighNotes.size === 0) {
+    if (this.heldLowNotes.length === 0 && this.activeHighNotes.size === 0) {
       this.synth.allSoundOff();
       this.stopTimerIfIdle();
     }

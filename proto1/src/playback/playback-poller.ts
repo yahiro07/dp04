@@ -15,11 +15,8 @@ export function startPlaybackPoller() {
 
   const store = useGrooveboxStore;
   const initialState = store.getState();
+  const activeMidiNotes = new Set<number>();
   playbackEngine.applySnapshot(createPlaybackSnapshot(initialState.song));
-  void playbackEngine.setInputState(
-    initialState.playback.intent.heldManualNotes,
-    initialState.playback.intent.heldDirectNotes,
-  );
 
   store.subscribe((state, previousState) => {
     if (state.song !== previousState.song) {
@@ -42,18 +39,6 @@ export function startPlaybackPoller() {
       previousState.playback.intent.queuedSceneIndex
     ) {
       playbackEngine.setQueuedScene(state.playback.intent.queuedSceneIndex);
-    }
-
-    if (
-      state.playback.intent.heldManualNotes !==
-        previousState.playback.intent.heldManualNotes ||
-      state.playback.intent.heldDirectNotes !==
-        previousState.playback.intent.heldDirectNotes
-    ) {
-      void playbackEngine.setInputState(
-        state.playback.intent.heldManualNotes,
-        state.playback.intent.heldDirectNotes,
-      );
     }
   });
 
@@ -83,7 +68,19 @@ export function startPlaybackPoller() {
       store.getState().setMidiAvailability(available);
     },
     onNoteChange: (note, enabled) => {
-      store.getState().processMidiNote(note, enabled);
+      if (enabled) {
+        activeMidiNotes.add(note);
+      } else {
+        activeMidiNotes.delete(note);
+      }
+
+      store.getState().setMidiInputView({
+        activeMidiNotes: [...activeMidiNotes].sort(
+          (left, right) => left - right,
+        ),
+      });
+
+      void playbackEngine.externalMidiNote(note, enabled);
     },
   });
 }
