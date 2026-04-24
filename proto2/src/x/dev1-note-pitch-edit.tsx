@@ -1,5 +1,6 @@
 import { CSSProperties, useState } from "react";
 import { createStore } from "snap-store";
+import { GridBackground } from "@/ui/organisms/grid-background";
 import { flexHorizontal, npx } from "@/ui/styling/styling-utils";
 import { startDragSession } from "@/utils/drag-session";
 import { mountAppRoot } from "@/utils/mount-app-root";
@@ -21,6 +22,7 @@ const defaultNotes: Note[] = [
   { id: "n1", relNoteNumber: 4, position: 2, duration: 2 },
   { id: "n2", relNoteNumber: 8, position: 4, duration: 4 },
   { id: "n3", relNoteNumber: 6, position: 4, duration: 4 },
+  { id: "n4", relNoteNumber: 0, position: 8, duration: 8 },
 ];
 
 const store = createStore<{ notes: Note[]; draftNote: DraftNote | null }>({
@@ -37,12 +39,14 @@ const sortNotes = (notes: Note[]) =>
   });
 
 const configs = {
-  minPitch: -12,
-  maxPitch: 12,
-  pitchDragStepPx: 12,
+  minPitch: -18,
+  maxPitch: 18,
+  pitchDragStepPx: 7,
   clickMoveThresholdPx: 6,
   stepCount: 16,
-  cellWidthPx: 60,
+  cellWidthPx: 40,
+  noteHeight: 40,
+  editAreaHeight: 220,
 };
 
 const actions = {
@@ -93,7 +97,7 @@ function styleLaneCell(
     variant === "draft" ? "#f8d66d" : variant === "note" ? "#aaea" : "#fff";
   return {
     width: npx(stepWidth * configs.cellWidthPx),
-    height: npx(60),
+    height: npx(configs.noteHeight),
     border: "solid 1px #ccc",
     background,
     ...flexHorizontal(),
@@ -142,7 +146,11 @@ const LaneCell = ({ note }: { note: Note }) => {
         ),
         position: "absolute",
         left: npx(note.position * configs.cellWidthPx),
-        top: npx(150 - note.relNoteNumber * 10 - 30),
+        top: npx(
+          configs.editAreaHeight / 2 -
+            note.relNoteNumber * 5 -
+            configs.noteHeight / 2,
+        ),
         cursor: dragging ? "ns-resize" : "grab",
         touchAction: "none",
         userSelect: "none",
@@ -157,7 +165,20 @@ const LaneCell = ({ note }: { note: Note }) => {
 const SequenceEditorView = () => {
   const { notes } = store.useSnapshot();
   return (
-    <div className="relative w-[600px] h-[300px] bd-red">
+    <div
+      className="relative"
+      style={{
+        width: npx(configs.stepCount * configs.cellWidthPx),
+        height: npx(configs.editAreaHeight),
+      }}
+    >
+      <GridBackground
+        nx={configs.stepCount}
+        ny={7}
+        width={configs.stepCount * configs.cellWidthPx}
+        height={configs.editAreaHeight}
+        bgAlterStrideX={4}
+      />
       {notes.map((note) => (
         <LaneCell key={note.id} note={note} />
       ))}
