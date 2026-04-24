@@ -13,7 +13,6 @@ import type {
   LoopCount,
   MachineId,
   PartMachineId,
-  PlaybackMode,
   ProgramTarget,
   SceneMachineId,
   SongKey,
@@ -63,7 +62,16 @@ interface GrooveboxActions {
     midi: number,
   ) => void;
   setMelodyOctaveShift: (octaveShift: number) => void;
-  setPlaybackState: (payload: Partial<GrooveboxState["playback"]>) => void;
+  togglePlaybackIntent: () => void;
+  requestSceneChange: (sceneIndex: number) => void;
+  setMidiAvailability: (midiAvailable: boolean) => void;
+  setTransportView: (payload: {
+    currentStepIndex: number;
+    currentBarIndex: number;
+    localStepIndex: number;
+  }) => void;
+  commitPlaybackSceneAdvance: (sceneIndex: number) => void;
+  processMidiNote: (note: number, enabled: boolean) => void;
 }
 
 export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
@@ -71,11 +79,18 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
     (set) => ({
       song: createDefaultSong(),
       playback: {
-        isPlaying: false,
-        playbackMode: "manual",
-        activeRootNote: null,
-        queuedSceneIndex: null,
-        midiAvailable: false,
+        intent: {
+          isPlaying: false,
+          queuedSceneIndex: null,
+          heldManualNotes: [],
+          heldDirectNotes: [],
+        },
+        runtimeView: {
+          midiAvailable: false,
+          currentStepIndex: -1,
+          currentBarIndex: 0,
+          localStepIndex: -1,
+        },
       },
       setBpm: (bpm) =>
         set((state) => ({
@@ -109,7 +124,10 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
         set((state) => ({
           playback: {
             ...state.playback,
-            queuedSceneIndex: sceneIndex,
+            intent: {
+              ...state.playback.intent,
+              queuedSceneIndex: sceneIndex,
+            },
           },
         })),
       setActiveMachineId: (machineId) =>
@@ -292,13 +310,115 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
             },
           },
         })),
-      setPlaybackState: (payload) =>
+      togglePlaybackIntent: () =>
         set((state) => ({
           playback: {
             ...state.playback,
-            ...payload,
+            intent: {
+              ...state.playback.intent,
+              isPlaying: !state.playback.intent.isPlaying,
+              queuedSceneIndex: state.playback.intent.isPlaying
+                ? null
+                : state.playback.intent.queuedSceneIndex,
+            },
           },
         })),
+      requestSceneChange: (sceneIndex) =>
+        set((state) => {
+          if (state.playback.intent.isPlaying) {
+            return {
+              playback: {
+                ...state.playback,
+                intent: {
+                  ...state.playback.intent,
+                  queuedSceneIndex: sceneIndex,
+                },
+              },
+            };
+          }
+
+          return {
+            song: {
+              ...state.song,
+              currentSceneIndex: sceneIndex,
+            },
+          };
+        }),
+      setMidiAvailability: (midiAvailable) =>
+        set((state) => ({
+          playback: {
+            ...state.playback,
+            runtimeView: {
+              ...state.playback.runtimeView,
+              midiAvailable,
+            },
+          },
+        })),
+      setTransportView: ({
+        currentStepIndex,
+        currentBarIndex,
+        localStepIndex,
+      }) =>
+        set((state) => {
+          if (
+            state.playback.runtimeView.currentStepIndex === currentStepIndex &&
+            state.playback.runtimeView.currentBarIndex === currentBarIndex &&
+            state.playback.runtimeView.localStepIndex === localStepIndex
+          ) {
+            return state;
+          }
+
+          return {
+            playback: {
+              ...state.playback,
+              runtimeView: {
+                ...state.playback.runtimeView,
+                currentStepIndex,
+                currentBarIndex,
+                localStepIndex,
+              },
+            },
+          };
+        }),
+      commitPlaybackSceneAdvance: (sceneIndex) =>
+        set((state) => ({
+          song: {
+            ...state.song,
+            currentSceneIndex: sceneIndex,
+          },
+          playback: {
+            ...state.playback,
+            intent: {
+              ...state.playback.intent,
+              queuedSceneIndex:
+                state.playback.intent.queuedSceneIndex === sceneIndex
+                  ? null
+                  : state.playback.intent.queuedSceneIndex,
+            },
+          },
+        })),
+      processMidiNote: (note, enabled) =>
+        set((state) => {
+          const intentKey = note <= 60 ? "heldManualNotes" : "heldDirectNotes";
+          const currentNotes = state.playback.intent[intentKey];
+          const nextNotes = enabled
+            ? [...currentNotes.filter((value) => value !== note), note]
+            : currentNotes.filter((value) => value !== note);
+
+          if (nextNotes === currentNotes) {
+            return state;
+          }
+
+          return {
+            playback: {
+              ...state.playback,
+              intent: {
+                ...state.playback.intent,
+                [intentKey]: nextNotes,
+              },
+            },
+          };
+        }),
     }),
     {
       name: "groovebox-proto-song",
@@ -311,20 +431,4 @@ export const useGrooveboxStore = create<GrooveboxState & GrooveboxActions>()(
 
 export function getStoreState() {
   return useGrooveboxStore.getState();
-}
-
-export function getStoreActions() {
-  const state = useGrooveboxStore.getState();
-  return {
-    queueSceneIndex: state.queueSceneIndex,
-    setCurrentSceneIndex: state.setCurrentSceneIndex,
-    setPlaybackState: state.setPlaybackState,
-  } satisfies Pick<
-    GrooveboxActions,
-    "queueSceneIndex" | "setCurrentSceneIndex" | "setPlaybackState"
-  >;
-}
-
-export function setPlaybackMode(playbackMode: PlaybackMode) {
-  useGrooveboxStore.getState().setPlaybackState({ playbackMode });
 }

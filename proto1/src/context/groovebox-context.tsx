@@ -1,10 +1,9 @@
-import { createContext, type ReactNode, useContext, useEffect } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 import {
   type GrooveboxController,
   useGrooveboxController,
 } from "../hooks/use-groovebox-controller";
-import { playbackEngine } from "../playback-engine";
 
 const GrooveboxContext = createContext<GrooveboxController | null>(null);
 
@@ -14,10 +13,6 @@ interface GrooveboxProviderProps {
 
 export function GrooveboxProvider({ children }: GrooveboxProviderProps) {
   const controller = useGrooveboxController();
-
-  useEffect(() => {
-    playbackEngine.init();
-  }, []);
 
   return (
     <GrooveboxContext.Provider value={controller}>

@@ -2,6 +2,7 @@ import type {
   MachineId,
   MelodyNote,
   PartMachineId,
+  PlaybackSnapshot,
   SceneMachineId,
   SongKey,
   SongState,
@@ -235,7 +236,7 @@ export function getPartLaneInterval(
 }
 
 export function getCurrentRootInfo(
-  song: SongState,
+  song: Pick<PlaybackSnapshot, "key" | "currentSceneIndex" | "scenes" | "root">,
   isManual: boolean,
   manualRootNote: number | null,
   barIndex: number,

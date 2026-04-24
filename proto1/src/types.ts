@@ -70,15 +70,57 @@ export interface SongState {
   scenes: SceneState[];
 }
 
-export interface PlaybackState {
+export interface PlaybackIntentState {
   isPlaying: boolean;
-  playbackMode: PlaybackMode;
-  activeRootNote: number | null;
   queuedSceneIndex: number | null;
+  heldManualNotes: number[];
+  heldDirectNotes: number[];
+}
+
+export interface PlaybackRuntimeViewState {
   midiAvailable: boolean;
+  currentStepIndex: number;
+  currentBarIndex: number;
+  localStepIndex: number;
+}
+
+export interface PlaybackState {
+  intent: PlaybackIntentState;
+  runtimeView: PlaybackRuntimeViewState;
 }
 
 export interface GrooveboxState {
   song: SongState;
   playback: PlaybackState;
 }
+
+export interface PlaybackSnapshot {
+  bpm: number;
+  key: SongKey;
+  autoAdvanceScenes: boolean;
+  currentSceneIndex: number;
+  scenes: SceneState[];
+  programs: Record<ProgramTarget, number>;
+  drums: boolean[][][];
+  parts: Record<PartMachineId, PartMachineState>;
+  root: RootMachineState;
+  melody: MelodyMachineState;
+}
+
+export interface PlaybackTransportState {
+  isRunning: boolean;
+  sceneIndex: number;
+  stepIndex: number;
+  barIndex: number;
+  localStepIndex: number;
+}
+
+export interface SceneAdvancedEvent {
+  type: "scene-advanced";
+  sceneIndex: number;
+  previousSceneIndex: number;
+  reason: "queued" | "auto";
+  atMs: number;
+}
+
+export type PlaybackEvent = SceneAdvancedEvent;

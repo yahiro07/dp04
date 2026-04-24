@@ -8,10 +8,13 @@ import {
   getPartChannel,
   getPartLaneInterval,
   getPartMachineIds,
-  getSceneMachineIds,
 } from "./music";
-import { getStoreState, useGrooveboxStore } from "./store";
-import type { PartMachineId, ProgramTarget } from "./types";
+import type {
+  PlaybackEvent,
+  PlaybackSnapshot,
+  PlaybackTransportState,
+  ProgramTarget,
+} from "./types";
 
 class TinySynthAdapter {
   private synth: WebAudioTinySynth | null = null;
@@ -23,7 +26,6 @@ class TinySynthAdapter {
 
     this.synth = new WebAudioTinySynth({ quality: 1, useReverb: 1 });
     this.synth.setChVol(9, 110);
-    this.applyPrograms(getStoreState().song.core.programs);
   }
 
   resumeAudio() {
@@ -81,6 +83,8 @@ class TinySynthAdapter {
 class PlaybackEngine {
   private synth = new TinySynthAdapter();
   private initialized = false;
+  private snapshot: PlaybackSnapshot | null = null;
+  private autoPlaying = false;
   private timerId: number | null = null;
   private lastStepIndex = -1;
   private lastBarIndex = -1;
@@ -88,7 +92,10 @@ class PlaybackEngine {
   private manualStartMs = 0;
   private sceneBarsElapsed = 0;
   private heldLowNotes: number[] = [];
-  private activeHighNotes = new Set<number>();
+  private activeHighNotes = new Map<number, number>();
+  private currentSceneIndex = 0;
+  private queuedSceneIndex: number | null = null;
+  private events: PlaybackEvent[] = [];
 
   init() {
     if (this.initialized || typeof window === "undefined") {
@@ -97,115 +104,98 @@ class PlaybackEngine {
 
     this.initialized = true;
     this.synth.init();
-    useGrooveboxStore.subscribe((state, previousState) => {
-      if (state.song.core.programs !== previousState.song.core.programs) {
-        this.synth.applyPrograms(state.song.core.programs);
-      }
-    });
-    this.connectMidi();
   }
 
-  async togglePlay() {
+  applySnapshot(snapshot: PlaybackSnapshot) {
+    this.snapshot = snapshot;
+    this.currentSceneIndex = snapshot.currentSceneIndex;
+    this.synth.applyPrograms(snapshot.programs);
+  }
+
+  async play() {
     this.init();
     await this.synth.resumeAudio();
-    const state = getStoreState();
-
-    if (state.playback.isPlaying) {
-      this.stopAutoPlayback();
+    if (!this.snapshot) {
       return;
     }
 
     this.lastStepIndex = -1;
     this.lastBarIndex = -1;
     this.sceneBarsElapsed = 0;
+    this.autoPlaying = true;
     this.autoStartMs = performance.now();
-    state.setPlaybackState({
-      isPlaying: true,
-      playbackMode: "auto",
-      activeRootNote: null,
-      queuedSceneIndex: null,
-    });
+    this.currentSceneIndex = this.snapshot.currentSceneIndex;
     this.ensureTimer();
   }
 
-  stopAutoPlayback() {
-    const state = getStoreState();
-    state.setPlaybackState({
-      isPlaying: false,
-      queuedSceneIndex: null,
-      playbackMode:
-        state.playback.activeRootNote === null
-          ? "manual"
-          : state.playback.playbackMode,
-    });
-    this.synth.allSoundOff();
+  stop() {
+    this.autoPlaying = false;
+    this.queuedSceneIndex = null;
     this.lastStepIndex = -1;
     this.lastBarIndex = -1;
     this.sceneBarsElapsed = 0;
+    if (this.heldLowNotes.length === 0 && this.activeHighNotes.size === 0) {
+      this.synth.allSoundOff();
+    }
     this.stopTimerIfIdle();
   }
 
-  async triggerManualRoot(note: number, enabled: boolean) {
-    this.init();
-    await this.synth.resumeAudio();
+  setQueuedScene(sceneIndex: number | null) {
+    this.queuedSceneIndex = sceneIndex;
+  }
 
-    if (enabled) {
-      this.heldLowNotes = [
-        ...this.heldLowNotes.filter((value) => value !== note),
-        note,
-      ];
+  async setInputState(heldLowNotes: number[], heldHighNotes: number[]) {
+    this.init();
+    const previousRootNote = this.heldLowNotes.at(-1) ?? null;
+    const nextRootNote = heldLowNotes.at(-1) ?? null;
+    const addedHighNotes = heldHighNotes.filter(
+      (note) => !this.activeHighNotes.has(note),
+    );
+    const removedHighNotes = [...this.activeHighNotes.keys()].filter(
+      (note) => !heldHighNotes.includes(note),
+    );
+
+    if (
+      nextRootNote !== null ||
+      addedHighNotes.length > 0 ||
+      removedHighNotes.length > 0
+    ) {
+      await this.synth.resumeAudio();
+    }
+
+    this.heldLowNotes = [...heldLowNotes];
+
+    if (nextRootNote !== previousRootNote && nextRootNote !== null) {
       this.manualStartMs = performance.now();
-      getStoreState().setPlaybackState({
-        playbackMode: "manual",
-        activeRootNote: note,
-      });
       this.lastStepIndex = -1;
       this.lastBarIndex = -1;
       this.ensureTimer();
-      return;
     }
 
-    this.heldLowNotes = this.heldLowNotes.filter((value) => value !== note);
-    const nextRootNote = this.heldLowNotes.at(-1) ?? null;
-    getStoreState().setPlaybackState({
-      activeRootNote: nextRootNote,
-      playbackMode: "manual",
-    });
-
-    if (nextRootNote !== null) {
-      this.manualStartMs = performance.now();
+    if (nextRootNote === null && this.heldLowNotes.length === 0) {
       this.lastStepIndex = -1;
       this.lastBarIndex = -1;
-    } else {
+      this.stopTimerIfIdle();
+    }
+
+    for (const note of addedHighNotes) {
+      const shiftedNote = note + (this.snapshot?.melody.octaveShift ?? 0) * 12;
+      this.activeHighNotes.set(note, shiftedNote);
+      this.synth.noteOn(getMelodyChannel(), shiftedNote, 100);
+    }
+
+    for (const note of removedHighNotes) {
+      const shiftedNote = this.activeHighNotes.get(note);
+      this.activeHighNotes.delete(note);
+      if (shiftedNote !== undefined) {
+        this.synth.noteOff(getMelodyChannel(), shiftedNote);
+      }
+    }
+
+    if (nextRootNote === null && this.activeHighNotes.size === 0) {
       this.synth.allSoundOff();
       this.stopTimerIfIdle();
     }
-  }
-
-  async handleDirectMelody(note: number, enabled: boolean) {
-    this.init();
-    await this.synth.resumeAudio();
-    const state = getStoreState();
-    const shiftedNote = note + state.song.melody.octaveShift * 12;
-    const channel = getMelodyChannel();
-
-    if (enabled) {
-      this.activeHighNotes.add(shiftedNote);
-      this.synth.noteOn(channel, shiftedNote, 100);
-      return;
-    }
-
-    this.activeHighNotes.delete(shiftedNote);
-    this.synth.noteOff(channel, shiftedNote);
-  }
-
-  requestSceneChange(sceneIndex: number) {
-    const state = getStoreState();
-    if (state.playback.isPlaying) {
-      state.queueSceneIndex(sceneIndex);
-      return;
-    }
-    state.setCurrentSceneIndex(sceneIndex);
   }
 
   private ensureTimer() {
@@ -218,8 +208,7 @@ class PlaybackEngine {
   }
 
   private stopTimerIfIdle() {
-    const state = getStoreState();
-    if (state.playback.isPlaying || state.playback.activeRootNote !== null) {
+    if (this.isAutoPlaying() || this.heldLowNotes.length > 0) {
       return;
     }
     if (this.timerId !== null) {
@@ -229,17 +218,19 @@ class PlaybackEngine {
   }
 
   private processTransport() {
-    const state = getStoreState();
-    const now = performance.now();
-    const manualActive =
-      !state.playback.isPlaying && state.playback.activeRootNote !== null;
-
-    if (!state.playback.isPlaying && !manualActive) {
+    if (!this.snapshot) {
       return;
     }
 
-    const stepDurationMs = 60000 / state.song.bpm / 4;
-    const transportMs = state.playback.isPlaying
+    const now = performance.now();
+    const manualActive = !this.isAutoPlaying() && this.heldLowNotes.length > 0;
+
+    if (!this.isAutoPlaying() && !manualActive) {
+      return;
+    }
+
+    const stepDurationMs = 60000 / this.snapshot.bpm / 4;
+    const transportMs = this.isAutoPlaying()
       ? now - this.autoStartMs
       : now - this.manualStartMs;
     const stepIndex = Math.floor(transportMs / stepDurationMs);
@@ -265,43 +256,68 @@ class PlaybackEngine {
   }
 
   private handleBarBoundary(barIndex: number) {
-    const state = getStoreState();
+    if (!this.snapshot) {
+      return;
+    }
 
-    if (this.lastBarIndex >= 0 && state.playback.isPlaying) {
+    if (this.lastBarIndex >= 0 && this.isAutoPlaying()) {
       this.sceneBarsElapsed += 1;
     }
 
-    if (state.playback.isPlaying && state.playback.queuedSceneIndex !== null) {
-      state.setCurrentSceneIndex(state.playback.queuedSceneIndex);
-      state.queueSceneIndex(null);
+    if (this.isAutoPlaying() && this.queuedSceneIndex !== null) {
+      const previousSceneIndex = this.currentSceneIndex;
+      this.currentSceneIndex = this.queuedSceneIndex;
+      this.queuedSceneIndex = null;
       this.sceneBarsElapsed = 0;
+      this.events.push({
+        type: "scene-advanced",
+        sceneIndex: this.currentSceneIndex,
+        previousSceneIndex,
+        reason: "queued",
+        atMs: performance.now(),
+      });
       return;
     }
 
-    if (!state.playback.isPlaying || !state.song.autoAdvanceScenes) {
+    if (!this.isAutoPlaying() || !this.snapshot.autoAdvanceScenes) {
       return;
     }
 
-    const scene = state.song.scenes[state.song.currentSceneIndex];
+    const scene = this.snapshot.scenes[this.currentSceneIndex];
     const sceneLengthBars = scene.baseBars * scene.loopCount;
     if (this.sceneBarsElapsed >= sceneLengthBars) {
-      state.setCurrentSceneIndex(
-        (state.song.currentSceneIndex + 1) % state.song.scenes.length,
-      );
+      const previousSceneIndex = this.currentSceneIndex;
+      this.currentSceneIndex =
+        (this.currentSceneIndex + 1) % this.snapshot.scenes.length;
       this.sceneBarsElapsed = 0;
       this.lastStepIndex = barIndex * 16 - 1;
+      this.events.push({
+        type: "scene-advanced",
+        sceneIndex: this.currentSceneIndex,
+        previousSceneIndex,
+        reason: "auto",
+        atMs: performance.now(),
+      });
     }
   }
 
   private triggerStep(stepIndex: number) {
-    const state = getStoreState();
-    const scene = state.song.scenes[state.song.currentSceneIndex];
+    if (!this.snapshot) {
+      return;
+    }
+
+    const scene = this.snapshot.scenes[this.currentSceneIndex];
     const localStep = stepIndex % 16;
     const barIndex = Math.floor(stepIndex / 16);
     const currentRoot = getCurrentRootInfo(
-      state.song,
-      !state.playback.isPlaying,
-      state.playback.activeRootNote,
+      {
+        key: this.snapshot.key,
+        currentSceneIndex: this.currentSceneIndex,
+        scenes: this.snapshot.scenes,
+        root: this.snapshot.root,
+      },
+      !this.isAutoPlaying(),
+      this.heldLowNotes.at(-1) ?? null,
       barIndex,
     );
 
@@ -310,8 +326,7 @@ class PlaybackEngine {
     }
 
     if (scene.machines.drums.enabled) {
-      const drumPattern =
-        state.song.drums.patterns[scene.machines.drums.variation];
+      const drumPattern = this.snapshot.drums[scene.machines.drums.variation];
       for (let laneIndex = 0; laneIndex < drumPattern.length; laneIndex += 1) {
         if (drumPattern[laneIndex][localStep]) {
           this.synth.noteOn(9, getDrumMidi(laneIndex), 110, 0.12);
@@ -325,7 +340,7 @@ class PlaybackEngine {
         continue;
       }
 
-      const machineState = state.song.parts[machineId];
+      const machineState = this.snapshot.parts[machineId];
       const pattern = machineState.patterns[sceneMachineState.variation];
       for (let laneIndex = 0; laneIndex < pattern.length; laneIndex += 1) {
         if (!pattern[laneIndex][localStep]) {
@@ -333,7 +348,7 @@ class PlaybackEngine {
         }
 
         const interval = getPartLaneInterval(
-          state.song.key,
+          this.snapshot.key,
           currentRoot.rootOffset,
           laneIndex,
         );
@@ -345,96 +360,38 @@ class PlaybackEngine {
 
     if (scene.machines.melody.enabled) {
       const melodyPattern =
-        state.song.melody.patterns[scene.machines.melody.variation];
+        this.snapshot.melody.patterns[scene.machines.melody.variation];
       const notes = getMelodyNotesAtStep(melodyPattern, stepIndex % 64);
       for (const note of notes) {
         this.synth.noteOn(
           getMelodyChannel(),
-          note.midi + state.song.melody.octaveShift * 12,
+          note.midi + this.snapshot.melody.octaveShift * 12,
           98,
-          (note.durationSteps * (60000 / state.song.bpm / 4)) / 1000,
+          (note.durationSteps * (60000 / this.snapshot.bpm / 4)) / 1000,
         );
       }
     }
   }
 
-  private connectMidi() {
-    if (
-      typeof navigator === "undefined" ||
-      !("requestMIDIAccess" in navigator)
-    ) {
-      getStoreState().setPlaybackState({ midiAvailable: false });
-      return;
-    }
-
-    navigator
-      .requestMIDIAccess()
-      .then((midiAccess) => {
-        getStoreState().setPlaybackState({
-          midiAvailable: midiAccess.inputs.size > 0,
-        });
-        for (const input of midiAccess.inputs.values()) {
-          input.onmidimessage = (event) => {
-            if (event.data) {
-              void this.handleMidiMessage(event.data);
-            }
-          };
-        }
-        midiAccess.onstatechange = () => {
-          const inputs = Array.from(midiAccess.inputs.values());
-          getStoreState().setPlaybackState({
-            midiAvailable: inputs.length > 0,
-          });
-          for (const input of inputs) {
-            input.onmidimessage = (event) => {
-              if (event.data) {
-                void this.handleMidiMessage(event.data);
-              }
-            };
-          }
-        };
-      })
-      .catch(() => {
-        getStoreState().setPlaybackState({ midiAvailable: false });
-      });
+  drainEvents() {
+    const events = [...this.events];
+    this.events = [];
+    return events;
   }
 
-  private async handleMidiMessage(data: Uint8Array) {
-    const [status, note, velocity] = data;
-    const messageType = status & 0xf0;
-    const isNoteOn = messageType === 0x90 && velocity > 0;
-    const isNoteOff =
-      messageType === 0x80 || (messageType === 0x90 && velocity === 0);
+  getTransportState(): PlaybackTransportState {
+    return {
+      isRunning: this.isAutoPlaying() || this.heldLowNotes.length > 0,
+      sceneIndex: this.currentSceneIndex,
+      stepIndex: this.lastStepIndex,
+      barIndex: Math.max(this.lastBarIndex, 0),
+      localStepIndex: this.lastStepIndex >= 0 ? this.lastStepIndex % 16 : -1,
+    };
+  }
 
-    if (!isNoteOn && !isNoteOff) {
-      return;
-    }
-
-    if (note <= 60) {
-      await this.triggerManualRoot(note, isNoteOn);
-      return;
-    }
-
-    await this.handleDirectMelody(note, isNoteOn);
+  private isAutoPlaying() {
+    return this.autoPlaying;
   }
 }
 
 export const playbackEngine = new PlaybackEngine();
-
-export function getMachineSceneState(
-  machineId: PartMachineId | "drums" | "root" | "melody",
-) {
-  const scene =
-    getStoreState().song.scenes[getStoreState().song.currentSceneIndex];
-  return scene.machines[machineId];
-}
-
-export function getVisibleSceneSummary() {
-  const state = getStoreState();
-  const scene = state.song.scenes[state.song.currentSceneIndex];
-  return getSceneMachineIds().map((machineId) => ({
-    machineId,
-    enabled: scene.machines[machineId].enabled,
-    variation: scene.machines[machineId].variation,
-  }));
-}

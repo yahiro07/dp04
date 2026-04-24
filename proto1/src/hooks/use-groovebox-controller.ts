@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 
-import { playbackEngine } from "../playback-engine";
 import { useGrooveboxStore } from "../store";
 import type {
   BaseBars,
   LoopCount,
   MachineId,
   PartMachineId,
+  PlaybackMode,
   ProgramTarget,
   SongKey,
   VariationIndex,
@@ -46,19 +46,39 @@ export function useGrooveboxController() {
   const setMelodyOctaveShift = useGrooveboxStore(
     (state) => state.setMelodyOctaveShift,
   );
+  const togglePlaybackIntent = useGrooveboxStore(
+    (state) => state.togglePlaybackIntent,
+  );
+  const requestSceneChange = useGrooveboxStore(
+    (state) => state.requestSceneChange,
+  );
 
   const currentScene = song.scenes[song.currentSceneIndex];
+  const playbackView = useMemo(
+    () => ({
+      isPlaying: playback.intent.isPlaying,
+      playbackMode: (playback.intent.isPlaying
+        ? "auto"
+        : "manual") as PlaybackMode,
+      queuedSceneIndex: playback.intent.queuedSceneIndex,
+      midiAvailable: playback.runtimeView.midiAvailable,
+      currentStepIndex: playback.runtimeView.currentStepIndex,
+      currentBarIndex: playback.runtimeView.currentBarIndex,
+      localStepIndex: playback.runtimeView.localStepIndex,
+    }),
+    [playback],
+  );
 
   return useMemo(
     () => ({
       song,
-      playback,
+      playback: playbackView,
       currentScene,
       togglePlay: () => {
-        void playbackEngine.togglePlay();
+        togglePlaybackIntent();
       },
       requestSceneChange: (sceneIndex: number) => {
-        playbackEngine.requestSceneChange(sceneIndex);
+        requestSceneChange(sceneIndex);
       },
       setBpm: (bpm: number) => {
         setBpm(bpm);
@@ -148,6 +168,9 @@ export function useGrooveboxController() {
       setSceneMachineEnabled,
       setSceneMachineVariation,
       song,
+      playbackView,
+      requestSceneChange,
+      togglePlaybackIntent,
       toggleDrumStep,
       toggleMelodyNote,
       togglePartStep,
