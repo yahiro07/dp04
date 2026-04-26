@@ -8,7 +8,7 @@ export type VgmCommand = {
   comment?: string;
 };
 
-export type VgmData = {
+export type VgmSong = {
   header: VgmHeader;
   commands: VgmCommand[];
 };
@@ -125,7 +125,7 @@ function parseCommands(
 }
 
 export const vgmParser = {
-  decodeVgmData(bytes: Uint8Array): VgmData {
+  decodeVgmData(bytes: Uint8Array): VgmSong {
     if (bytes.length < VGM_MIN_HEADER_LENGTH) {
       throw new Error("VGM file is too short to contain a valid header.");
     }
@@ -169,7 +169,7 @@ export const vgmParser = {
       commands,
     };
   },
-  decorateWithComments(data: VgmData): VgmData {
+  decorateWithComments(data: VgmSong): VgmSong {
     return {
       ...data,
       commands: data.commands.map((command) => ({

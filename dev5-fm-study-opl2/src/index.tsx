@@ -3,63 +3,28 @@ import { Button } from "@/components/button";
 import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
-import { VgmData, vgmParser } from "@/vgm-parser";
+import { useEffect } from "react";
+import { createVgmFileDataManager } from "@/vgm-file-data-manager";
+import { VgmSong } from "@/vgm-parser";
 
-const store = createStore<{ vgmData: VgmData | null }>({
-  vgmData: null,
+const store = createStore<{ vgmData: VgmSong | undefined }>({
+  vgmData: undefined,
 });
 
-const actions = {
-  async loadVgmFileWithDialog() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".vgm,.vgz";
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-
-      if (!file) return;
-
-      const lowerName = file.name.toLowerCase();
-
-      if (!lowerName.endsWith(".vgm") && !lowerName.endsWith(".vgz")) {
-        console.error("Unsupported file type:", file.name);
-        return;
-      }
-
-      try {
-        const rawBytes = new Uint8Array(await file.arrayBuffer());
-        let vgmBytes = rawBytes;
-
-        if (lowerName.endsWith(".vgz")) {
-          if (typeof DecompressionStream === "undefined") {
-            throw new Error(
-              "This browser does not support gzip decompression.",
-            );
-          }
-
-          const decompressedStream = new Blob([rawBytes])
-            .stream()
-            .pipeThrough(new DecompressionStream("gzip"));
-          const decompressedBuffer = await new Response(
-            decompressedStream,
-          ).arrayBuffer();
-          vgmBytes = new Uint8Array(decompressedBuffer);
-        }
-
-        const decodedVgmData = vgmParser.decodeVgmData(vgmBytes);
-        const decoratedVgmData = vgmParser.decorateWithComments(decodedVgmData);
-
-        store.setVgmData(decoratedVgmData);
-        console.log(decoratedVgmData);
-      } catch (error) {
-        console.error("Failed to load VGM/VGZ file:", error);
-      }
-    };
-
-    input.click();
+const storeActions = {
+  setVgmData(vgmData: VgmSong) {
+    store.setVgmData(vgmData);
+  },
+  clearVgmData(errorMessage?: string) {
+    store.setVgmData(undefined);
   },
 };
+
+const vgmFileDataManager = createVgmFileDataManager({
+  songLoadedCallback: storeActions.setVgmData,
+  loadFailureCallback: storeActions.clearVgmData,
+  clearCallback: storeActions.clearVgmData,
+});
 
 const CommandListView = () => {
   const { vgmData } = store.useSnapshot();
@@ -85,10 +50,14 @@ const CommandListView = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    vgmFileDataManager.restoreFileFromSession();
+  }, []);
   return (
     <div className="w-dvw h-dvh p-2">
       <div className="flex-ha gap-2">
-        <Button onClick={actions.loadVgmFileWithDialog}>load</Button>
+        <Button onClick={vgmFileDataManager.loadFileWithDialog}>load</Button>
+        <Button onClick={vgmFileDataManager.clearFileLoaded}>clear</Button>
         <div className="text-[#666]">
           load vgm or vgz file, only OPL2 (YM3812) supported
         </div>
