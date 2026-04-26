@@ -169,18 +169,4 @@ export const vgmParser = {
       commands,
     };
   },
-  decorateWithComments(data: VgmSong): VgmSong {
-    return {
-      ...data,
-      commands: data.commands.map((command) => ({
-        ...command,
-        comment:
-          command.bytes[0] === 0x67
-            ? "VGM data block command (0x67)."
-            : getVgmCommandLength(command.bytes, 0) === null
-              ? "Unparsed trailing bytes after command parsing stopped."
-              : undefined,
-      })),
-    };
-  },
 };

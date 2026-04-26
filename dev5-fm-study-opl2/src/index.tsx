@@ -4,6 +4,7 @@ import { mountAppRoot } from "@/utils/mount-app-root";
 import "./styling/page.css";
 import "./styling/utility-classes.css";
 import { useEffect } from "react";
+import { applyVgmDataHint } from "@/vgm-data-hint-applier";
 import { createVgmFileDataManager } from "@/vgm-file-data-manager";
 import { VgmSong } from "@/vgm-parser";
 
@@ -13,6 +14,7 @@ const store = createStore<{ vgmData: VgmSong | undefined }>({
 
 const storeActions = {
   setVgmData(vgmData: VgmSong) {
+    applyVgmDataHint(vgmData);
     store.setVgmData(vgmData);
   },
   clearVgmData(errorMessage?: string) {
@@ -36,13 +38,15 @@ const CommandListView = () => {
     <div>
       <div>{`header version=${header.version} length=${header.headerLength}`}</div>
       {commands.map((command, index) => (
-        <div key={index.toString()}>
-          <div>
+        <div key={index.toString()} className="flex-ha gap-2">
+          <div className="min-w-[100px]">
             {[...command.bytes.values()]
               .map((b) => b.toString(16).padStart(2, "0"))
               .join(" ")}
           </div>
-          {command.comment ? <div>{command.comment}</div> : null}
+          {command.comment ? (
+            <div className="text-[#aaa]">{command.comment}</div>
+          ) : null}
         </div>
       ))}
     </div>
