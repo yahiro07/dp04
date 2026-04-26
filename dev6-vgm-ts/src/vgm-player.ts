@@ -1,4 +1,4 @@
-import { createChipAY8910 } from "@/chip-ay8910";
+import { createChipAY8910 } from "@/chip-psg-ay8910";
 import { VgmSong } from "./types";
 
 export function createVgmPlayer() {

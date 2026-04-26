@@ -1,1 +1,2 @@
-based on vgm-js https://github.com/netherbox/vgm-js
+based on
+- vgm-js https://github.com/netherbox/vgm-js
