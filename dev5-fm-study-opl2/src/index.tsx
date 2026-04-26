@@ -14,6 +14,7 @@ const store = createStore<{ vgmData: VgmSong | undefined }>({
 
 const storeActions = {
   setVgmData(vgmData: VgmSong) {
+    console.log(vgmData.header);
     applyVgmDataHint(vgmData);
     store.setVgmData(vgmData);
   },

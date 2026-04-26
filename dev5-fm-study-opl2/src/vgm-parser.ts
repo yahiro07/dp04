@@ -1,6 +1,12 @@
 export type VgmHeader = {
   version: string;
   headerLength: number;
+  totalSamples: number;
+  loopOffset: number;
+  loopSamples: number;
+  rate: number;
+  vgmDataOffset: number;
+  ym3812Clock: number;
 };
 
 export type VgmCommand = {
@@ -25,6 +31,10 @@ function formatVgmVersion(version: number) {
   const major = (version >> 8) & 0xff;
   const minor = version & 0xff;
   return `${major}.${minor.toString(16).toUpperCase().padStart(2, "0")}`;
+}
+
+function getAbsoluteOffset(baseOffset: number, relativeOffset: number) {
+  return relativeOffset === 0 ? 0 : baseOffset + relativeOffset;
 }
 
 function getVgmCommandLength(bytes: Uint8Array, relativeOffset: number) {
@@ -142,7 +152,13 @@ export const vgmParser = {
       bytes.byteLength,
     );
     const version = dataView.getUint32(0x08, true);
+    const totalSamples = dataView.getUint32(0x18, true);
+    const loopOffset = getAbsoluteOffset(0x1c, dataView.getUint32(0x1c, true));
+    const loopSamples = dataView.getUint32(0x20, true);
+    const rate = dataView.getUint32(0x24, true);
     const relativeDataOffset = dataView.getUint32(VGM_DATA_OFFSET_FIELD, true);
+    const ym3812Clock =
+      bytes.length >= 0x54 ? dataView.getUint32(0x50, true) : 0;
     const dataByteOffset =
       version >= VGM_1_50
         ? VGM_DATA_OFFSET_FIELD + relativeDataOffset
@@ -165,6 +181,12 @@ export const vgmParser = {
       header: {
         version: formatVgmVersion(version),
         headerLength: headerByteLength,
+        totalSamples,
+        loopOffset,
+        loopSamples,
+        rate,
+        vgmDataOffset: dataByteOffset,
+        ym3812Clock,
       },
       commands,
     };
