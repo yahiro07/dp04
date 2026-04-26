@@ -1,4 +1,4 @@
-import { AY8910 } from "@/ay8910";
+import { createChipAY8910 } from "@/chip-ay8910";
 import { VgmSong } from "./types";
 
 export function createVgmPlayer() {
@@ -9,13 +9,13 @@ export function createVgmPlayer() {
     loadSong(song: VgmSong) {
       const { header, commands } = song;
       const vgmSampleRate = song.sampleRate;
-      const chip = new AY8910(header.ay8910Clock);
-      var myArrayBuffer = audioCtx.createBuffer(
+      const chip = createChipAY8910(header.ay8910Clock);
+      const myArrayBuffer = audioCtx.createBuffer(
         1,
         header.samplesCount,
         vgmSampleRate,
       );
-      var nowBuffering = myArrayBuffer.getChannelData(0);
+      const nowBuffering = myArrayBuffer.getChannelData(0);
 
       let offset = 0;
       for (const command of commands) {
@@ -27,7 +27,7 @@ export function createVgmPlayer() {
         }
       }
 
-      var source = audioCtx.createBufferSource();
+      const source = audioCtx.createBufferSource();
 
       source.buffer = myArrayBuffer;
       source.connect(audioCtx.destination);

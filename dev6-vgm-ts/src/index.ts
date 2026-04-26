@@ -29,8 +29,8 @@ function setupUi() {
     return button;
   }
 
-  var playButton = addButton("play-button", "play");
-  var pauseButton = addButton("pause-button", "pause");
+  const playButton = addButton("play-button", "play");
+  const pauseButton = addButton("pause-button", "pause");
   playButton.style.display = "block";
   pauseButton.style.display = "none";
 
