@@ -30,9 +30,15 @@ const uiActions = {
 
 const App = () => {
   return (
-    <div className="w-dvw h-dvh flex-c">
-      <Button onClick={() => uiActions.handleNote(true)}>ON</Button>
-      <Button onClick={() => uiActions.handleNote(false)}>OFF</Button>
+    <div className="w-dvw h-dvh flex-vc gap-2">
+      <div className="flex-ha gap-2">
+        <Button onClick={() => uiActions.handleNote(true)}>ON</Button>
+        <Button onClick={() => uiActions.handleNote(false)}>OFF</Button>
+      </div>
+      <div className="flex-v gap-2">
+        <img src="/images/fish-active.png" alt="fish" className="w-[150px]" />
+        <img src="/images/fish-inactive.png" alt="fish" className="w-[150px]" />
+      </div>
     </div>
   );
 };
