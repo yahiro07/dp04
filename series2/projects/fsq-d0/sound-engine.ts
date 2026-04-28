@@ -1,6 +1,12 @@
 import { WorkletSynthesizer } from "spessasynth_lib";
 
-export async function setupSoundEngine() {
+export type SoundEngine = {
+  resumeIfNeed(): Promise<void>;
+  selectProgram(ch: number, programNumber: number): void;
+  playNote(ch: number, noteNumber: number, velocity: number): void;
+};
+
+export async function setupSoundEngine(): Promise<SoundEngine> {
   const workletUrl = new URL(
     "spessasynth_lib/dist/spessasynth_processor.min.js",
     import.meta.url,
