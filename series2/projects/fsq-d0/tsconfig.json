@@ -12,7 +12,7 @@
     }
   },
   "include": [
-    "index.ts",
+    "index.tsx",
     "../../lib/**/*",
   ]
 }
