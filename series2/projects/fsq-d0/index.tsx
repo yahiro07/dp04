@@ -108,6 +108,31 @@ const uiActions = {
   },
 };
 
+const fishImageUrls = {
+  active: "/images/fish-active.png",
+  inactive: "/images/fish-inactive.png",
+};
+
+const UnitView = ({ unitId }: { unitId: string }) => {
+  const st = store.useSnapshot();
+  const active = st.fish1Active;
+  const handleToggleActive = () => {
+    uiActions.toggleFish1Active();
+  };
+  return (
+    <div onClick={handleToggleActive} className="relative">
+      <div className="absolute top-[-8px] left-0 w-full text-center text-[#888]">
+        {unitId}
+      </div>
+      <img
+        src={active ? fishImageUrls.active : fishImageUrls.inactive}
+        alt="fish"
+        className="w-[150px]"
+      />
+    </div>
+  );
+};
+
 const MainPanel = () => {
   const st = store.useSnapshot();
   return (
@@ -116,16 +141,9 @@ const MainPanel = () => {
         <Button active={st.playing} onClick={() => uiActions.togglePlayState()}>
           play
         </Button>
-        <Button
-          active={st.fish1Active}
-          onClick={() => uiActions.toggleFish1Active()}
-        >
-          fish1
-        </Button>
       </div>
       <div className="flex-v gap-2">
-        <img src="/images/fish-active.png" alt="fish" className="w-[150px]" />
-        <img src="/images/fish-inactive.png" alt="fish" className="w-[150px]" />
+        <UnitView unitId="fish1" />
       </div>
       <div>
         <Button onClick={() => uiActions.selectProgram(0)}>piano</Button>
