@@ -3,14 +3,28 @@ import { setupMidiKeyboardInput } from "@lib/ax/midi-keyboard-input";
 import { mountAppRoot } from "@lib/ax/mount-app-root";
 import { Button } from "@lib/components1/button";
 import { useEffect } from "react";
+import { createStore } from "snap-store";
 
 const soundEngine = await setupSoundEngine();
-soundEngine.selectProgram(0, 48);
+
+const store = createStore<{ programNumber: number }>({
+  programNumber: 48,
+});
+soundEngine.selectProgram(0, store.state.programNumber);
+
+store.subscribe((attrs) => {
+  if (attrs.programNumber !== undefined) {
+    soundEngine.selectProgram(0, attrs.programNumber);
+  }
+});
 
 const uiActions = {
   async handleNote(noteNumber: number, velocity: number) {
     await soundEngine.resumeIfNeed();
     soundEngine.playNote(0, noteNumber, velocity > 0 ? 100 : 0); //fix velocity
+  },
+  selectProgram(programNumber: number) {
+    store.mutations.setProgramNumber(programNumber);
   },
 };
 
@@ -24,6 +38,10 @@ const MainPanel = () => {
       <div className="flex-v gap-2">
         <img src="/images/fish-active.png" alt="fish" className="w-[150px]" />
         <img src="/images/fish-inactive.png" alt="fish" className="w-[150px]" />
+      </div>
+      <div>
+        <Button onClick={() => uiActions.selectProgram(0)}>piano</Button>
+        <Button onClick={() => uiActions.selectProgram(4)}>e.piano</Button>
       </div>
     </div>
   );
