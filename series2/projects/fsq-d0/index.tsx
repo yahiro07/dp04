@@ -1,9 +1,6 @@
 import { mountAppRoot } from "@lib/ax/mount-app-root";
-import { foo } from "@lib/ax/utils";
 import { Button } from "@lib/components1/button";
 import { WorkletSynthesizer } from "spessasynth_lib";
-
-foo();
 
 const workletUrl = new URL(
   "spessasynth_lib/dist/spessasynth_processor.min.js",

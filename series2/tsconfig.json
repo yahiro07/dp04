@@ -15,6 +15,14 @@
     "jsxImportSource": "@emotion/react",
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "paths": {
+      "@lib/*": [
+        "./lib/*"
+      ]
+    }
+  },
+  "include": [
+    "lib/**/*"
+  ]
 }
