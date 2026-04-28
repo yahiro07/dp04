@@ -1,0 +1,27 @@
+{
+  "name": "series2",
+  "workspaces": [
+    "projects/*"
+  ],
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "clsx": "^2.1.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "snap-store": "^0.1.5",
+    "spessasynth_lib": "^4.2.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.10",
+    "vite-tsconfig-paths": "^6.1.1"
+  }
+}
