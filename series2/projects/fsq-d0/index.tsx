@@ -22,9 +22,9 @@ const uiActions = {
   handleNote: async (noteNumber: number, velocity: number) => {
     await ctx.resume();
     if (velocity > 0) {
-      synth.noteOn(0, noteNumber, 100); //fix velocity
+      synth.noteOn(9, noteNumber, 100); //fix velocity
     } else {
-      synth.noteOff(0, noteNumber);
+      synth.noteOff(9, noteNumber);
     }
   },
 };
