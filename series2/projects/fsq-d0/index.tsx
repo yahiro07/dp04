@@ -1,5 +1,7 @@
+import { setupMidiKeyboardInput } from "@lib/ax/midi-keyboard-input";
 import { mountAppRoot } from "@lib/ax/mount-app-root";
 import { Button } from "@lib/components1/button";
+import { useEffect } from "react";
 import { WorkletSynthesizer } from "spessasynth_lib";
 
 const workletUrl = new URL(
@@ -14,26 +16,25 @@ const synth = new WorkletSynthesizer(ctx);
 synth.connect(ctx.destination);
 await synth.soundBankManager.addSoundBank(sfont, "main");
 await synth.isReady;
+synth.programChange(0, 48);
 
 const uiActions = {
-  handleNote: async (isOn: boolean) => {
+  handleNote: async (noteNumber: number, velocity: number) => {
     await ctx.resume();
-    synth.programChange(0, 48);
-
-    if (isOn) {
-      synth.noteOn(0, 52, 127);
+    if (velocity > 0) {
+      synth.noteOn(0, noteNumber, 100); //fix velocity
     } else {
-      synth.noteOff(0, 52);
+      synth.noteOff(0, noteNumber);
     }
   },
 };
 
-const App = () => {
+const MainPanel = () => {
   return (
     <div className="w-dvw h-dvh flex-vc gap-2">
       <div className="flex-ha gap-2">
-        <Button onClick={() => uiActions.handleNote(true)}>ON</Button>
-        <Button onClick={() => uiActions.handleNote(false)}>OFF</Button>
+        <Button onClick={() => uiActions.handleNote(52, 127)}>ON</Button>
+        <Button onClick={() => uiActions.handleNote(52, 0)}>OFF</Button>
       </div>
       <div className="flex-v gap-2">
         <img src="/images/fish-active.png" alt="fish" className="w-[150px]" />
@@ -41,6 +42,15 @@ const App = () => {
       </div>
     </div>
   );
+};
+
+const App = () => {
+  useEffect(() => {
+    setupMidiKeyboardInput({
+      noteCallback: uiActions.handleNote,
+    });
+  });
+  return <MainPanel />;
 };
 
 mountAppRoot(<App />, "app");
