@@ -16,11 +16,7 @@ export function createRootMachine(): RootMachine {
 
   const dispatcher = createCommandDispatcher<RootMachineCommand>({
     setPlayState({ playing }) {
-      if (playing) {
-        sequencer.handelCommand({ type: "start" });
-      } else {
-        sequencer.handelCommand({ type: "stop" });
-      }
+      sequencer.setPlayState(playing);
     },
     setBpm(e) {},
     playPrimaryTone(e) {

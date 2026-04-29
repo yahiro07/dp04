@@ -1,7 +1,5 @@
 import { Scene, SpecialNote } from "@fd0/types";
 import { SoundEngine } from "./sound-engine";
-
-export type SequencerCommand = { type: "start" } | { type: "stop" };
 export function createSequencer(soundEngine: SoundEngine, scene: Scene) {
   let timerId: number;
 
@@ -64,9 +62,8 @@ export function createSequencer(soundEngine: SoundEngine, scene: Scene) {
   };
 
   return {
-    handelCommand(command: SequencerCommand) {
-      if (command.type === "start") internal.start();
-      if (command.type === "stop") internal.stop();
+    setPlayState(playing: boolean) {
+      playing ? internal.start() : internal.stop();
     },
   };
 }
