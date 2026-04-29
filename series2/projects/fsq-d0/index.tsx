@@ -1,45 +1,47 @@
-import { createSequencer } from "@fd0/sequencer";
-import { setupSoundEngine } from "@fd0/sound-engine";
+import { createRootMachine } from "@fd0/backend/root-machine";
 import { setupMidiKeyboardInput } from "@lib/ax/midi-keyboard-input";
 import { mountAppRoot } from "@lib/ax/mount-app-root";
 import { Button } from "@lib/components1/button";
 import { useEffect } from "react";
 import { createStore } from "snap-store";
 
-const soundEngine = await setupSoundEngine();
-const sequencer = createSequencer(soundEngine);
+const rootMachine = createRootMachine();
 
 const store = createStore<{
   programNumber: number;
   playing: boolean;
   fish1Active: boolean;
+  initializing: boolean;
 }>({
   playing: false,
   programNumber: 48,
   fish1Active: false,
+  initializing: false,
 });
-soundEngine.selectProgram(0, store.state.programNumber);
 
 store.subscribe(({ programNumber, playing, fish1Active }) => {
   if (programNumber !== undefined) {
-    soundEngine.selectProgram(0, programNumber);
+    rootMachine.handleCommand({
+      type: "setUnitInstrumentId",
+      unitId: "primary-tone",
+      instrumentId: `gm-${programNumber}`,
+    });
   }
   if (playing !== undefined) {
     if (playing) {
-      sequencer.handelCommand({ type: "start" });
+      rootMachine.handleCommand({ type: "setPlayState", playing: true });
     } else {
-      sequencer.handelCommand({ type: "stop" });
+      rootMachine.handleCommand({ type: "setPlayState", playing: false });
     }
   }
   if (fish1Active !== undefined) {
-    sequencer.handelCommand({
+    rootMachine.handleCommand({
       type: "setUnitActive",
       unitId: "fish1",
       active: fish1Active,
     });
   }
 });
-store.setFish1Active(true);
 
 const uiActions = {
   togglePlayState() {
@@ -49,8 +51,12 @@ const uiActions = {
     store.mutations.toggleFish1Active();
   },
   async handleNote(noteNumber: number, velocity: number) {
-    await soundEngine.resumeIfNeed();
-    soundEngine.playNote(0, noteNumber, velocity > 0 ? 100 : 0); //fix velocity
+    await rootMachine.resumeIfNeed();
+    rootMachine.handleCommand({
+      type: "playPrimaryTone",
+      noteNumber,
+      velocity: velocity > 0 ? 100 : 0, //fixed velocity
+    });
   },
   selectProgram(programNumber: number) {
     store.mutations.setProgramNumber(programNumber);
@@ -83,11 +89,14 @@ const UnitView = ({ unitId }: { unitId: string }) => {
 };
 
 const MainPanel = () => {
-  const st = store.useSnapshot();
+  const { initializing, playing } = store.useSnapshot();
+  if (initializing) {
+    return <div>loading...</div>;
+  }
   return (
     <div className="w-dvw h-dvh flex-vc gap-2">
       <div className="flex-ha gap-2">
-        <Button active={st.playing} onClick={() => uiActions.togglePlayState()}>
+        <Button active={playing} onClick={() => uiActions.togglePlayState()}>
           play
         </Button>
       </div>
@@ -104,10 +113,21 @@ const MainPanel = () => {
 
 const App = () => {
   useEffect(() => {
-    setupMidiKeyboardInput({
-      noteCallback: uiActions.handleNote,
-    });
-  });
+    (async () => {
+      store.mutations.setInitializing(true);
+      await rootMachine.initialize();
+      store.mutations.setInitializing(false);
+      setupMidiKeyboardInput({
+        noteCallback: uiActions.handleNote,
+      });
+      rootMachine.handleCommand({
+        type: "setUnitInstrumentId",
+        unitId: "primary-tone",
+        instrumentId: `gm-${store.state.programNumber}`,
+      });
+      store.setFish1Active(true);
+    })();
+  }, []);
   return <MainPanel />;
 };
 
