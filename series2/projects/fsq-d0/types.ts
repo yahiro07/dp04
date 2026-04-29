@@ -45,7 +45,7 @@ export type StaticUnit_PrimaryTone = {
   // relativeNotes: number[]; //1bar x4, relative from key
 };
 
-export type PatternUnit =
+export type DynamicUnit =
   | PatternUnit_Seri8
   | PatternUnit_Seri8Static
   | PatternUnit_Seri8Drum;
@@ -53,15 +53,15 @@ export type PatternUnit =
 export type Scene = {
   bpm: number;
   key: string;
-  units: PatternUnit[];
+  units: DynamicUnit[];
   primaryToneUnit: StaticUnit_PrimaryTone;
   rootNoteUnit: StaticUnit_RootNotesV1;
 };
 
 export type SceneEditCommand =
   | { type: "setKey"; key: string }
-  | { type: "addPatternUnit"; unit: PatternUnit }
-  | { type: "removePatternUnit"; unit: PatternUnit }
+  | { type: "addUnit"; unit: DynamicUnit }
+  | { type: "removeUnit"; unitId: string }
   | { type: "setUnitActive"; unitId: string; active: boolean }
   | { type: "setUnitInstrumentId"; unitId: string; instrumentId: string }
   | {

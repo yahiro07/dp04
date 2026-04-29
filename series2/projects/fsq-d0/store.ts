@@ -1,5 +1,5 @@
 import { createRootMachine } from "@fd0/backend/root-machine";
-import { UiAction } from "@fd0/types";
+import { DynamicUnit, UiAction } from "@fd0/types";
 import {
   CommandDispatcher,
   createCommandDispatcher,
@@ -11,17 +11,24 @@ export const rootMachine = createRootMachine();
 export const store = createStore<{
   primaryToneInstrumentId: string;
   playing: boolean;
-  fish1Active: boolean;
   initializing: boolean;
+  units: DynamicUnit[];
 }>({
   playing: false,
   primaryToneInstrumentId: "gm-48",
-  fish1Active: false,
   initializing: false,
+  units: [],
 });
 
 function createUiActionDispatcher(): CommandDispatcher<UiAction> {
   const mut = store.mutations;
+
+  const updateUnit = (unitId: string, fn: (unit: DynamicUnit) => void) => {
+    store.produceUnits((draft) => {
+      const unit = draft.find((u) => u.id === unitId);
+      unit && fn(unit);
+    });
+  };
   return createCommandDispatcher<UiAction>({
     setPlayState(e) {
       mut.setPlaying(e.playing);
@@ -29,12 +36,12 @@ function createUiActionDispatcher(): CommandDispatcher<UiAction> {
     setBpm(e) {},
     playPrimaryTone(e) {},
     setKey(e) {},
-    addPatternUnit(e) {},
-    removePatternUnit(e) {},
+    addUnit(e) {},
+    removeUnit(e) {},
     setUnitActive(e) {
-      if (e.unitId === "fish1") {
-        mut.setFish1Active(e.active);
-      }
+      updateUnit(e.unitId, (unit) => {
+        unit.active = e.active;
+      });
     },
     setUnitStepNote(e) {},
     setUnitInstrumentId(e) {
@@ -54,9 +61,8 @@ export const uiOperations = {
     const playing = !store.state.playing;
     dispatchUiAction({ type: "setPlayState", playing });
   },
-  toggleFish1Active() {
-    const active = !store.state.fish1Active;
-    dispatchUiAction({ type: "setUnitActive", unitId: "fish1", active });
+  setUnitActive(unitId: string, active: boolean) {
+    dispatchUiAction({ type: "setUnitActive", unitId, active });
   },
   async handleNote(noteNumber: number, velocity: number) {
     await rootMachine.resumeIfNeed();

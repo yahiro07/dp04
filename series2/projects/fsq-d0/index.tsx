@@ -1,7 +1,9 @@
 import { rootMachine, store, uiOperations } from "@fd0/store";
+import { DynamicUnit } from "@fd0/types";
 import { setupMidiKeyboardInput } from "@lib/ax/midi-keyboard-input";
 import { mountAppRoot } from "@lib/ax/mount-app-root";
 import { Button } from "@lib/components1/button";
+import { npx } from "@lib/styling/styling-utils";
 import { useEffect } from "react";
 
 const fishImageUrls = {
@@ -9,18 +11,46 @@ const fishImageUrls = {
   inactive: "/images/fish-inactive.png",
 };
 
-const UnitView = ({ unitId }: { unitId: string }) => {
-  const { fish1Active } = store.useSnapshot();
+const UnitView = ({ unit }: { unit: DynamicUnit }) => {
+  const { id: unitId, active, position } = unit;
   return (
-    <div onClick={uiOperations.toggleFish1Active} className="relative">
-      <div className="absolute top-[-8px] left-0 w-full text-center text-[#888]">
-        {unitId}
+    <div
+      className="absolute"
+      style={{
+        left: npx(position.x),
+        top: npx(position.y),
+        transform: "translate(-50%, -50%)",
+      }}
+    >
+      <div
+        onClick={() => uiOperations.setUnitActive(unitId, !active)}
+        className="relative"
+      >
+        <div className="absolute top-[-8px] left-0 w-full text-center text-[#888]">
+          {unitId}
+        </div>
+        <img
+          src={active ? fishImageUrls.active : fishImageUrls.inactive}
+          alt="fish"
+          className="w-[150px]"
+        />
       </div>
-      <img
-        src={fish1Active ? fishImageUrls.active : fishImageUrls.inactive}
-        alt="fish"
-        className="w-[150px]"
-      />
+    </div>
+  );
+};
+
+const SceneField = () => {
+  const { units } = store.useSnapshot();
+  return (
+    <div className="w-[600px] h-[400px] border border-[#ccc]">
+      <div
+        className="w-full h-full relative"
+        style={{ transform: "translate(50%, 50%)" }}
+      >
+        {units.map((unit) => (
+          <UnitView key={unit.id} unit={unit} />
+        ))}
+      </div>
     </div>
   );
 };
@@ -37,9 +67,8 @@ const MainPanel = () => {
           play
         </Button>
       </div>
-      <div className="flex-v gap-2">
-        <UnitView unitId="fish1" />
-      </div>
+
+      <SceneField />
       <div>
         <Button onClick={() => uiOperations.selectProgram("gm-0")}>
           piano
@@ -62,6 +91,8 @@ const App = () => {
         noteCallback: uiOperations.handleNote,
       });
       uiOperations.selectProgram(store.state.primaryToneInstrumentId);
+      const scene = rootMachine.getSceneState();
+      store.mutations.setUnits(scene.units);
     })();
   }, []);
   return <MainPanel />;
