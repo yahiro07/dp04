@@ -86,3 +86,8 @@ export type RootMachine = {
 };
 
 export type UiAction = RootMachineCommand;
+
+export enum SpecialNote {
+  rest = 1000,
+  tie = 1001,
+}

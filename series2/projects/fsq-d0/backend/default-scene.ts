@@ -1,6 +1,7 @@
-import { Scene } from "@fd0/types";
+import { Scene, SpecialNote } from "@fd0/types";
 
 export function createDefaultScene(): Scene {
+  const { rest: r, tie } = SpecialNote;
   return {
     bpm: 120,
     key: "Am",
@@ -10,7 +11,7 @@ export function createDefaultScene(): Scene {
         variant: "seri8-drum",
         position: { x: 0, y: 100 },
         active: true,
-        stepNotes: [36, 0, 36, 0, 36, 0, 36, 0],
+        stepNotes: [36, r, 36, r, 36, r, 36, r],
       },
       {
         id: "bass1",
@@ -19,16 +20,16 @@ export function createDefaultScene(): Scene {
         active: true,
         channel: 1,
         instrumentId: "gm-34",
-        relativeNotes: [-1, 0, -1, 0, -1, 0, -1, 0],
+        relativeNotes: [r, 0, r, 0, r, 0, r, 0],
       },
       {
         id: "pad1",
         variant: "seri8",
-        position: { x: 0, y: 0 },
+        position: { x: -200, y: 0 },
         active: true,
         channel: 2,
         instrumentId: "gm-89",
-        relativeNotes: [0, -2, -2, -2, -2, -2, -2, -2],
+        relativeNotes: [0, tie, tie, tie, tie, tie, tie, tie],
       },
     ],
     primaryToneUnit: {

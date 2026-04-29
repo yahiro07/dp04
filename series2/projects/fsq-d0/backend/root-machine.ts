@@ -7,7 +7,7 @@ import { createCommandDispatcher } from "@lib/ax/command-dispatcher";
 export function createRootMachine(): RootMachine {
   const scene = createDefaultScene();
   const soundEngine = createSoundEngine();
-  const sequencer = createSequencer(soundEngine);
+  const sequencer = createSequencer(soundEngine, scene);
 
   function updateUnit(unitId: string, fn: (unit: DynamicUnit) => void) {
     const unit = scene.units.find((u) => u.id === unitId);
@@ -37,7 +37,6 @@ export function createRootMachine(): RootMachine {
       updateUnit(e.unitId, (u) => {
         u.active = e.active;
       });
-      // sequencer.handelCommand(e);
     },
     setUnitStepNote(e) {},
     setUnitInstrumentId(e) {

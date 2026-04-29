@@ -61,7 +61,7 @@ const MainPanel = () => {
     return <div>loading...</div>;
   }
   return (
-    <div className="w-dvw h-dvh flex-vc gap-2">
+    <div className="w-dvw h-dvh flex-vc gap-2 overflow-hidden">
       <div className="flex-ha gap-2">
         <Button active={playing} onClick={() => uiOperations.togglePlayState()}>
           play
