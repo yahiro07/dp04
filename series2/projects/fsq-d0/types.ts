@@ -84,3 +84,5 @@ export type RootMachine = {
   getSceneState(): Scene;
   handleCommand(command: RootMachineCommand): void;
 };
+
+export type UiAction = RootMachineCommand;
