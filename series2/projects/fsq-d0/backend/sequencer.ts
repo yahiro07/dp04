@@ -1,3 +1,4 @@
+import { createNoteVoicingManager } from "@fd0/backend/note-voicing-manager";
 import { Scene, SpecialNote } from "@fd0/types";
 import { SoundEngine } from "./sound-engine";
 export function createSequencer(soundEngine: SoundEngine, scene: Scene) {
@@ -8,32 +9,44 @@ export function createSequencer(soundEngine: SoundEngine, scene: Scene) {
 
   const rootNote = 36 + 9;
 
+  const noteManager = createNoteVoicingManager({
+    destFn: soundEngine.playNote,
+  });
+
   const internal = {
     onStep() {
       for (const unit of scene.units) {
         if (unit.variant === "seri8-drum") {
           const note = unit.stepNotes[stepIndex];
           if (note === SpecialNote.rest) {
-            soundEngine.playNote(9, note, 0);
+            noteManager.channelNotesOff(9);
           } else if (note === SpecialNote.tie) {
           } else {
-            soundEngine.playNote(9, note, 100);
+            if (unit.active) {
+              noteManager.noteOn(9, note, 100);
+            }
           }
         }
         if (unit.variant === "seri8") {
           const relNote = unit.relativeNotes[stepIndex];
           const ch = unit.channel;
-          const note = rootNote + relNote;
           if (relNote === SpecialNote.rest) {
-            soundEngine.playNote(ch, note, 0);
+            noteManager.channelNotesOff(ch);
           } else if (relNote === SpecialNote.tie) {
           } else {
-            soundEngine.playNote(ch, note, 100);
+            if (unit.active) {
+              const note = rootNote + relNote;
+              noteManager.noteOn(ch, note, 100);
+            } else {
+              noteManager.channelNotesOff(ch);
+            }
           }
         }
       }
       stepIndex++;
-      stepIndex %= 8;
+      if (stepIndex >= 8) {
+        stepIndex = 0;
+      }
     },
     onTick() {
       frameCount++;
@@ -56,8 +69,8 @@ export function createSequencer(soundEngine: SoundEngine, scene: Scene) {
       timerId = setInterval(internal.onTick, 50);
     },
     stop() {
+      noteManager.allNotesOff();
       clearInterval(timerId);
-      //todo: all sound off
     },
   };
 
