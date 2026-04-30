@@ -1,22 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { PianoRoll } from "@/components/PianoRoll";
-import { TopBar } from "@/components/TopBar";
-import { TrackList } from "@/components/TrackList";
+import { PianoRollContainer } from "@/containers/PianoRollContainer";
+import { TopBarContainer } from "@/containers/TopBarContainer";
+import { TrackListContainer } from "@/containers/TrackListContainer";
 import {
   createWindowMidiDropHandlers,
   pickMidiFile,
 } from "@/lib/file-loading-support";
 import { formatOctaveRange } from "@/lib/formatters";
 import { createPlaybackController } from "@/lib/playback";
-import { buildPlaybackEvents, buildSliceExport } from "@/lib/slice";
-import {
-  loadMidiFile,
-  setPlaying,
-  setPreviewEnabled,
-  setSelectedBar,
-  setSelectedBarLength,
-  toggleTrack,
-} from "@/store/appSlice";
+import { loadMidiFile, setPlaying } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export default function App() {
@@ -30,18 +22,7 @@ export default function App() {
     }),
   );
 
-  const {
-    activeTrackIds,
-    error,
-    isPlaying,
-    previewEnabled,
-    selectedBar,
-    selectedBarLength,
-    song,
-    status,
-  } = useAppSelector((state) => state.app);
-
-  const isLoading = status === "loading";
+  const { error, song } = useAppSelector((state) => state.app);
   const dropMessage = useMemo(() => {
     if (!song) {
       return "Load a MIDI file to render the piano roll.";
@@ -81,39 +62,6 @@ export default function App() {
     }
   };
 
-  const handleBarClick = (barIndex: number) => {
-    if (!song) {
-      return;
-    }
-
-    if (isPlaying) {
-      playbackRef.current.stop();
-      return;
-    }
-
-    dispatch(setSelectedBar(barIndex));
-
-    const sliceExport = buildSliceExport(
-      song,
-      activeTrackIds,
-      barIndex,
-      selectedBarLength,
-    );
-    console.log(JSON.stringify(sliceExport, null, 2));
-
-    if (!previewEnabled) {
-      return;
-    }
-
-    const playbackEvents = buildPlaybackEvents(
-      song,
-      activeTrackIds,
-      barIndex,
-      selectedBarLength,
-    );
-    playbackRef.current.play(playbackEvents);
-  };
-
   return (
     <div className="min-h-screen text-stone-900">
       <input
@@ -124,35 +72,17 @@ export default function App() {
         onChange={(event) => handleFileChange(event.target.files)}
       />
 
-      <TopBar
-        song={song}
-        isLoading={isLoading}
-        previewEnabled={previewEnabled}
-        selectedBarLength={selectedBarLength}
-        onLoadClick={() => fileInputRef.current?.click()}
-        onPreviewChange={(enabled) => dispatch(setPreviewEnabled(enabled))}
-        onBarLengthChange={(value) => dispatch(setSelectedBarLength(value))}
-      />
+      <TopBarContainer onLoadClick={() => fileInputRef.current?.click()} />
 
       <main className="flex min-h-[calc(100vh-61px)]">
         {song ? (
           <>
-            <TrackList
-              tracks={song.tracks}
-              activeTrackIds={activeTrackIds}
-              onToggleTrack={(trackId) => dispatch(toggleTrack(trackId))}
-            />
+            <TrackListContainer />
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="border-b border-stone-300 bg-stone-100 px-4 py-2 text-sm text-stone-600">
                 {dropMessage}
               </div>
-              <PianoRoll
-                song={song}
-                activeTrackIds={activeTrackIds}
-                selectedBar={selectedBar}
-                selectedBarLength={selectedBarLength}
-                onBarClick={handleBarClick}
-              />
+              <PianoRollContainer playbackController={playbackRef.current} />
             </div>
           </>
         ) : (
