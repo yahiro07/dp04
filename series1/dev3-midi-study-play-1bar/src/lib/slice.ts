@@ -41,7 +41,7 @@ export function buildSliceExport(
         .map((note) => ({
           position: note.startStep - startStep,
           duration: note.durationSteps,
-          midi: note.midi,
+          noteNumber: note.noteNumber,
           velocity: note.velocity,
         })),
     }))
@@ -75,7 +75,7 @@ export function buildPlaybackEvents(
         .map((note) => ({
           channel: note.channel,
           program: track.channelPrograms[note.channel] ?? 0,
-          midi: note.midi,
+          noteNumber: note.noteNumber,
           velocity: note.velocity,
           startSeconds: (note.startStep - startStep) * secondsPerStep,
           endSeconds:
@@ -84,6 +84,7 @@ export function buildPlaybackEvents(
     )
     .sort(
       (left, right) =>
-        left.startSeconds - right.startSeconds || left.midi - right.midi,
+        left.startSeconds - right.startSeconds ||
+        left.noteNumber - right.noteNumber,
     );
 }

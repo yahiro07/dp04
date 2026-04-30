@@ -2,7 +2,7 @@ export type BarLength = 1 | 2 | 4;
 
 export interface MidiNoteEvent {
   id: string;
-  midi: number;
+  noteNumber: number;
   velocity: number;
   startTick: number;
   durationTicks: number;
@@ -29,8 +29,8 @@ export interface TrackData {
 }
 
 export interface NoteRange {
-  minMidi: number;
-  maxMidi: number;
+  minNoteNumber: number;
+  maxNoteNumber: number;
   minOctave: number;
   maxOctave: number;
 }
@@ -52,7 +52,7 @@ export interface ParsedMidiSong {
 export interface SliceTrackNote {
   position: number;
   duration: number;
-  midi: number;
+  noteNumber: number;
   velocity: number;
 }
 
@@ -73,7 +73,7 @@ export interface SliceExport {
 export interface PlaybackEvent {
   channel: number;
   program: number;
-  midi: number;
+  noteNumber: number;
   velocity: number;
   startSeconds: number;
   endSeconds: number;

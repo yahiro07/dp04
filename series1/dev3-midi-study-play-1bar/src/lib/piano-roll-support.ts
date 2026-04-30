@@ -175,11 +175,11 @@ export function createPianoRollViewModel(
     const isActive = activeTrackIds.includes(track.id);
 
     return track.notes.map((note) => {
-      const topIndex = song.range.maxOctave * 12 + 11 - note.midi;
+      const topIndex = song.range.maxOctave * 12 + 11 - note.noteNumber;
 
       return {
         id: note.id,
-        title: `${track.name} ${formatNoteName(note.midi)}`,
+        title: `${track.name} ${formatNoteName(note.noteNumber)}`,
         top: topIndex * ROW_HEIGHT + 2,
         left: note.startStep * STEP_WIDTH,
         width: Math.max(4, note.durationSteps * STEP_WIDTH - 2),

@@ -59,19 +59,19 @@ export function createPlaybackController(
 
       const noteOnId = window.setTimeout(
         () => {
-          synth.noteOn(event.channel, event.midi, event.velocity, 0);
+          synth.noteOn(event.channel, event.noteNumber, event.velocity, 0);
         },
         Math.max(0, Math.round(event.startSeconds * 1000)),
       );
       const noteOffId = window.setTimeout(
         () => {
-          synth.noteOff(event.channel, event.midi, 0);
+          synth.noteOff(event.channel, event.noteNumber, 0);
         },
         Math.max(0, Math.round(event.endSeconds * 1000)),
       );
 
       scheduledTimeouts.push(noteOnId, noteOffId);
-      scheduledNotes.push({ channel: event.channel, midi: event.midi });
+      scheduledNotes.push({ channel: event.channel, midi: event.noteNumber });
     }
 
     const lastEndSeconds = Math.max(...events.map((event) => event.endSeconds));

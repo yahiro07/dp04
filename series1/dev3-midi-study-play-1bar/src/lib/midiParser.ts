@@ -40,13 +40,13 @@ function clampStartTick(tick: number): number {
 
 function getNoteRange(tracks: TrackData[]): NoteRange {
   const allMidiNotes = tracks.flatMap((track) =>
-    track.notes.map((note) => note.midi),
+    track.notes.map((note) => note.noteNumber),
   );
 
   if (allMidiNotes.length === 0) {
     return {
-      minMidi: 60,
-      maxMidi: 71,
+      minNoteNumber: 60,
+      maxNoteNumber: 71,
       minOctave: 5,
       maxOctave: 5,
     };
@@ -58,8 +58,8 @@ function getNoteRange(tracks: TrackData[]): NoteRange {
   const maxOctave = Math.floor((maxMidi - C_NOTE) / MIDI_NOTES_PER_OCTAVE);
 
   return {
-    minMidi,
-    maxMidi,
+    minNoteNumber: minMidi,
+    maxNoteNumber: maxMidi,
     minOctave,
     maxOctave,
   };
@@ -99,7 +99,7 @@ export async function parseMidiFileBytes(
 
         return {
           id: `${trackIndex}-${noteIndex}`,
-          midi: note.midi,
+          noteNumber: note.midi,
           velocity: Math.round(note.velocity * 127),
           startTick: adjustedStartTick,
           durationTicks: note.durationTicks,
