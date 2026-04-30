@@ -1,6 +1,6 @@
 import { TrackList } from "@/components/TrackList";
 import { createTrackListItems } from "@/lib/view-model-support";
-import { toggleChannel } from "@/store/appSlice";
+import { soloChannel, toggleChannel } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export function TrackListContainer() {
@@ -17,6 +17,7 @@ export function TrackListContainer() {
     <TrackList
       items={items}
       onToggleTrack={(channel) => dispatch(toggleChannel(channel))}
+      onSoloTrack={(channel) => dispatch(soloChannel(channel))}
     />
   );
 }

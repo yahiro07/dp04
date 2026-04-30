@@ -23,6 +23,12 @@ function collectSongChannels(song: ParsedMidiSong) {
   ).sort((left, right) => left - right);
 }
 
+function hasChannel(song: ParsedMidiSong, channel: number) {
+  return song.tracks.some((track) =>
+    track.notes.some((note) => note.channel === channel),
+  );
+}
+
 const initialState: AppState = {
   song: null,
   status: "idle",
@@ -71,6 +77,13 @@ const appSlice = createSlice({
         (left, right) => left - right,
       );
     },
+    soloChannel(state, action: PayloadAction<number>) {
+      if (!state.song || !hasChannel(state.song, action.payload)) {
+        return;
+      }
+
+      state.activeChannels = [action.payload];
+    },
     setPlaying(state, action: PayloadAction<boolean>) {
       state.isPlaying = action.payload;
     },
@@ -106,6 +119,7 @@ export const {
   setPreviewEnabled,
   setSelectedBar,
   setSelectedBarLength,
+  soloChannel,
   toggleChannel,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
