@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { PianoRoll } from "@/components/PianoRoll";
 import { TopBar } from "@/components/TopBar";
 import { TrackList } from "@/components/TrackList";
+import {
+  createWindowMidiDropHandlers,
+  pickMidiFile,
+} from "@/lib/file-loading-support";
 import { formatOctaveRange } from "@/lib/formatters";
 import { createPlaybackController } from "@/lib/playback";
 import { buildPlaybackEvents, buildSliceExport } from "@/lib/slice";
@@ -14,23 +18,6 @@ import {
   toggleTrack,
 } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-
-function isMidiFile(file: File) {
-  const lowerName = file.name.toLowerCase();
-  return (
-    lowerName.endsWith(".mid") ||
-    lowerName.endsWith(".midi") ||
-    file.type === "audio/midi"
-  );
-}
-
-function pickMidiFile(fileList: FileList | null) {
-  if (!fileList) {
-    return null;
-  }
-
-  return Array.from(fileList).find(isMidiFile) ?? null;
-}
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -63,28 +50,22 @@ export default function App() {
     return `${song.tracks.length} tracks, BPM ${song.bpm}, range ${formatOctaveRange(song.range)}`;
   }, [song]);
 
+  const handleMidiFileLoad = useCallback(
+    (file: File) => {
+      playbackRef.current.stop();
+      void dispatch(loadMidiFile(file));
+    },
+    [dispatch],
+  );
+
   useEffect(() => {
-    const handleDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-
-    const handleDrop = (event: DragEvent) => {
-      event.preventDefault();
-      const file = pickMidiFile(event.dataTransfer?.files ?? null);
-
-      if (file) {
-        void dispatch(loadMidiFile(file));
-      }
-    };
-
-    window.addEventListener("dragover", handleDragOver);
-    window.addEventListener("drop", handleDrop);
+    const dropHandlers = createWindowMidiDropHandlers(handleMidiFileLoad);
+    dropHandlers.register();
 
     return () => {
-      window.removeEventListener("dragover", handleDragOver);
-      window.removeEventListener("drop", handleDrop);
+      dropHandlers.unregister();
     };
-  }, [dispatch]);
+  }, [handleMidiFileLoad]);
 
   useEffect(() => {
     return () => {
@@ -96,8 +77,7 @@ export default function App() {
     const file = pickMidiFile(fileList);
 
     if (file) {
-      playbackRef.current.stop();
-      void dispatch(loadMidiFile(file));
+      handleMidiFileLoad(file);
     }
   };
 
