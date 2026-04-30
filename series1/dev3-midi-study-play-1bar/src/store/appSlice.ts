@@ -3,7 +3,7 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { parseMidiFile } from "@/lib/midiParser";
+import { parseMidiFileBytes } from "@/lib/midiParser";
 import type { BarLength, ParsedMidiSong } from "@/types/midi";
 
 interface AppState {
@@ -30,7 +30,10 @@ const initialState: AppState = {
 
 export const loadMidiFile = createAsyncThunk(
   "app/loadMidiFile",
-  async (file: File) => parseMidiFile(file),
+  async (file: File) => {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return parseMidiFileBytes(bytes, file.name);
+  },
 );
 
 const appSlice = createSlice({

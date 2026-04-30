@@ -65,9 +65,11 @@ function getNoteRange(tracks: TrackData[]): NoteRange {
   };
 }
 
-export async function parseMidiFile(file: File): Promise<ParsedMidiSong> {
-  const buffer = await file.arrayBuffer();
-  const midi = new Midi(buffer);
+export async function parseMidiFileBytes(
+  bytes: Uint8Array,
+  fileName: string,
+): Promise<ParsedMidiSong> {
+  const midi = new Midi(bytes);
   const ticksPerQuarter = getTicksPerQuarter(midi);
   const ticksPerStep = getTicksPerStep(ticksPerQuarter);
   const ticksPerBar = getTicksPerBar(ticksPerQuarter);
@@ -133,7 +135,7 @@ export async function parseMidiFile(file: File): Promise<ParsedMidiSong> {
   const totalBars = Math.max(1, Math.ceil(totalSteps / STEPS_PER_BAR));
 
   return {
-    fileName: file.name,
+    fileName,
     bpm: Math.round(getTempoBpm(midi)),
     ppq: midi.header.ppq,
     ticksPerQuarter,
