@@ -179,7 +179,7 @@ export default function App() {
           <div className="flex flex-1 items-center justify-center px-6">
             <div className="max-w-xl rounded border border-dashed border-stone-400 bg-white/80 px-8 py-10 text-center shadow-sm">
               <div className="text-lg font-semibold">
-                MIDI Pattern Extractor
+                MIDI Piano Roll Viewer
               </div>
               <p className="mt-3 text-sm leading-6 text-stone-600">
                 Use the Load button or drop a MIDI file anywhere in the window.
