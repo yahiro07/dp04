@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { PianoRollContainer } from "@/containers/PianoRollContainer";
 import { TopBarContainer } from "@/containers/TopBarContainer";
 import { TrackListContainer } from "@/containers/TrackListContainer";
 import {
+  createMidiFileLoadHandler,
   createWindowMidiDropHandlers,
-  pickMidiFile,
+  handleSelectedMidiFileList,
 } from "@/lib/file-loading-support";
-import { formatOctaveRange } from "@/lib/formatters";
 import { createPlaybackController } from "@/lib/playback";
+import { createDropMessage } from "@/lib/view-model-support";
 import { loadMidiFile, setPlaying } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -23,19 +24,13 @@ export default function App() {
   );
 
   const { error, song } = useAppSelector((state) => state.app);
-  const dropMessage = useMemo(() => {
-    if (!song) {
-      return "Load a MIDI file to render the piano roll.";
-    }
-
-    return `${song.tracks.length} tracks, BPM ${song.bpm}, range ${formatOctaveRange(song.range)}`;
-  }, [song]);
-
-  const handleMidiFileLoad = useCallback(
-    (file: File) => {
-      playbackRef.current.stop();
-      void dispatch(loadMidiFile(file));
-    },
+  const dropMessage = useMemo(() => createDropMessage(song), [song]);
+  const handleMidiFileLoad = useMemo(
+    () =>
+      createMidiFileLoadHandler({
+        stopPlayback: () => playbackRef.current.stop(),
+        loadFile: (file) => dispatch(loadMidiFile(file)),
+      }),
     [dispatch],
   );
 
@@ -55,11 +50,7 @@ export default function App() {
   }, []);
 
   const handleFileChange = (fileList: FileList | null) => {
-    const file = pickMidiFile(fileList);
-
-    if (file) {
-      handleMidiFileLoad(file);
-    }
+    handleSelectedMidiFileList(fileList, handleMidiFileLoad);
   };
 
   return (

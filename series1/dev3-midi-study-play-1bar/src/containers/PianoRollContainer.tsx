@@ -1,6 +1,9 @@
 import { PianoRoll } from "@/components/PianoRoll";
+import {
+  createPianoRollViewModel,
+  resolvePianoRollBarSelection,
+} from "@/lib/piano-roll-support";
 import type { PlaybackController } from "@/lib/playback";
-import { buildPlaybackEvents, buildSliceExport } from "@/lib/slice";
 import { setSelectedBar } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -24,42 +27,38 @@ export function PianoRollContainer(props: PianoRollContainerProps) {
     return null;
   }
 
+  const viewModel = createPianoRollViewModel({
+    song,
+    activeTrackIds,
+    selectedBar,
+    selectedBarLength,
+  });
+
   const handleBarClick = (barIndex: number) => {
-    if (isPlaying) {
+    const result = resolvePianoRollBarSelection({
+      song,
+      activeTrackIds,
+      barIndex,
+      selectedBarLength,
+      previewEnabled,
+      isPlaying,
+    });
+
+    if (result.shouldStopPlayback) {
       playbackController.stop();
       return;
     }
 
-    dispatch(setSelectedBar(barIndex));
+    dispatch(setSelectedBar(result.nextSelectedBar));
 
-    const sliceExport = buildSliceExport(
-      song,
-      activeTrackIds,
-      barIndex,
-      selectedBarLength,
-    );
-    console.log(JSON.stringify(sliceExport, null, 2));
-
-    if (!previewEnabled) {
-      return;
+    if (result.sliceExport) {
+      console.log(JSON.stringify(result.sliceExport, null, 2));
     }
 
-    const playbackEvents = buildPlaybackEvents(
-      song,
-      activeTrackIds,
-      barIndex,
-      selectedBarLength,
-    );
-    playbackController.play(playbackEvents);
+    if (result.playbackEvents.length > 0) {
+      playbackController.play(result.playbackEvents);
+    }
   };
 
-  return (
-    <PianoRoll
-      song={song}
-      activeTrackIds={activeTrackIds}
-      selectedBar={selectedBar}
-      selectedBarLength={selectedBarLength}
-      onBarClick={handleBarClick}
-    />
-  );
+  return <PianoRoll viewModel={viewModel} onBarClick={handleBarClick} />;
 }

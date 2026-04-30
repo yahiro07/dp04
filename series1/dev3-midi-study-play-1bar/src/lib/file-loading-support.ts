@@ -15,6 +15,33 @@ export function pickMidiFile(fileList: FileList | null) {
   return Array.from(fileList).find(isMidiFile) ?? null;
 }
 
+export function handleSelectedMidiFileList(
+  fileList: FileList | null,
+  onFileSelect: (file: File) => void,
+) {
+  const file = pickMidiFile(fileList);
+
+  if (!file) {
+    return;
+  }
+
+  onFileSelect(file);
+}
+
+interface MidiFileLoadHandlerOptions {
+  stopPlayback: () => void;
+  loadFile: (file: File) => unknown;
+}
+
+export function createMidiFileLoadHandler(options: MidiFileLoadHandlerOptions) {
+  const { loadFile, stopPlayback } = options;
+
+  return (file: File) => {
+    stopPlayback();
+    void loadFile(file);
+  };
+}
+
 export function createWindowMidiDropHandlers(onFileDrop: (file: File) => void) {
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();

@@ -1,41 +1,27 @@
 import type { ChangeEvent } from "react";
-import type { BarLength, ParsedMidiSong } from "@/types/midi";
+import type { TopBarViewModel } from "@/lib/view-model-support";
+import type { BarLength } from "@/types/midi";
 
 interface TopBarProps {
-  song: ParsedMidiSong | null;
-  isLoading: boolean;
-  previewEnabled: boolean;
-  selectedBarLength: BarLength;
+  viewModel: TopBarViewModel;
   onLoadClick: () => void;
   onPreviewChange: (enabled: boolean) => void;
   onBarLengthChange: (value: BarLength) => void;
 }
 
-function toBarLength(value: string): BarLength {
-  if (value === "2") {
-    return 2;
-  }
-
-  if (value === "4") {
-    return 4;
-  }
-
-  return 1;
-}
-
 export function TopBar(props: TopBarProps) {
+  const { onBarLengthChange, onLoadClick, onPreviewChange, viewModel } = props;
   const {
+    bpmText,
+    fileNameText,
     isLoading,
-    onBarLengthChange,
-    onLoadClick,
-    onPreviewChange,
     previewEnabled,
+    rangeText,
     selectedBarLength,
-    song,
-  } = props;
+  } = viewModel;
 
   const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onBarLengthChange(toBarLength(event.target.value));
+    onBarLengthChange(Number(event.target.value) as BarLength);
   };
 
   return (
@@ -72,18 +58,11 @@ export function TopBar(props: TopBarProps) {
           <span>preview</span>
         </label>
 
-        <div className="min-w-28 text-sm text-stone-700">
-          BPM: {song ? song.bpm : "-"}
-        </div>
+        <div className="min-w-28 text-sm text-stone-700">BPM: {bpmText}</div>
         <div className="min-w-40 text-sm text-stone-700">
-          Range:{" "}
-          {song
-            ? `C${song.range.minOctave - 1} - B${song.range.maxOctave - 1}`
-            : "-"}
+          Range: {rangeText}
         </div>
-        <div className="truncate text-sm text-stone-500">
-          {song ? song.fileName : "Drop a MIDI file anywhere or use Load."}
-        </div>
+        <div className="truncate text-sm text-stone-500">{fileNameText}</div>
       </div>
     </header>
   );

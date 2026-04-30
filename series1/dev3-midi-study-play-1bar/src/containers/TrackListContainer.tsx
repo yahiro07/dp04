@@ -1,4 +1,5 @@
 import { TrackList } from "@/components/TrackList";
+import { createTrackListItems } from "@/lib/view-model-support";
 import { toggleTrack } from "@/store/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -10,10 +11,11 @@ export function TrackListContainer() {
     return null;
   }
 
+  const items = createTrackListItems(song.tracks, activeTrackIds);
+
   return (
     <TrackList
-      tracks={song.tracks}
-      activeTrackIds={activeTrackIds}
+      items={items}
       onToggleTrack={(trackId) => dispatch(toggleTrack(trackId))}
     />
   );
