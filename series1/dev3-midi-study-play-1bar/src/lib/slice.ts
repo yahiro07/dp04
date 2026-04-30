@@ -33,31 +33,36 @@ export function buildSliceExport(
   const { startStep, endStep } = getSliceSteps(startBar, barLength);
 
   const tracks: SliceTrackExport[] = song.tracks
-    .map((track) => ({
-      trackId: track.id,
-      trackName: track.name,
-      channelPrograms: getSortedPrograms(track).filter((program) =>
+    .map((track) => {
+      const channelProgram = getSortedPrograms(track).filter((program) =>
         isChannelActive(activeChannels, program.channel),
-      ),
-      notes: track.notes
-        .filter(
-          (note) =>
-            isChannelActive(activeChannels, note.channel) &&
-            note.startStep >= startStep &&
-            note.startStep < endStep,
-        )
-        .map((note) => ({
-          position: note.startStep - startStep,
-          duration: note.durationSteps,
-          noteNumber: note.noteNumber,
-          velocity: note.velocity,
-        })),
-    }))
+      );
+      return {
+        // trackId: track.id,
+        // trackName: track.name,
+        // channelPrograms:,
+        channel: channelProgram[0]?.channel ?? 0,
+        program: channelProgram[0]?.program ?? 0,
+        notes: track.notes
+          .filter(
+            (note) =>
+              isChannelActive(activeChannels, note.channel) &&
+              note.startStep >= startStep &&
+              note.startStep < endStep,
+          )
+          .map((note) => ({
+            position: note.startStep - startStep,
+            duration: note.durationSteps,
+            noteNumber: note.noteNumber,
+            velocity: note.velocity,
+          })),
+      };
+    })
     .filter((track) => track.notes.length > 0);
 
   return {
     tempo: song.bpm,
-    startBar,
+    // startBar,
     barLength,
     tracks,
   };

@@ -57,15 +57,17 @@ export interface SliceTrackNote {
 }
 
 export interface SliceTrackExport {
-  trackId: string;
-  trackName: string;
-  channelPrograms: InstrumentInfo[];
+  // trackId: string;
+  // trackName: string;
+  // channelPrograms: InstrumentInfo[];
+  channel: number;
+  program: number;
   notes: SliceTrackNote[];
 }
 
 export interface SliceExport {
   tempo: number;
-  startBar: number;
+  // startBar: number;
   barLength: BarLength;
   tracks: SliceTrackExport[];
 }
