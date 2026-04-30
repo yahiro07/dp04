@@ -11,6 +11,7 @@ export interface TopBarViewModel {
 }
 
 export interface TrackListItemViewModel {
+  channel: number;
   id: string;
   name: string;
   color: string;
@@ -51,12 +52,29 @@ export function createTopBarViewModel(
 
 export function createTrackListItems(
   tracks: TrackData[],
-  activeTrackIds: string[],
+  activeChannels: number[],
 ): TrackListItemViewModel[] {
-  return tracks.map((track) => ({
-    id: track.id,
-    name: track.name,
-    color: track.color,
-    isActive: activeTrackIds.includes(track.id),
-  }));
+  const channelMap = new Map<number, TrackListItemViewModel>();
+
+  for (const track of tracks) {
+    const channels = Array.from(
+      new Set(track.notes.map((note) => note.channel)),
+    ).sort((left, right) => left - right);
+
+    for (const channel of channels) {
+      if (channelMap.has(channel)) {
+        continue;
+      }
+
+      channelMap.set(channel, {
+        channel,
+        id: `channel-${channel}`,
+        name: `Channel ${channel + 1}`,
+        color: track.color,
+        isActive: activeChannels.includes(channel),
+      });
+    }
+  }
+
+  return [...channelMap.values()];
 }

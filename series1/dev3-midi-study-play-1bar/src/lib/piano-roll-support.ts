@@ -57,14 +57,14 @@ export interface PianoRollViewModel {
 
 interface CreatePianoRollViewModelParams {
   song: ParsedMidiSong;
-  activeTrackIds: string[];
+  activeChannels: number[];
   selectedBar: number | null;
   selectedBarLength: BarLength;
 }
 
 interface PianoRollBarSelectionParams {
   song: ParsedMidiSong;
-  activeTrackIds: string[];
+  activeChannels: number[];
   barIndex: number;
   selectedBarLength: BarLength;
   previewEnabled: boolean;
@@ -109,7 +109,7 @@ function isHighlightedBar(
 export function createPianoRollViewModel(
   params: CreatePianoRollViewModelParams,
 ): PianoRollViewModel {
-  const { activeTrackIds, selectedBar, selectedBarLength, song } = params;
+  const { activeChannels, selectedBar, selectedBarLength, song } = params;
   const midiRows = [] as number[];
 
   for (
@@ -172,9 +172,8 @@ export function createPianoRollViewModel(
   );
 
   const notes = song.tracks.flatMap((track) => {
-    const isActive = activeTrackIds.includes(track.id);
-
     return track.notes.map((note) => {
+      const isActive = activeChannels.includes(note.channel);
       const topIndex = song.range.maxOctave * 12 + 11 - note.noteNumber;
 
       return {
@@ -209,7 +208,7 @@ export function resolvePianoRollBarSelection(
   params: PianoRollBarSelectionParams,
 ): PianoRollBarSelectionResult {
   const {
-    activeTrackIds,
+    activeChannels,
     barIndex,
     isPlaying,
     previewEnabled,
@@ -228,7 +227,7 @@ export function resolvePianoRollBarSelection(
 
   const sliceExport = buildSliceExport(
     song,
-    activeTrackIds,
+    activeChannels,
     barIndex,
     selectedBarLength,
   );
@@ -238,7 +237,7 @@ export function resolvePianoRollBarSelection(
     nextSelectedBar: barIndex,
     sliceExport,
     playbackEvents: previewEnabled
-      ? buildPlaybackEvents(song, activeTrackIds, barIndex, selectedBarLength)
+      ? buildPlaybackEvents(song, activeChannels, barIndex, selectedBarLength)
       : [],
   };
 }

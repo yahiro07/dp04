@@ -2,7 +2,7 @@ import type { TrackListItemViewModel } from "@/lib/view-model-support";
 
 interface TrackListProps {
   items: TrackListItemViewModel[];
-  onToggleTrack: (trackId: string) => void;
+  onToggleTrack: (channel: number) => void;
 }
 
 export function TrackList(props: TrackListProps) {
@@ -11,7 +11,7 @@ export function TrackList(props: TrackListProps) {
   return (
     <aside className="w-64 shrink-0 border-r border-stone-300 bg-stone-50">
       <div className="border-b border-stone-300 px-4 py-3 text-sm font-semibold text-stone-900">
-        Tracks
+        Channels
       </div>
       <div className="flex flex-col gap-2 p-3">
         {items.map((item) => {
@@ -26,7 +26,7 @@ export function TrackList(props: TrackListProps) {
               />
               <input
                 checked={item.isActive}
-                onChange={() => onToggleTrack(item.id)}
+                onChange={() => onToggleTrack(item.channel)}
                 type="checkbox"
               />
               <span className="min-w-0 flex-1 truncate">{item.name}</span>

@@ -15,7 +15,7 @@ export function PianoRollContainer(props: PianoRollContainerProps) {
   const { playbackController } = props;
   const dispatch = useAppDispatch();
   const {
-    activeTrackIds,
+    activeChannels,
     isPlaying,
     previewEnabled,
     selectedBar,
@@ -29,7 +29,7 @@ export function PianoRollContainer(props: PianoRollContainerProps) {
 
   const viewModel = createPianoRollViewModel({
     song,
-    activeTrackIds,
+    activeChannels,
     selectedBar,
     selectedBarLength,
   });
@@ -37,7 +37,7 @@ export function PianoRollContainer(props: PianoRollContainerProps) {
   const handleBarClick = (barIndex: number) => {
     const result = resolvePianoRollBarSelection({
       song,
-      activeTrackIds,
+      activeChannels,
       barIndex,
       selectedBarLength,
       previewEnabled,

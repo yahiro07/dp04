@@ -13,8 +13,14 @@ interface AppState {
   previewEnabled: boolean;
   selectedBarLength: BarLength;
   selectedBar: number | null;
-  activeTrackIds: string[];
+  activeChannels: number[];
   isPlaying: boolean;
+}
+
+function collectSongChannels(song: ParsedMidiSong) {
+  return Array.from(
+    new Set(song.tracks.flatMap((track) => track.notes.map((note) => note.channel))),
+  ).sort((left, right) => left - right);
 }
 
 const initialState: AppState = {
@@ -24,7 +30,7 @@ const initialState: AppState = {
   previewEnabled: true,
   selectedBarLength: 1,
   selectedBar: null,
-  activeTrackIds: [],
+  activeChannels: [],
   isPlaying: false,
 };
 
@@ -49,19 +55,21 @@ const appSlice = createSlice({
     setSelectedBar(state, action: PayloadAction<number | null>) {
       state.selectedBar = action.payload;
     },
-    toggleTrack(state, action: PayloadAction<string>) {
+    toggleChannel(state, action: PayloadAction<number>) {
       if (!state.song) {
         return;
       }
 
-      if (state.activeTrackIds.includes(action.payload)) {
-        state.activeTrackIds = state.activeTrackIds.filter(
-          (trackId) => trackId !== action.payload,
+      if (state.activeChannels.includes(action.payload)) {
+        state.activeChannels = state.activeChannels.filter(
+          (channel) => channel !== action.payload,
         );
         return;
       }
 
-      state.activeTrackIds = [...state.activeTrackIds, action.payload];
+      state.activeChannels = [...state.activeChannels, action.payload].sort(
+        (left, right) => left - right,
+      );
     },
     setPlaying(state, action: PayloadAction<boolean>) {
       state.isPlaying = action.payload;
@@ -81,13 +89,13 @@ const appSlice = createSlice({
           state.status = "ready";
           state.error = null;
           state.selectedBar = null;
-          state.activeTrackIds = action.payload.tracks.map((track) => track.id);
+          state.activeChannels = collectSongChannels(action.payload);
         },
       )
       .addCase(loadMidiFile.rejected, (state, action) => {
         state.status = "error";
         state.song = null;
-        state.activeTrackIds = [];
+        state.activeChannels = [];
         state.error = action.error.message ?? "Failed to parse MIDI file.";
       });
   },
@@ -98,6 +106,6 @@ export const {
   setPreviewEnabled,
   setSelectedBar,
   setSelectedBarLength,
-  toggleTrack,
+  toggleChannel,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;

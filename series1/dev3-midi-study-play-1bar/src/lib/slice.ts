@@ -14,6 +14,10 @@ function getSortedPrograms(track: TrackData) {
     .sort((left, right) => left.channel - right.channel);
 }
 
+function isChannelActive(activeChannels: number[], channel: number) {
+  return activeChannels.includes(channel);
+}
+
 export function getSliceSteps(startBar: number, barLength: BarLength) {
   const startStep = startBar * STEPS_PER_BAR;
   const endStep = startStep + barLength * STEPS_PER_BAR;
@@ -22,21 +26,25 @@ export function getSliceSteps(startBar: number, barLength: BarLength) {
 
 export function buildSliceExport(
   song: ParsedMidiSong,
-  activeTrackIds: string[],
+  activeChannels: number[],
   startBar: number,
   barLength: BarLength,
 ): SliceExport {
   const { startStep, endStep } = getSliceSteps(startBar, barLength);
 
   const tracks: SliceTrackExport[] = song.tracks
-    .filter((track) => activeTrackIds.includes(track.id))
     .map((track) => ({
       trackId: track.id,
       trackName: track.name,
-      channelPrograms: getSortedPrograms(track),
+      channelPrograms: getSortedPrograms(track).filter((program) =>
+        isChannelActive(activeChannels, program.channel),
+      ),
       notes: track.notes
         .filter(
-          (note) => note.startStep >= startStep && note.startStep < endStep,
+          (note) =>
+            isChannelActive(activeChannels, note.channel) &&
+            note.startStep >= startStep &&
+            note.startStep < endStep,
         )
         .map((note) => ({
           position: note.startStep - startStep,
@@ -57,7 +65,7 @@ export function buildSliceExport(
 
 export function buildPlaybackEvents(
   song: ParsedMidiSong,
-  activeTrackIds: string[],
+  activeChannels: number[],
   startBar: number,
   barLength: BarLength,
 ): PlaybackEvent[] {
@@ -66,11 +74,13 @@ export function buildPlaybackEvents(
   const secondsPerStep = secondsPerBeat / 4;
 
   return song.tracks
-    .filter((track) => activeTrackIds.includes(track.id))
     .flatMap((track) =>
       track.notes
         .filter(
-          (note) => note.startStep >= startStep && note.startStep < endStep,
+          (note) =>
+            isChannelActive(activeChannels, note.channel) &&
+            note.startStep >= startStep &&
+            note.startStep < endStep,
         )
         .map((note) => ({
           channel: note.channel,
