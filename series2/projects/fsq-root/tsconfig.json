@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@fd0/*": [
+        "../fsq-d0/*"
+      ],
+      "@lib/*": [
+        "../../lib/*"
+      ],
+    }
+  },
+  "include": [
+    "index.ts",
+    "../../lib/**/*",
+  ]
+}

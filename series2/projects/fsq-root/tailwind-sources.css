@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+@source "../../lib/components1/**/*.{ts,tsx}";
+@source "../fsq-d0/**/*.{ts,tsx}";

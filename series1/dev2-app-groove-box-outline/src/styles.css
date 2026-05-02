@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(245, 158, 11, 0.14), transparent 24%),
+    linear-gradient(180deg, #171717 0%, #09090b 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", monospace;
+}
