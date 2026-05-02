@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 import { Show } from "solid-js";
-import { getSongBuffer, pauseSong, playSong } from "../lib/audioPlayer";
+import { getSongBuffer, pauseSong, playSong } from "../modules/audio-player";
 import { setStore, store } from "../store";
 
 interface Props {

@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount } from "solid-js";
-import type { AnalysisDebugData } from "../lib/audioAnalysis";
+import type { AnalysisDebugData } from "../modules/audio-analysis";
 
 interface Props {
   data: AnalysisDebugData;

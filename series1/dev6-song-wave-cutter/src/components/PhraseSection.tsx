@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import { Show } from "solid-js";
-import { exportMp3, exportWav } from "../lib/audioExport";
-import { playPhrase, stopPhrase, getSongBuffer } from "../lib/audioPlayer";
+import { exportMp3, exportWav } from "../modules/audio-export";
+import { getSongBuffer, playPhrase, stopPhrase } from "../modules/audio-player";
 import { BAR_LENGTH_OPTIONS, setStore, store } from "../store";
 import BarLengthSelector from "./BarLengthSelector";
 import DraggableNumber from "./DraggableNumber";
@@ -28,8 +28,7 @@ function computePhrase(
 }
 
 const PhraseSection: Component = () => {
-  const ready = () =>
-    store.bpm != null && store.startSamplesOffset != null;
+  const ready = () => store.bpm != null && store.startSamplesOffset != null;
 
   function handlePlayPause() {
     const buf = getSongBuffer();

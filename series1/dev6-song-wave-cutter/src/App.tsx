@@ -3,9 +3,13 @@ import { createSignal, Show } from "solid-js";
 import AnalysisDebugView from "./components/AnalysisDebugView";
 import PhraseSection from "./components/PhraseSection";
 import SongSection from "./components/SongSection";
-import type { AnalysisDebugData } from "./lib/audioAnalysis";
-import { AnalysisError, analyzeAudio } from "./lib/audioAnalysis";
-import { loadAndDecodeFile, stopPhrase, stopSong } from "./lib/audioPlayer";
+import type { AnalysisDebugData } from "./modules/audio-analysis";
+import { AnalysisError, analyzeAudio } from "./modules/audio-analysis";
+import {
+  loadAndDecodeFile,
+  stopPhrase,
+  stopSong,
+} from "./modules/audio-player";
 import { setStore } from "./store";
 
 export const App: Component = () => {
