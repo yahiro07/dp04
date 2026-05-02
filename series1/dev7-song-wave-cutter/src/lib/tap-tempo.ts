@@ -1,11 +1,8 @@
-import { configs } from "../configs";
 import { clampBpm } from "./audio-utils";
 
 export const registerTapTempo = (tapTimes: number[], currentTime: number) => {
-  const nextTapTimes = [...tapTimes, currentTime].slice(
-    -configs.tapHistorySize,
-  );
-  if (nextTapTimes.length < 2) {
+  const nextTapTimes = [...tapTimes, currentTime].slice(-4);
+  if (nextTapTimes.length < 4) {
     return {
       bpm: null,
       tapTimes: nextTapTimes,
