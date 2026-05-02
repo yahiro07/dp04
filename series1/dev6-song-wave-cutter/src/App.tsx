@@ -54,7 +54,9 @@ export const App: Component = () => {
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
-    e.dataTransfer && (e.dataTransfer.dropEffect = "copy");
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "copy";
+    }
   }
 
   function handleDrop(e: DragEvent) {
