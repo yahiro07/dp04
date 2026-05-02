@@ -4,7 +4,7 @@ import AnalysisDebugView from "./components/AnalysisDebugView";
 import PhraseSection from "./components/PhraseSection";
 import SongSection from "./components/SongSection";
 import type { AnalysisDebugData } from "./lib/audioAnalysis";
-import { analyzeAudio } from "./lib/audioAnalysis";
+import { AnalysisError, analyzeAudio } from "./lib/audioAnalysis";
 import { loadAndDecodeFile, stopPhrase, stopSong } from "./lib/audioPlayer";
 import { setStore } from "./store";
 
@@ -38,6 +38,9 @@ export const App: Component = () => {
         isAnalyzing: false,
       });
     } catch (err) {
+      if (err instanceof AnalysisError && err.debugData) {
+        setDebugData(err.debugData);
+      }
       setStore({
         analysisError: err instanceof Error ? err.message : String(err),
         isAnalyzing: false,

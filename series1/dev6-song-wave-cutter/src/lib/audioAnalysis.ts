@@ -1,3 +1,13 @@
+/** Error thrown by analyzeAudio. May carry partial debug data for display. */
+export class AnalysisError extends Error {
+  debugData?: AnalysisDebugData;
+  constructor(message: string, debugData?: AnalysisDebugData) {
+    super(message);
+    this.name = "AnalysisError";
+    this.debugData = debugData;
+  }
+}
+
 export interface AnalysisDebugData {
   /** RMS energy per frame (normalized 0–1) */
   energy: Float32Array;
@@ -41,7 +51,9 @@ export async function analyzeAudio(
   );
 
   if (analysisSamples < Math.floor(sampleRate * 0.3)) {
-    throw new Error("Audio too short for analysis (need at least 0.3 s)");
+    throw new AnalysisError(
+      "Audio too short for analysis (need at least 0.3 s)",
+    );
   }
 
   // --- Mix channels to mono ---
@@ -62,7 +74,7 @@ export async function analyzeAudio(
     if (a > maxAbs) maxAbs = a;
   }
   if (maxAbs < 0.001) {
-    throw new Error("No audio signal detected in the first 2 seconds");
+    throw new AnalysisError("No audio signal detected in the first 2 seconds");
   }
 
   // --- Low-pass filter via OfflineAudioContext ---
@@ -106,14 +118,33 @@ export async function analyzeAudio(
   }
 
   const maxOnset = Math.max(...onset);
+
+  // Build partial debug data (no peaks / threshold yet) for error cases
+  const buildPartialDebug = (): AnalysisDebugData => {
+    const maxE = Math.max(...energy, 1e-10);
+    const normE = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normE[f] = energy[f] / maxE;
+    const mo = Math.max(maxOnset, 1e-10);
+    const normO = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normO[f] = onset[f] / mo;
+    return {
+      energy: normE,
+      onset: normO,
+      peakFrames: [],
+      threshold: 0,
+      frameSizeSec: 0.01,
+    };
+  };
+
   if (maxOnset < 1e-5) {
-    throw new Error(
+    throw new AnalysisError(
       "Could not detect any transients in the low-frequency band",
+      buildPartialDebug(),
     );
   }
 
   // --- Peak picking ---
-  const threshold = maxOnset * 0.25;
+  const threshold = maxOnset * 0.5;
   // 150 ms minimum interval between kick hits
   const minPeakInterval = Math.max(1, Math.floor(0.15 / 0.01)); // frames
   const peaks: number[] = [];
@@ -130,8 +161,21 @@ export async function analyzeAudio(
   }
 
   if (peaks.length < 2) {
-    throw new Error(
+    // Build partial debug with threshold and found peaks (may be 0 or 1)
+    const maxE = Math.max(...energy, 1e-10);
+    const normE = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normE[f] = energy[f] / maxE;
+    const normO = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normO[f] = onset[f] / maxOnset;
+    throw new AnalysisError(
       "Could not detect enough kick drum beats to determine BPM (found fewer than 2)",
+      {
+        energy: normE,
+        onset: normO,
+        peakFrames: peaks,
+        threshold: threshold / maxOnset,
+        frameSizeSec: 0.01,
+      },
     );
   }
 
@@ -144,7 +188,22 @@ export async function analyzeAudio(
   const bpm = Math.round((framesPerSec / medianInterval) * 60);
 
   if (bpm < 40 || bpm > 240) {
-    throw new Error(`Detected BPM (${bpm}) is out of expected range (40–240)`);
+    // Build full debug data including all peaks
+    const maxE2 = Math.max(...energy, 1e-10);
+    const normE2 = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normE2[f] = energy[f] / maxE2;
+    const normO2 = new Float32Array(numFrames);
+    for (let f = 0; f < numFrames; f++) normO2[f] = onset[f] / maxOnset;
+    throw new AnalysisError(
+      `Detected BPM (${bpm}) is out of expected range (40–240)`,
+      {
+        energy: normE2,
+        onset: normO2,
+        peakFrames: peaks,
+        threshold: threshold / maxOnset,
+        frameSizeSec: 0.01,
+      },
+    );
   }
 
   const startSamplesOffset = peaks[0] * frameSize;
