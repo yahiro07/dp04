@@ -12,6 +12,7 @@ interface TopBarProps {
 export const TopBar = (props: TopBarProps) => {
   let fileInputElement: HTMLInputElement | undefined;
   let dragPointerId: number | null = null;
+  let dragLastX = 0;
   let dragLastY = 0;
   let dragCarry = 0;
 
@@ -33,6 +34,7 @@ export const TopBar = (props: TopBarProps) => {
     }
 
     dragPointerId = event.pointerId;
+    dragLastX = event.clientX;
     dragLastY = event.clientY;
     dragCarry = 0;
     targetElement.setPointerCapture(event.pointerId);
@@ -43,7 +45,11 @@ export const TopBar = (props: TopBarProps) => {
       return;
     }
 
-    dragCarry += dragLastY - event.clientY;
+    const deltaX = -(event.clientX - dragLastX);
+    const deltaY = dragLastY - event.clientY;
+
+    dragCarry += deltaX + deltaY;
+    dragLastX = event.clientX;
     dragLastY = event.clientY;
 
     const stepThreshold = configs.bpmDragPixelsPerStep;
@@ -64,6 +70,8 @@ export const TopBar = (props: TopBarProps) => {
     const targetElement = event.currentTarget as HTMLDivElement | null;
     if (dragPointerId === event.pointerId) {
       dragPointerId = null;
+      dragLastX = 0;
+      dragLastY = 0;
       dragCarry = 0;
       targetElement?.releasePointerCapture(event.pointerId);
     }

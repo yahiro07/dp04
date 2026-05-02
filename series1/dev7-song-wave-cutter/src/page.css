@@ -75,7 +75,7 @@ button {
   background: #fafaf9;
   padding: 10px 12px;
   text-align: center;
-  cursor: ns-resize;
+  cursor: ew-resize;
 }
 
 .value-chip strong {
