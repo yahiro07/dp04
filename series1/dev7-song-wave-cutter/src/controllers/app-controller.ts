@@ -27,6 +27,7 @@ const buildInitialState = (): AppState => {
     previewBeatLineRatios: [],
     waveformBars: [],
     selection: null,
+    isSongPlaying: false,
     isLoading: false,
     errorMessage: "",
   };
@@ -57,6 +58,7 @@ export const createAppController = () => {
 
   const stopPlayback = () => {
     audioEngine.stopPlayback();
+    setState("isSongPlaying", false);
   };
 
   const selectRange = (selection: SelectionRange) => {
@@ -84,6 +86,7 @@ export const createAppController = () => {
       sampleWindow.startSample,
       sampleWindow.endSample,
       loop,
+      () => setState("isSongPlaying", false),
     );
   };
 
@@ -103,6 +106,7 @@ export const createAppController = () => {
         previewBeatLineRatios: buildPreviewGuides(audioClip, state.bpm, 0),
         waveformBars: [],
         selection: null,
+        isSongPlaying: false,
         errorMessage: "",
       });
     } catch (error) {
@@ -176,6 +180,26 @@ export const createAppController = () => {
     await playSelection(selection, true);
   };
 
+  const toggleSongPlayback = async () => {
+    if (!state.audioClip) {
+      return;
+    }
+
+    if (state.isSongPlaying) {
+      stopPlayback();
+      return;
+    }
+
+    setState("isSongPlaying", true);
+    await audioEngine.playSegment(
+      state.audioClip,
+      0,
+      state.audioClip.totalSamples,
+      false,
+      () => setState("isSongPlaying", false),
+    );
+  };
+
   const exportSelection = async () => {
     if (
       !state.audioClip ||
@@ -213,6 +237,7 @@ export const createAppController = () => {
       selectRange,
       playSelectionOnce,
       startSelectionLoop,
+      toggleSongPlayback,
       stopPlayback,
       exportSelection,
     },

@@ -112,6 +112,12 @@ button {
   color: #171717;
 }
 
+.is-active {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #f0fdfa;
+}
+
 .meta-text {
   font-size: 12px;
   color: #57534e;

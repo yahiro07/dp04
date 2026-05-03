@@ -3,10 +3,12 @@ import { configs } from "../configs";
 interface TopBarProps {
   bpm: number;
   fileName: string | null;
+  isSongPlaying: boolean;
   isLoading: boolean;
   onLoadFile: (file: File) => void;
   onAdjustBpm: (deltaSteps: number) => void;
   onTapBpm: () => void;
+  onToggleSongPlayback: () => void;
 }
 
 export const TopBar = (props: TopBarProps) => {
@@ -107,6 +109,14 @@ export const TopBar = (props: TopBarProps) => {
           <span>drag vertical</span>
         </div>
       </div>
+      <button
+        class={`action-button ${props.isSongPlaying ? "is-active" : "secondary-button"}`}
+        disabled={!props.fileName}
+        onClick={props.onToggleSongPlayback}
+        type="button"
+      >
+        {props.isSongPlaying ? "stop" : "play"}
+      </button>
       <button
         class="action-button secondary-button"
         onClick={props.onTapBpm}

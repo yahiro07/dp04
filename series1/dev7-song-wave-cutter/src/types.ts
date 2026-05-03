@@ -29,6 +29,7 @@ export interface AppState {
   previewBeatLineRatios: number[];
   waveformBars: WaveformBar[];
   selection: SelectionRange | null;
+  isSongPlaying: boolean;
   isLoading: boolean;
   errorMessage: string;
 }

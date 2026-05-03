@@ -9,13 +9,18 @@ const audioContext = new AudioContext();
 
 let currentSource: AudioBufferSourceNode | null = null;
 let currentGainNode: GainNode | null = null;
+let onPlaybackEnded: (() => void) | null = null;
 
 const stopPlayback = () => {
+  if (currentSource) {
+    currentSource.onended = null;
+  }
   currentSource?.stop();
   currentSource?.disconnect();
   currentGainNode?.disconnect();
   currentSource = null;
   currentGainNode = null;
+  onPlaybackEnded = null;
 };
 
 const resumeAudioContext = async () => {
@@ -45,6 +50,7 @@ const playSegment = async (
   startSample: number,
   endSample: number,
   loop: boolean,
+  handleEnded?: () => void,
 ) => {
   if (endSample <= startSample) {
     return;
@@ -73,9 +79,11 @@ const playSegment = async (
 
   currentSource = sourceNode;
   currentGainNode = gainNode;
+  onPlaybackEnded = handleEnded ?? null;
 
   sourceNode.onended = () => {
     if (!loop) {
+      onPlaybackEnded?.();
       stopPlayback();
     }
   };

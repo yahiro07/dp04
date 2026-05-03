@@ -40,10 +40,12 @@ export const App = () => {
       <TopBar
         bpm={state.bpm}
         fileName={state.audioClip?.fileName ?? null}
+        isSongPlaying={state.isSongPlaying}
         isLoading={state.isLoading}
         onAdjustBpm={actions.adjustBpm}
         onLoadFile={actions.loadAudioFile}
         onTapBpm={actions.tapBpm}
+        onToggleSongPlayback={actions.toggleSongPlayback}
       />
 
       <OffsetAdjuster
