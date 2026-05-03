@@ -4,7 +4,7 @@ export const configs = {
   bpmMax: 240,
   bpmDragPixelsPerStep: 7,
   previewSeconds: 2,
-  displayMaxBars: 64,
+  displayMaxBars: 96,
   barsPerRow: 4,
   beatsPerBar: 4,
   mainWaveformPointsPerBar: 96,
