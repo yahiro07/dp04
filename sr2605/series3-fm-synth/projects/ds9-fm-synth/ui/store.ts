@@ -43,7 +43,7 @@ function calculateModulationFlags(schemes: OperatorScheme[]): number {
   const bp = ModulationFlagBitPosition;
   const setFlagBit = (pos: ModulationFlagBitPosition, enabled: boolean) => {
     if (enabled) {
-      flags |= 1 << (pos - 1);
+      flags |= 1 << pos;
     }
   };
   setFlagBit(bp.mod01, schemes[0] === "M");

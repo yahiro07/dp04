@@ -101,12 +101,12 @@ function voice_wireOperators(bus: SynthesisBus, voice: VoiceState) {
   const bp = ModulationFlagBitPosition;
   const opDummy = dummyZeroOperatorState;
 
-  const modEn01 = mf & bp.mod01;
-  const modEn12 = mf & bp.mod12;
-  const modEn23 = mf & bp.mod23;
-  const modEn02 = mf & bp.mod02;
-  const modEn13 = mf & bp.mod13;
-  const modEn03 = mf & bp.mod03;
+  const modEn01 = mf & (1 << bp.mod01);
+  const modEn12 = mf & (1 << bp.mod12);
+  const modEn23 = mf & (1 << bp.mod23);
+  const modEn02 = mf & (1 << bp.mod02);
+  const modEn13 = mf & (1 << bp.mod13);
+  const modEn03 = mf & (1 << bp.mod03);
 
   for (let i = 0; i < 4; i++) {
     const op = ops[i];
