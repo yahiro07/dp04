@@ -5,7 +5,7 @@ import { clampValue, linerInterpolate } from "@lib/ax/number-utils";
 import { mountAppRoot } from "@lib/ax-solid/mount-app-root";
 import { startDragSession } from "@lib/mo/drag-session";
 import { npx } from "@lib/mo/styling-utils";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
 function EditNoteInputBar_Narrow1() {
   const [state, setState] = createSignal({
@@ -96,15 +96,16 @@ const Editor1 = () => {
 };
 
 const Editor2 = () => {
+  type Note = {
+    noteNumber: number;
+    position: number;
+    duration: number;
+  };
   type State = {
-    tmpNotePosition: number;
-    tmpNoteDuration: number;
-    tmpNoteNumber: number;
+    tmpNote: Note | null;
   };
   const [state, setState] = createSignal<State>({
-    tmpNotePosition: 0,
-    tmpNoteDuration: 1,
-    tmpNoteNumber: 0,
+    tmpNote: null,
   });
 
   const helpers = {
@@ -121,7 +122,7 @@ const Editor2 = () => {
       return p * (640 / 32);
     },
   };
-  const core = {
+  const actions = {
     patchState(attrs: Partial<State>) {
       setState((prev) => ({ ...prev, ...attrs }));
     },
@@ -135,10 +136,12 @@ const Editor2 = () => {
         onDown(e) {
           const ni = helpers.yToNoteNumber(e.position.y);
           const pos = helpers.xToNotePosition(e.position.x);
-          core.patchState({
-            tmpNoteNumber: ni,
-            tmpNotePosition: pos,
-            tmpNoteDuration: 1,
+          actions.patchState({
+            tmpNote: {
+              noteNumber: ni,
+              position: pos,
+              duration: 1,
+            },
           });
           startNoteNumber = ni;
           startNotePosition = pos;
@@ -150,18 +153,24 @@ const Editor2 = () => {
           const ni = clampValue(startNoteNumber + yShift, -12, 24);
           const pos = helpers.xToNotePosition(e.position.x);
           const newDuration = pos - startNotePosition + 1;
-          core.patchState({ tmpNoteNumber: ni, tmpNoteDuration: newDuration });
+          actions.patchState({
+            tmpNote: {
+              noteNumber: ni,
+              position: state().tmpNote!.position,
+              duration: newDuration,
+            },
+          });
         },
       });
     },
     getTempNoteNumberY() {
-      return helpers.noteNumberToY(state().tmpNoteNumber);
+      return helpers.noteNumberToY(state().tmpNote?.noteNumber ?? 0);
     },
     getTempNotePositionX() {
-      return helpers.notePositionToX(state().tmpNotePosition);
+      return helpers.notePositionToX(state().tmpNote?.position ?? 0);
     },
     getTempNoteDurationWidth() {
-      return state().tmpNoteDuration * (640 / 32);
+      return (state().tmpNote?.duration ?? 0) * (640 / 32);
     },
   };
 
@@ -194,18 +203,20 @@ const Editor2 = () => {
             }}
           />
         ))}
-        <div
-          class="absolute flex-ha text-[#888] border border-[#888] bg-[#cfcc]"
-          style={{
-            left: npx(vm.getTempNotePositionX()),
-            top: npx(vm.getTempNoteNumberY()),
-            width: npx(vm.getTempNoteDurationWidth()),
-            height: "20px",
-            transform: "translateY(-50%)",
-          }}
-        >
-          {state().tmpNoteNumber}
-        </div>
+        <Show when={!!state().tmpNote && state().tmpNote!.duration > 0}>
+          <div
+            class="absolute flex-ha text-[#888] border border-[#888] bg-[#cfcc]"
+            style={{
+              left: npx(vm.getTempNotePositionX()),
+              top: npx(vm.getTempNoteNumberY()),
+              width: npx(vm.getTempNoteDurationWidth()),
+              height: "20px",
+              transform: "translateY(-50%)",
+            }}
+          >
+            {state().tmpNote?.noteNumber}
+          </div>
+        </Show>
       </div>
     </div>
   );
