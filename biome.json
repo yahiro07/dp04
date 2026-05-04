@@ -9,17 +9,14 @@
     "rules": {
       "recommended": true,
       "style": {
-        "useImportType": "off"
+        "useImportType": "off",
+        "noNonNullAssertion": "off"
       },
       "complexity": {
         "noUselessSwitchCase": "off"
       },
       "correctness": {
         "noConstantCondition": "off"
-      },
-      "suspicious": {
-        "noApproximativeNumericConstant": "off",
-        "useDefaultSwitchClauseLast": "off"
       },
       "a11y": {
         "noSvgWithoutTitle": "off",
