@@ -59,6 +59,10 @@ export function createOperatorParameters(): OperatorParameters {
 }
 
 export type CommonParameters = {
+  delayEnabled: boolean;
+  delayTime: number;
+  delayFeed: number;
+  delayMix: number;
   reverbEnabled: boolean;
   reverbTime: number;
   reverbMix: number;
@@ -68,6 +72,10 @@ export type CommonParameterKey = keyof CommonParameters;
 
 export function createCommonParameters(): CommonParameters {
   return {
+    delayEnabled: false,
+    delayTime: 0.5,
+    delayFeed: 0.5,
+    delayMix: 0.5,
     reverbEnabled: false,
     reverbTime: 0.5,
     reverbMix: 0.5,

@@ -10,6 +10,28 @@ export function EffectSection(props: {
     <div class="flex-v gap-1">
       <div class="flex-ha gap-4">
         <FeToggleBox
+          label="DELAY"
+          checked={props.parameters.delayEnabled}
+          onChange={(v) => props.setParameter("delayEnabled", v)}
+        />
+        <FeKnob
+          label="TIME"
+          value={props.parameters.delayTime}
+          onChange={(v) => props.setParameter("delayTime", v)}
+        />
+        <FeKnob
+          label="FEED"
+          value={props.parameters.delayFeed}
+          onChange={(v) => props.setParameter("delayFeed", v)}
+        />
+        <FeKnob
+          label="MIX"
+          value={props.parameters.delayMix}
+          onChange={(v) => props.setParameter("delayMix", v)}
+        />
+      </div>
+      <div class="flex-ha gap-4">
+        <FeToggleBox
           label="REVERB"
           checked={props.parameters.reverbEnabled}
           onChange={(v) => props.setParameter("reverbEnabled", v)}

@@ -1,6 +1,7 @@
 import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
 import { ISynthesizerRoot } from "@ds9/dsp/api";
 import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
+import { createDelayEffect } from "@ds9/dsp/delay-effect";
 import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
 import { createReverbSchroeder } from "@ds9/dsp/reverb-schroeder";
 import { getWaveformSample } from "@ds9/dsp/waveform";
@@ -325,11 +326,15 @@ function voice_processAudio(
 export function createSynthesizerRoot(): ISynthesizerRoot {
   const rc = createRenderingContext();
   const bus = createSynthesisBus();
+  const delayL = createDelayEffect();
+  const delayR = createDelayEffect();
   const reverbL = createReverbSchroeder();
   const reverbR = createReverbSchroeder();
   return {
     prepareProcessing(sampleRate, _maxFrameLength) {
       rc.sampleRate = sampleRate;
+      delayL.prepare(sampleRate);
+      delayR.prepare(sampleRate);
       reverbL.prepare(sampleRate);
       reverbR.prepare(sampleRate);
     },
@@ -372,6 +377,22 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       applyBufferGainRms(bufferR, configs.numVoices);
 
       const cp = rc.scene.commonParameters;
+      if (cp.delayEnabled) {
+        delayL.processSamples(
+          bufferL,
+          frames,
+          cp.delayTime,
+          cp.delayFeed,
+          cp.delayMix,
+        );
+        delayR.processSamples(
+          bufferR,
+          frames,
+          cp.delayTime,
+          cp.delayFeed,
+          cp.delayMix,
+        );
+      }
       if (cp.reverbEnabled) {
         reverbL.processSamples(bufferL, frames, cp.reverbTime, cp.reverbMix);
         reverbR.processSamples(bufferR, frames, cp.reverbTime, cp.reverbMix);
