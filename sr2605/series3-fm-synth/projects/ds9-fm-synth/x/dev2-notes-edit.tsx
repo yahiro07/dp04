@@ -124,6 +124,16 @@ const Editor2 = () => {
       return p * (640 / 32);
     },
   };
+  const readers = {
+    findNoteAt(position: number, noteNumber: number) {
+      return state().notes.find(
+        (note) =>
+          note.position <= position &&
+          position < note.position + note.duration &&
+          note.noteNumber === noteNumber,
+      );
+    },
+  };
   const actions = {
     patchState(attrs: Partial<State>) {
       setState((prev) => ({ ...prev, ...attrs }));
@@ -138,13 +148,24 @@ const Editor2 = () => {
         onDown(e) {
           const ni = helpers.yToNoteNumber(e.position.y);
           const pos = helpers.xToNotePosition(e.position.x);
-          actions.patchState({
-            tmpNote: {
-              noteNumber: ni,
-              position: pos,
-              duration: 1,
-            },
-          });
+          const note = readers.findNoteAt(pos, ni);
+          if (note) {
+            //edit note
+            actions.patchState({
+              notes: state().notes.filter((n) => n !== note),
+              tmpNote: note,
+            });
+          } else {
+            //create new note
+            actions.patchState({
+              tmpNote: {
+                noteNumber: ni,
+                position: pos,
+                duration: 1,
+              },
+            });
+          }
+
           startNoteNumber = ni;
           startNotePosition = pos;
         },
@@ -163,7 +184,7 @@ const Editor2 = () => {
             },
           });
         },
-        onUp(e) {
+        onUp() {
           const tmpNote = state().tmpNote;
           if (!tmpNote) return;
           if (tmpNote.duration > 0) {
