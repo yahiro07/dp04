@@ -138,7 +138,7 @@ const Editor2 = () => {
           core.patchState({
             tmpNoteNumber: ni,
             tmpNotePosition: pos,
-            // tmpNoteDuration: 1,
+            tmpNoteDuration: 1,
           });
           startNoteNumber = ni;
           startNotePosition = pos;
@@ -148,13 +148,9 @@ const Editor2 = () => {
             -(e.position.y - e.originalPosition.y) / (20 / 3),
           );
           const ni = clampValue(startNoteNumber + yShift, -12, 24);
-          core.patchState({ tmpNoteNumber: ni });
-
           const pos = helpers.xToNotePosition(e.position.x);
-          if (pos !== startNotePosition) {
-            const duration = Math.max(pos - startNotePosition + 1, 1);
-            core.patchState({ tmpNoteDuration: duration });
-          }
+          const newDuration = pos - startNotePosition + 1;
+          core.patchState({ tmpNoteNumber: ni, tmpNoteDuration: newDuration });
         },
       });
     },
@@ -199,7 +195,7 @@ const Editor2 = () => {
           />
         ))}
         <div
-          class="absolute flex-ha pl-1 text-[#888] border border-[#888] bg-[#cfcc]"
+          class="absolute flex-ha text-[#888] border border-[#888] bg-[#cfcc]"
           style={{
             left: npx(vm.getTempNotePositionX()),
             top: npx(vm.getTempNoteNumberY()),

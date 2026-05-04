@@ -1,5 +1,13 @@
-export function clampValue(value: number, lo: number, hi: number): number {
+export function clampValue(value: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, value));
+}
+
+export function lowClip(value: number, lo: number) {
+  return Math.max(value, lo);
+}
+
+export function highClip(value: number, hi: number) {
+  return Math.min(value, hi);
 }
 
 export function mapUnaryTo(value: number, d0: number, d1: number) {
