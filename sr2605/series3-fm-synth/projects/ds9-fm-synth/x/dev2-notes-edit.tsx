@@ -96,8 +96,14 @@ const Editor1 = () => {
 };
 
 const Editor2 = () => {
-  const [state, setState] = createSignal({
-    tmpNoteDuration: 4,
+  type State = {
+    tmpNotePosition: number;
+    tmpNoteDuration: number;
+    tmpNoteNumber: number;
+  };
+  const [state, setState] = createSignal<State>({
+    tmpNotePosition: 0,
+    tmpNoteDuration: 1,
     tmpNoteNumber: 0,
   });
 
@@ -108,28 +114,55 @@ const Editor2 = () => {
     noteNumberToY(ni: number) {
       return linerInterpolate(ni, -12, 24, 260, 0);
     },
+    xToNotePosition(x: number) {
+      return Math.floor(x / (640 / 32));
+    },
+    notePositionToX(p: number) {
+      return p * (640 / 32);
+    },
+  };
+  const core = {
+    patchState(attrs: Partial<State>) {
+      setState((prev) => ({ ...prev, ...attrs }));
+    },
   };
   const vm = {
     handlePointerDown(e: PointerEvent) {
       let startNoteNumber: number;
+      let startNotePosition: number;
 
       startDragSession(e, {
         onDown(e) {
           const ni = helpers.yToNoteNumber(e.position.y);
-          setState((prev) => ({ ...prev, tmpNoteNumber: ni }));
+          const pos = helpers.xToNotePosition(e.position.x);
+          core.patchState({
+            tmpNoteNumber: ni,
+            tmpNotePosition: pos,
+            // tmpNoteDuration: 1,
+          });
           startNoteNumber = ni;
+          startNotePosition = pos;
         },
         onMove(e) {
           const yShift = Math.round(
             -(e.position.y - e.originalPosition.y) / (20 / 3),
           );
           const ni = clampValue(startNoteNumber + yShift, -12, 24);
-          setState((prev) => ({ ...prev, tmpNoteNumber: ni }));
+          core.patchState({ tmpNoteNumber: ni });
+
+          const pos = helpers.xToNotePosition(e.position.x);
+          if (pos !== startNotePosition) {
+            const duration = Math.max(pos - startNotePosition + 1, 1);
+            core.patchState({ tmpNoteDuration: duration });
+          }
         },
       });
     },
     getTempNoteNumberY() {
       return helpers.noteNumberToY(state().tmpNoteNumber);
+    },
+    getTempNotePositionX() {
+      return helpers.notePositionToX(state().tmpNotePosition);
     },
     getTempNoteDurationWidth() {
       return state().tmpNoteDuration * (640 / 32);
@@ -168,7 +201,7 @@ const Editor2 = () => {
         <div
           class="absolute flex-ha pl-1 text-[#888] border border-[#888] bg-[#cfcc]"
           style={{
-            left: 0,
+            left: npx(vm.getTempNotePositionX()),
             top: npx(vm.getTempNoteNumberY()),
             width: npx(vm.getTempNoteDurationWidth()),
             height: "20px",
