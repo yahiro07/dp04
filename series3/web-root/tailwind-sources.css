@@ -1,0 +1,5 @@
+/** biome-ignore-all lint/suspicious/noUnknownAtRules: tailwind extended syntax */
+@import "tailwindcss";
+
+@source "../lib/mo-solid/**/*.{ts,tsx}";
+@source "../projects/ds9-fm-synth/**/*.tsx";

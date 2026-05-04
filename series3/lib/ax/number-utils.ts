@@ -1,0 +1,33 @@
+export function clampValue(value: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, value));
+}
+
+export function mapUnaryTo(value: number, d0: number, d1: number) {
+  return d0 + (d1 - d0) * value;
+}
+
+export function mapUnaryFrom(
+  val: number,
+  lo: number,
+  hi: number,
+  clamp?: boolean,
+) {
+  if (hi === lo) return lo;
+  const v = (val - lo) / (hi - lo);
+  if (clamp) {
+    return clampValue(v, 0, 1);
+  }
+  return v;
+}
+
+export function power2(value: number) {
+  return value * value;
+}
+
+export function invPower2(value: number) {
+  return 1 - (1 - value) * (1 - value);
+}
+
+export function power3(value: number) {
+  return value * value * value;
+}
