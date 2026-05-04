@@ -187,16 +187,22 @@ function processOperator(bus: SynthesisBus, operatorIndex: number) {
       op.modSourceOperatorA.output +
       op.modSourceOperatorB.output +
       op.modSourceOperatorC.output;
+    if (sp.feedback > 0) {
+      phase += op.output * power2(sp.feedback);
+    }
     phase -= Math.floor(phase);
     const y = getWaveformSample(phase, sp.wave) * op.egLevel * gain;
     op.output = y;
   } else {
     op.phase += op.phaseInc;
-    const basePhase =
+    let basePhase =
       op.phase +
       op.modSourceOperatorA.output +
       op.modSourceOperatorB.output +
       op.modSourceOperatorC.output;
+    if (sp.feedback > 0) {
+      basePhase += op.output * power2(sp.feedback);
+    }
     const n = sp.unisonNum;
     let y = 0;
     for (let i = 0; i < n; i++) {
