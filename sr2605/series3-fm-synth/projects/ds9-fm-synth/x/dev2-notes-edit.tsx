@@ -1,5 +1,6 @@
 /* @refresh reload */
 
+import { seqNumbers } from "@lib/ax/array-utils";
 import { clampValue, linerInterpolate } from "@lib/ax/number-utils";
 import { mountAppRoot } from "@lib/ax-solid/mount-app-root";
 import { startDragSession } from "@lib/mo/drag-session";
@@ -79,17 +80,112 @@ function EditNoteInputBar_Narrow1() {
   );
 }
 
+const Editor1 = () => {
+  return (
+    <div class="flex-h">
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+      <EditNoteInputBar_Narrow1 />
+    </div>
+  );
+};
+
+const Editor2 = () => {
+  const [state, setState] = createSignal({
+    tmpNoteDuration: 4,
+    tmpNoteNumber: 0,
+  });
+
+  const helpers = {
+    yToNoteNumber(y: number) {
+      return Math.round(linerInterpolate(y, 0, 260, 24, -12, true));
+    },
+    noteNumberToY(ni: number) {
+      return linerInterpolate(ni, -12, 24, 260, 0);
+    },
+  };
+  const vm = {
+    handlePointerDown(e: PointerEvent) {
+      let startNoteNumber: number;
+
+      startDragSession(e, {
+        onDown(e) {
+          const ni = helpers.yToNoteNumber(e.position.y);
+          setState((prev) => ({ ...prev, tmpNoteNumber: ni }));
+          startNoteNumber = ni;
+        },
+        onMove(e) {
+          const yShift = Math.round(
+            -(e.position.y - e.originalPosition.y) / (20 / 3),
+          );
+          const ni = clampValue(startNoteNumber + yShift, -12, 24);
+          setState((prev) => ({ ...prev, tmpNoteNumber: ni }));
+        },
+      });
+    },
+    getTempNoteNumberY() {
+      return helpers.noteNumberToY(state().tmpNoteNumber);
+    },
+    getTempNoteDurationWidth() {
+      return state().tmpNoteDuration * (640 / 32);
+    },
+  };
+
+  return (
+    <div class="border border-[#aaa]">
+      <div
+        class="w-[640px] h-[260px] relative cursor-pointer"
+        onPointerDown={vm.handlePointerDown}
+      >
+        {seqNumbers(4).map((i) => {
+          return (
+            <div
+              class="absolute bg-[#f8f8f8]"
+              style={{
+                top: 0,
+                left: npx(i * 160 + 80),
+                width: npx(80),
+                height: "100%",
+              }}
+            />
+          );
+        })}
+        {seqNumbers(2).map((i) => (
+          <div
+            class="absolute w-full border-b border-[#ddd]"
+            style={{
+              left: 0,
+              top: npx(helpers.noteNumberToY(i * 12)),
+              transform: "translateY(-50%)",
+            }}
+          />
+        ))}
+        <div
+          class="absolute flex-ha pl-1 text-[#888] border border-[#888] bg-[#cfcc]"
+          style={{
+            left: 0,
+            top: npx(vm.getTempNoteNumberY()),
+            width: npx(vm.getTempNoteDurationWidth()),
+            height: "20px",
+            transform: "translateY(-50%)",
+          }}
+        >
+          {state().tmpNoteNumber}
+        </div>
+      </div>
+    </div>
+  );
+};
 function MainUi() {
   return (
-    <div class="w-dvw h-dvh flex-c">
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
-      <EditNoteInputBar_Narrow1 />
+    <div class="w-dvw h-dvh flex-vc gap-6">
+      <Editor1 />
+      <Editor2 />
     </div>
   );
 }
