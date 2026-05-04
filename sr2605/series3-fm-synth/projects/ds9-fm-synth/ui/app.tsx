@@ -52,14 +52,13 @@ function MainUi() {
         <div class="flex-ha gap-6">
           <FmAlgorithmPart />
           <OperatorSummariesPart />
-        </div>
-        <div class="flex-ha gap-6">
           <OperatorEditPart />
           <EffectSection
             parameters={store.commonParameters}
             setParameter={uiOperations.setCommonParameter}
           />
         </div>
+        <div class="flex-ha gap-6"></div>
       </div>
     </div>
   );
