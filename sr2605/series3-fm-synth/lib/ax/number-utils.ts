@@ -38,6 +38,10 @@ export function linerInterpolate(
   return v;
 }
 
+export function mixValue(a: number, b: number, m: number) {
+  return (1 - m) * a + m * b;
+}
+
 export function power2(value: number) {
   return value * value;
 }

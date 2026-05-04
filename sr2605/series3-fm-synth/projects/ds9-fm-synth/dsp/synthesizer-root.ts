@@ -2,6 +2,7 @@ import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
 import { ISynthesizerRoot } from "@ds9/dsp/api";
 import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
 import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
+import { createReverbSchroeder } from "@ds9/dsp/reverb-schroeder";
 import { getWaveformSample } from "@ds9/dsp/waveform";
 import { createDefaultScene } from "@ds9/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
@@ -324,9 +325,13 @@ function voice_processAudio(
 export function createSynthesizerRoot(): ISynthesizerRoot {
   const rc = createRenderingContext();
   const bus = createSynthesisBus();
+  const reverbL = createReverbSchroeder();
+  const reverbR = createReverbSchroeder();
   return {
-    prepareProcessing(_sampleRate, _maxFrameLength) {
-      rc.sampleRate = _sampleRate;
+    prepareProcessing(sampleRate, _maxFrameLength) {
+      rc.sampleRate = sampleRate;
+      reverbL.prepare(sampleRate);
+      reverbR.prepare(sampleRate);
     },
     setParameter(_id, _value) {},
     setOperatorParameter(operatorIndex, paramKey, value) {
@@ -362,6 +367,9 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       }
       applyBufferGainRms(bufferL, configs.numVoices);
       applyBufferGainRms(bufferR, configs.numVoices);
+
+      reverbL.processSamples(bufferL, frames, 0.8, 0.5);
+      reverbR.processSamples(bufferR, frames, 0.8, 0.5);
     },
     applyCommand(_id, _value) {},
   };
