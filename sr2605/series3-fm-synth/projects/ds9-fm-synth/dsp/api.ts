@@ -1,4 +1,4 @@
-import { OperatorParameterKey } from "@ds9/base/parameters";
+import { CommonParameterKey, OperatorParameterKey } from "@ds9/base/parameters";
 
 export interface ISynthesizerRoot {
   prepareProcessing(sampleRate: number, maxFrames: number): void;
@@ -6,6 +6,10 @@ export interface ISynthesizerRoot {
   setOperatorParameter(
     operatorIndex: number,
     paramKey: OperatorParameterKey,
+    value: number | boolean,
+  ): void;
+  setCommonParameter(
+    paramKey: CommonParameterKey,
     value: number | boolean,
   ): void;
   setModulationFlags(flags: number): void;

@@ -1,4 +1,9 @@
-import { OperatorParameterKey, OperatorParameters } from "@ds9/base/parameters";
+import {
+  CommonParameterKey,
+  CommonParameters,
+  OperatorParameterKey,
+  OperatorParameters,
+} from "@ds9/base/parameters";
 
 export enum ModulationFlagBitPosition {
   mod01 = 0,
@@ -11,6 +16,7 @@ export enum ModulationFlagBitPosition {
 
 export type Scene = {
   operatorParameters: OperatorParameters[];
+  commonParameters: CommonParameters;
   modulationFlags: number;
 };
 
@@ -19,6 +25,11 @@ export type SceneEditCommand =
       type: "setOperatorParameter";
       opIndex: number;
       paramKey: OperatorParameterKey;
+      value: number | boolean;
+    }
+  | {
+      type: "setCommonParameter";
+      paramKey: CommonParameterKey;
       value: number | boolean;
     }
   | { type: "setModulationFlags"; flags: number };

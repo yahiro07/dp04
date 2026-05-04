@@ -339,6 +339,9 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         | number
         | boolean) = value;
     },
+    setCommonParameter(paramKey, value) {
+      (rc.scene.commonParameters[paramKey] as number | boolean) = value;
+    },
     setModulationFlags(flags) {
       rc.scene.modulationFlags = flags;
     },
@@ -368,8 +371,11 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       applyBufferGainRms(bufferL, configs.numVoices);
       applyBufferGainRms(bufferR, configs.numVoices);
 
-      reverbL.processSamples(bufferL, frames, 0.8, 0.5);
-      reverbR.processSamples(bufferR, frames, 0.8, 0.5);
+      const cp = rc.scene.commonParameters;
+      if (cp.reverbEnabled) {
+        reverbL.processSamples(bufferL, frames, cp.reverbTime, cp.reverbMix);
+        reverbR.processSamples(bufferR, frames, cp.reverbTime, cp.reverbMix);
+      }
     },
     applyCommand(_id, _value) {},
   };

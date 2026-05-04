@@ -1,0 +1,30 @@
+import { CommonParameterKey, CommonParameters } from "@ds9/base/parameters";
+import { FeKnob } from "@ds9/ui/components/knob";
+import { FeToggleBox } from "@ds9/ui/components/toggle-box";
+
+export function EffectSection(props: {
+  parameters: CommonParameters;
+  setParameter: (name: CommonParameterKey, value: number | boolean) => void;
+}) {
+  return (
+    <div class="flex-v gap-1">
+      <div class="flex-ha gap-4">
+        <FeToggleBox
+          label="REVERB"
+          checked={props.parameters.reverbEnabled}
+          onChange={(v) => props.setParameter("reverbEnabled", v)}
+        />
+        <FeKnob
+          label="TIME"
+          value={props.parameters.reverbTime}
+          onChange={(v) => props.setParameter("reverbTime", v)}
+        />
+        <FeKnob
+          label="MIX"
+          value={props.parameters.reverbMix}
+          onChange={(v) => props.setParameter("reverbMix", v)}
+        />
+      </div>
+    </div>
+  );
+}

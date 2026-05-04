@@ -33,6 +33,9 @@ function createProcessorClass() {
         } else if (type === "setOperatorParameter") {
           const { opIndex, paramKey, value } = event.data;
           this.synthesizer.setOperatorParameter(opIndex, paramKey, value);
+        } else if (type === "setCommonParameter") {
+          const { paramKey, value } = event.data;
+          this.synthesizer.setCommonParameter(paramKey, value);
         } else if (type === "setModulationFlags") {
           const { flags } = event.data;
           this.synthesizer.setModulationFlags(flags);

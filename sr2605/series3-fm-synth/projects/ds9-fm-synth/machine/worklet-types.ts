@@ -1,4 +1,4 @@
-import { OperatorParameterKey } from "@ds9/base/parameters";
+import { CommonParameterKey, OperatorParameterKey } from "@ds9/base/parameters";
 
 export type WorkletInputMessage =
   | { type: "setParameter"; id: number; value: number }
@@ -6,6 +6,11 @@ export type WorkletInputMessage =
       type: "setOperatorParameter";
       opIndex: number;
       paramKey: OperatorParameterKey;
+      value: number | boolean;
+    }
+  | {
+      type: "setCommonParameter";
+      paramKey: CommonParameterKey;
       value: number | boolean;
     }
   | { type: "setModulationFlags"; flags: number }

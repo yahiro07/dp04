@@ -1,6 +1,7 @@
 /* @refresh reload */
 
 import { OperatorParameterKey } from "@ds9/base/parameters";
+import { EffectSection } from "@ds9/ui/organisms/effect-section";
 import { OperatorEditor } from "@ds9/ui/organisms/operator-editor";
 import { OperatorSchemeEditor } from "@ds9/ui/organisms/operator-scheme-editor";
 import { OperatorSchemesPresetSelector } from "@ds9/ui/organisms/operator-schemes-preset-selector";
@@ -52,7 +53,13 @@ function MainUi() {
           <FmAlgorithmPart />
           <OperatorSummariesPart />
         </div>
-        <OperatorEditPart />
+        <div class="flex-ha gap-6">
+          <OperatorEditPart />
+          <EffectSection
+            parameters={store.commonParameters}
+            setParameter={uiOperations.setCommonParameter}
+          />
+        </div>
       </div>
     </div>
   );

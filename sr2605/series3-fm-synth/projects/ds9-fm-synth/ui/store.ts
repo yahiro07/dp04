@@ -1,4 +1,7 @@
 import {
+  CommonParameterKey,
+  CommonParameters,
+  createCommonParameters,
   createOperatorParameters,
   OperatorParameterKey,
   OperatorParameters,
@@ -21,6 +24,7 @@ type StoreState = {
   operatorSelectionIndex: number;
   operatorSchemes: OperatorScheme[];
   operatorParameters: OperatorParameters[];
+  commonParameters: CommonParameters;
   loading: boolean;
 };
 
@@ -28,6 +32,7 @@ const initialState: StoreState = {
   operatorSelectionIndex: 0,
   operatorSchemes: ["C", "C", "M", "C"],
   operatorParameters: seqNumbers(4).map(createOperatorParameters),
+  commonParameters: createCommonParameters(),
   loading: false,
 };
 
@@ -83,6 +88,13 @@ export const uiOperations = {
       value,
     });
   },
+  setCommonParameter(paramKey: CommonParameterKey, value: number | boolean) {
+    storeMutations.setCommonParameters((prev) => ({
+      ...prev,
+      [paramKey]: value,
+    }));
+    emitMachineCommand({ type: "setCommonParameter", paramKey, value });
+  },
   async handleNote(noteNumber: number, velocity: number) {
     await rootMachine.resumeIfNeed();
     if (velocity > 0) {
@@ -99,6 +111,7 @@ export async function initializeApp() {
   storeMutations.setLoading(false);
   const scene = rootMachine.getSceneState();
   storeMutations.setOperatorParameters(scene.operatorParameters);
+  storeMutations.setCommonParameters(scene.commonParameters);
   uiOperations.setOperatorSchemes(store.operatorSchemes);
   for (let i = 0; i < 3; i++) {
     uiOperations.setOperatorParameter(i, "active", false);

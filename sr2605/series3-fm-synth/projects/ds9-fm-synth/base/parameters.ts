@@ -57,3 +57,19 @@ export function createOperatorParameters(): OperatorParameters {
     unisonRndPhase: true,
   };
 }
+
+export type CommonParameters = {
+  reverbEnabled: boolean;
+  reverbTime: number;
+  reverbMix: number;
+};
+
+export type CommonParameterKey = keyof CommonParameters;
+
+export function createCommonParameters(): CommonParameters {
+  return {
+    reverbEnabled: false,
+    reverbTime: 0.5,
+    reverbMix: 0.5,
+  };
+}
