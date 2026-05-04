@@ -20,16 +20,20 @@ type OperatorState = {
   egGateOnLastLevel: number;
 };
 
-type SynthesisBus = {
-  scene: Scene;
+type VoiceState = {
   noteNumber: number;
-  noteGate: boolean;
-  sampleRate: number;
-  operatorStates: OperatorState[];
-  modulationFlags: number;
+  gateActive: boolean;
   gateOnUptime: number; //seconds
   gateOffUptime: number; //seconds
   gateTriggered: boolean;
+  operatorStates: OperatorState[];
+};
+
+type SynthesisBus = {
+  scene: Scene;
+  sampleRate: number;
+  voice: VoiceState;
+  // voices: VoiceState[];  //polyphony
 };
 
 const dummyZeroOperatorState: OperatorState = {
@@ -58,17 +62,23 @@ function createOperatorState(): OperatorState {
   };
 }
 
-function createBus(): SynthesisBus {
+function createVoiceState(): VoiceState {
   return {
-    scene: createDefaultScene(),
-    noteNumber: 60,
-    noteGate: false,
-    sampleRate: 0,
-    operatorStates: seqNumbers(4).map(createOperatorState),
-    modulationFlags: 0,
+    noteNumber: 0,
+    gateActive: false,
     gateOnUptime: 0,
     gateOffUptime: 0,
     gateTriggered: false,
+    operatorStates: seqNumbers(4).map(createOperatorState),
+  };
+}
+
+function createBus(): SynthesisBus {
+  return {
+    scene: createDefaultScene(),
+    sampleRate: 0,
+    voice: createVoiceState(),
+    // voices: seqNumbers(4).map(createVoiceState),
   };
 }
 
@@ -76,9 +86,9 @@ function midiToFrequency(noteNumber: number): number {
   return 440 * 2 ** ((noteNumber - 69) / 12);
 }
 
-function wireOperators(bus: SynthesisBus) {
-  const ops = bus.operatorStates;
-  const mf = bus.modulationFlags;
+function wireOperators(bus: SynthesisBus, voice: VoiceState) {
+  const ops = voice.operatorStates;
+  const mf = bus.scene.modulationFlags;
   const bp = ModulationFlagBitPosition;
   const opDummy = dummyZeroOperatorState;
 
@@ -115,11 +125,15 @@ function wireOperators(bus: SynthesisBus) {
   }
 }
 
-function updateOperatorDelta(bus: SynthesisBus, operatorIndex: number) {
+function updateOperatorDelta(
+  bus: SynthesisBus,
+  voice: VoiceState,
+  operatorIndex: number,
+) {
   const sp = bus.scene.operatorParameters[operatorIndex];
-  const es = bus.operatorStates[operatorIndex];
+  const es = voice.operatorStates[operatorIndex];
   const det = power2(sp.fine) * Math.sign(sp.fine);
-  const noteNumber = bus.noteNumber + sp.octave * 12 + sp.semi + det;
+  const noteNumber = voice.noteNumber + sp.octave * 12 + sp.semi + det;
   const freq = midiToFrequency(noteNumber) * sp.ratio;
   es.phaseInc = freq / bus.sampleRate;
 }
@@ -132,9 +146,10 @@ const operatorEgConfig = {
 
 function calculateOperatorEgLevel(
   bus: SynthesisBus,
+  voice: VoiceState,
   operatorIndex: number,
 ): number {
-  const op = bus.operatorStates[operatorIndex];
+  const op = voice.operatorStates[operatorIndex];
   const sp = bus.scene.operatorParameters[operatorIndex];
   const egParams = {
     attack: sp.attack,
@@ -142,9 +157,9 @@ function calculateOperatorEgLevel(
     sustain: sp.sustain,
     release: sp.release,
   };
-  if (bus.noteGate) {
+  if (voice.gateActive) {
     return getEnvelopeLevelADSR(
-      bus.gateOnUptime,
+      voice.gateOnUptime,
       egParams,
       operatorEgConfig,
       "gateOn",
@@ -152,7 +167,7 @@ function calculateOperatorEgLevel(
     );
   } else {
     return getEnvelopeLevelADSR(
-      bus.gateOffUptime,
+      voice.gateOffUptime,
       egParams,
       operatorEgConfig,
       "gateOff",
@@ -161,20 +176,28 @@ function calculateOperatorEgLevel(
   }
 }
 
-function updateOperatorEg(bus: SynthesisBus, operatorIndex: number) {
-  const op = bus.operatorStates[operatorIndex];
-  op.egLevel = calculateOperatorEgLevel(bus, operatorIndex);
-  if (bus.noteGate) {
+function updateOperatorEg(
+  bus: SynthesisBus,
+  voice: VoiceState,
+  operatorIndex: number,
+) {
+  const op = voice.operatorStates[operatorIndex];
+  op.egLevel = calculateOperatorEgLevel(bus, voice, operatorIndex);
+  if (voice.gateActive) {
     op.egGateOnLastLevel = op.egLevel;
   }
 }
 
-function processOperator(bus: SynthesisBus, operatorIndex: number) {
-  const op = bus.operatorStates[operatorIndex];
+function processOperator(
+  bus: SynthesisBus,
+  voice: VoiceState,
+  operatorIndex: number,
+) {
+  const op = voice.operatorStates[operatorIndex];
   const sp = bus.scene.operatorParameters[operatorIndex];
   const gain = sp.active ? power2(sp.level) : 0;
 
-  if (bus.gateTriggered) {
+  if (voice.gateTriggered) {
     op.phase = 0;
   }
 
@@ -229,31 +252,34 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         | boolean) = value;
     },
     setModulationFlags(flags) {
-      bus.modulationFlags = flags;
+      bus.scene.modulationFlags = flags;
     },
     noteOn(noteNumber, _velocity) {
-      bus.noteNumber = noteNumber;
-      bus.noteGate = true;
-      bus.gateOnUptime = 0;
-      bus.gateTriggered = true;
+      const voice = bus.voice;
+      voice.noteNumber = noteNumber;
+      voice.gateActive = true;
+      voice.gateOnUptime = 0;
+      voice.gateTriggered = true;
     },
     noteOff(noteNumber) {
-      if (noteNumber === bus.noteNumber && bus.noteGate) {
-        bus.noteGate = false;
-        bus.gateOffUptime = 0;
+      const voice = bus.voice;
+      if (noteNumber === voice.noteNumber && voice.gateActive) {
+        voice.gateActive = false;
+        voice.gateOffUptime = 0;
       }
     },
     processAudio(bufferL, bufferR, frames) {
       if (bus.sampleRate === 0) return;
-      wireOperators(bus);
+      const voice = bus.voice;
+      wireOperators(bus, voice);
       for (let j = 0; j < 4; j++) {
-        updateOperatorDelta(bus, j);
-        updateOperatorEg(bus, j);
+        updateOperatorDelta(bus, voice, j);
+        updateOperatorEg(bus, voice, j);
       }
-      const ops = bus.operatorStates;
+      const ops = voice.operatorStates;
       for (let i = 0; i < frames; i++) {
         for (let j = 0; j < 4; j++) {
-          processOperator(bus, j);
+          processOperator(bus, voice, j);
         }
         const y =
           ((ops[0].isCarrier ? ops[0].output : 0) +
@@ -265,11 +291,11 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         bufferR[i] = y;
       }
       const timeElapsed = frames / bus.sampleRate;
-      bus.gateOnUptime += timeElapsed;
-      if (!bus.noteGate) {
-        bus.gateOffUptime += timeElapsed;
+      voice.gateOnUptime += timeElapsed;
+      if (!voice.gateActive) {
+        voice.gateOffUptime += timeElapsed;
       }
-      bus.gateTriggered = false;
+      voice.gateTriggered = false;
     },
     applyCommand(_id, _value) {},
   };
