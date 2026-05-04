@@ -86,7 +86,7 @@ function midiToFrequency(noteNumber: number): number {
   return 440 * 2 ** ((noteNumber - 69) / 12);
 }
 
-function wireOperators(bus: SynthesisBus, voice: VoiceState) {
+function voice_wireOperators(bus: SynthesisBus, voice: VoiceState) {
   const ops = voice.operatorStates;
   const mf = bus.scene.modulationFlags;
   const bp = ModulationFlagBitPosition;
@@ -125,7 +125,7 @@ function wireOperators(bus: SynthesisBus, voice: VoiceState) {
   }
 }
 
-function updateOperatorDelta(
+function operator_updateDelta(
   bus: SynthesisBus,
   voice: VoiceState,
   operatorIndex: number,
@@ -144,7 +144,7 @@ const operatorEgConfig = {
   releaseMaxSec: 3,
 };
 
-function calculateOperatorEgLevel(
+function operator_calculateEgLevel(
   bus: SynthesisBus,
   voice: VoiceState,
   operatorIndex: number,
@@ -176,19 +176,19 @@ function calculateOperatorEgLevel(
   }
 }
 
-function updateOperatorEg(
+function operator_updateEg(
   bus: SynthesisBus,
   voice: VoiceState,
   operatorIndex: number,
 ) {
   const op = voice.operatorStates[operatorIndex];
-  op.egLevel = calculateOperatorEgLevel(bus, voice, operatorIndex);
+  op.egLevel = operator_calculateEgLevel(bus, voice, operatorIndex);
   if (voice.gateActive) {
     op.egGateOnLastLevel = op.egLevel;
   }
 }
 
-function processOperator(
+function operator_processOneStep(
   bus: SynthesisBus,
   voice: VoiceState,
   operatorIndex: number,
@@ -271,15 +271,15 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
     processAudio(bufferL, bufferR, frames) {
       if (bus.sampleRate === 0) return;
       const voice = bus.voice;
-      wireOperators(bus, voice);
+      voice_wireOperators(bus, voice);
       for (let j = 0; j < 4; j++) {
-        updateOperatorDelta(bus, voice, j);
-        updateOperatorEg(bus, voice, j);
+        operator_updateDelta(bus, voice, j);
+        operator_updateEg(bus, voice, j);
       }
       const ops = voice.operatorStates;
       for (let i = 0; i < frames; i++) {
         for (let j = 0; j < 4; j++) {
-          processOperator(bus, voice, j);
+          operator_processOneStep(bus, voice, j);
         }
         const y =
           ((ops[0].isCarrier ? ops[0].output : 0) +
