@@ -18,18 +18,27 @@ const storeMutations = createStoreMutations(setStore, initialState);
 
 const uiActions = {};
 
+const targetNotes = [0, 4, 7];
+
 function NoteInputBar_Normal() {
   return (
     <div class="flex-v">
       {seqNumbers(37).map((i) => {
         const ni = 36 - i - 12;
         const highlighted = ni % 12 === 0;
+        const noteHighlighted = targetNotes.includes(ni);
         return (
-          <div
-            class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
-            style={{ background: highlighted ? "#ddf" : "#fff" }}
-          >
-            {ni}
+          <div class="flex-h">
+            <div
+              class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
+              style={{ background: highlighted ? "#ddf" : "#fff" }}
+            >
+              {ni}
+            </div>
+            <div
+              class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
+              style={{ background: noteHighlighted ? "#cfc" : "#fff" }}
+            />
           </div>
         );
       })}
@@ -43,12 +52,20 @@ function NoteInputBar_InScale() {
       {seqNumbers(22).map((i) => {
         const ni = 21 - i - 7;
         const highlighted = ni % 7 === 0;
+        const targetNotesInScale = [0, 2, 4];
+        const noteHighlighted = targetNotesInScale.includes(ni);
         return (
-          <div
-            class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
-            style={{ background: highlighted ? "#ddf" : "#fff" }}
-          >
-            {ni}
+          <div class="flex-h">
+            <div
+              class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
+              style={{ background: highlighted ? "#ddf" : "#fff" }}
+            >
+              {ni}
+            </div>
+            <div
+              class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
+              style={{ background: noteHighlighted ? "#cfc" : "#fff" }}
+            />
           </div>
         );
       })}
