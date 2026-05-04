@@ -4,18 +4,7 @@ import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
 import { getWaveformSample } from "@ds9/dsp/waveform";
 import { createDefaultScene } from "@ds9/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
-import { power2 } from "@lib/ax/number-utils";
-
-type SynthesisBus = {
-  scene: Scene;
-  noteNumber: number;
-  noteGate: boolean;
-  sampleRate: number;
-  operatorStates: OperatorState[];
-  modulationFlags: number;
-  gateOnUptime: number; //seconds
-  gateOffUptime: number; //seconds
-};
+import { linerInterpolate, power2 } from "@lib/ax/number-utils";
 
 type OperatorState = {
   phase: number;
@@ -29,6 +18,18 @@ type OperatorState = {
   isCarrier: boolean;
   egLevel: number;
   egGateOnLastLevel: number;
+};
+
+type SynthesisBus = {
+  scene: Scene;
+  noteNumber: number;
+  noteGate: boolean;
+  sampleRate: number;
+  operatorStates: OperatorState[];
+  modulationFlags: number;
+  gateOnUptime: number; //seconds
+  gateOffUptime: number; //seconds
+  gateTriggered: boolean;
 };
 
 const dummyZeroOperatorState: OperatorState = {
@@ -67,6 +68,7 @@ function createBus(): SynthesisBus {
     modulationFlags: 0,
     gateOnUptime: 0,
     gateOffUptime: 0,
+    gateTriggered: false,
   };
 }
 
@@ -172,17 +174,40 @@ function processOperator(bus: SynthesisBus, operatorIndex: number) {
   const sp = bus.scene.operatorParameters[operatorIndex];
   const gain = sp.active ? power2(sp.level) : 0;
 
-  op.phase += op.phaseInc;
-  op.phase -= Math.floor(op.phase);
+  if (bus.gateTriggered) {
+    op.phase = 0;
+  }
 
-  let phase =
-    op.phase +
-    op.modSourceOperatorA.output +
-    op.modSourceOperatorB.output +
-    op.modSourceOperatorC.output;
-  phase -= Math.floor(phase);
-  const y = getWaveformSample(phase, sp.wave) * op.egLevel * gain;
-  op.output = y;
+  if (!sp.unisonOn) {
+    op.phase += op.phaseInc;
+    op.phase -= Math.floor(op.phase);
+
+    let phase =
+      op.phase +
+      op.modSourceOperatorA.output +
+      op.modSourceOperatorB.output +
+      op.modSourceOperatorC.output;
+    phase -= Math.floor(phase);
+    const y = getWaveformSample(phase, sp.wave) * op.egLevel * gain;
+    op.output = y;
+  } else {
+    op.phase += op.phaseInc;
+    const basePhase =
+      op.phase +
+      op.modSourceOperatorA.output +
+      op.modSourceOperatorB.output +
+      op.modSourceOperatorC.output;
+    const n = sp.unisonNum;
+    let y = 0;
+    for (let i = 0; i < n; i++) {
+      const w = linerInterpolate(i, 0, n - 1, -1, 1);
+      let phase = basePhase * (1 + sp.unisonDetune * 0.03 * w);
+      phase -= Math.floor(phase);
+      y += getWaveformSample(phase, sp.wave);
+    }
+    y /= n;
+    op.output = y * op.egLevel * gain;
+  }
 }
 
 export function createSynthesizerRoot(): ISynthesizerRoot {
@@ -204,6 +229,7 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       bus.noteNumber = noteNumber;
       bus.noteGate = true;
       bus.gateOnUptime = 0;
+      bus.gateTriggered = true;
     },
     noteOff(noteNumber) {
       if (noteNumber === bus.noteNumber && bus.noteGate) {
@@ -237,6 +263,7 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       if (!bus.noteGate) {
         bus.gateOffUptime += timeElapsed;
       }
+      bus.gateTriggered = false;
     },
     applyCommand(_id, _value) {},
   };

@@ -2,6 +2,7 @@ import {
   createOperatorParameters,
   OperatorParameterKey,
   OperatorParameters,
+  OperatorWave,
 } from "@ds9/base/parameters";
 import {
   ModulationFlagBitPosition,
@@ -103,6 +104,10 @@ export async function initializeApp() {
     uiOperations.setOperatorParameter(i, "active", false);
   }
   uiOperations.selectOperator(3);
+  if (1) {
+    uiOperations.setOperatorParameter(3, "wave", OperatorWave.Saw);
+    uiOperations.setOperatorParameter(3, "unisonNum", 5);
+  }
   setupMidiKeyboardInput({
     noteCallback: uiOperations.handleNote,
   });

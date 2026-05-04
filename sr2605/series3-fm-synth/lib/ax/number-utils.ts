@@ -20,6 +20,24 @@ export function mapUnaryFrom(
   return v;
 }
 
+export function linerInterpolate(
+  value: number,
+  s0: number,
+  s1: number,
+  d0: number,
+  d1: number,
+  clamp?: boolean,
+) {
+  if (s1 === s0) return d0;
+  const v = (value - s0) / (s1 - s0) + (d1 - d0) + d0;
+  if (clamp) {
+    const lo = Math.min(d0, d1);
+    const hi = Math.max(d0, d1);
+    return clampValue(v, lo, hi);
+  }
+  return v;
+}
+
 export function power2(value: number) {
   return value * value;
 }
