@@ -21,11 +21,7 @@ type OperatorState = {
   phase: number;
   phaseInc: number;
   output: number;
-  //if ported to c++, use pointer for better performance
-  //float* modSourceOperatorOutputs;
-  modSourceOperatorA: OperatorState;
-  modSourceOperatorB: OperatorState;
-  modSourceOperatorC: OperatorState;
+  modSourceBitFlags: number;
   isCarrier: boolean;
   egLevel: number;
   egGateOnLastLevel: number;
@@ -46,26 +42,12 @@ type SynthesisBus = {
   voices: VoiceState[];
 };
 
-const dummyZeroOperatorState: OperatorState = {
-  phase: 0,
-  phaseInc: 0,
-  output: 0,
-  modSourceOperatorA: null!, //dummy, not accessed
-  modSourceOperatorB: null!, //dummy, not accessed
-  modSourceOperatorC: null!, //dummy, not accessed
-  isCarrier: false,
-  egLevel: 0,
-  egGateOnLastLevel: 0,
-};
-
 function createOperatorState(): OperatorState {
   return {
     phase: 0,
     phaseInc: 0,
     output: 0,
-    modSourceOperatorA: dummyZeroOperatorState,
-    modSourceOperatorB: dummyZeroOperatorState,
-    modSourceOperatorC: dummyZeroOperatorState,
+    modSourceBitFlags: 0,
     isCarrier: false,
     egLevel: 0,
     egGateOnLastLevel: 0,
@@ -99,36 +81,27 @@ function voice_wireOperators(bus: SynthesisBus, voice: VoiceState) {
   const ops = voice.operatorStates;
   const mf = bus.scene.modulationFlags;
   const bp = ModulationFlagBitPosition;
-  const opDummy = dummyZeroOperatorState;
 
-  const modEn01 = mf & (1 << bp.mod01);
-  const modEn12 = mf & (1 << bp.mod12);
-  const modEn23 = mf & (1 << bp.mod23);
-  const modEn02 = mf & (1 << bp.mod02);
-  const modEn13 = mf & (1 << bp.mod13);
-  const modEn03 = mf & (1 << bp.mod03);
+  const modEn01 = mf & (1 << bp.mod01) ? 1 : 0;
+  const modEn12 = mf & (1 << bp.mod12) ? 1 : 0;
+  const modEn23 = mf & (1 << bp.mod23) ? 1 : 0;
+  const modEn02 = mf & (1 << bp.mod02) ? 1 : 0;
+  const modEn13 = mf & (1 << bp.mod13) ? 1 : 0;
+  const modEn03 = mf & (1 << bp.mod03) ? 1 : 0;
 
   for (let i = 0; i < 4; i++) {
     const op = ops[i];
     if (i === 0) {
-      op.modSourceOperatorA = opDummy;
-      op.modSourceOperatorB = opDummy;
-      op.modSourceOperatorC = opDummy;
+      op.modSourceBitFlags = 0;
       op.isCarrier = !(modEn01 || modEn02 || modEn03);
     } else if (i === 1) {
-      op.modSourceOperatorA = modEn01 ? ops[0] : opDummy;
-      op.modSourceOperatorB = opDummy;
-      op.modSourceOperatorC = opDummy;
+      op.modSourceBitFlags = modEn01 << 0;
       op.isCarrier = !(modEn12 || modEn13);
     } else if (i === 2) {
-      op.modSourceOperatorA = modEn02 ? ops[0] : opDummy;
-      op.modSourceOperatorB = modEn12 ? ops[1] : opDummy;
-      op.modSourceOperatorC = opDummy;
+      op.modSourceBitFlags = (modEn02 << 0) | (modEn12 << 1);
       op.isCarrier = !modEn23;
     } else if (i === 3) {
-      op.modSourceOperatorA = modEn03 ? ops[0] : opDummy;
-      op.modSourceOperatorB = modEn13 ? ops[1] : opDummy;
-      op.modSourceOperatorC = modEn23 ? ops[2] : opDummy;
+      op.modSourceBitFlags = (modEn03 << 0) | (modEn13 << 1) | (modEn23 << 2);
       op.isCarrier = true;
     }
   }
@@ -202,9 +175,11 @@ function operator_processOneStep(
   voice: VoiceState,
   operatorIndex: number,
 ) {
-  const op = voice.operatorStates[operatorIndex];
+  const ops = voice.operatorStates;
+  const op = ops[operatorIndex];
   const sp = bus.scene.operatorParameters[operatorIndex];
   const gain = sp.active ? power2(sp.level) : 0;
+  const modSourceBf = op.modSourceBitFlags;
 
   if (voice.gateTriggered) {
     op.phase = 0;
@@ -216,9 +191,9 @@ function operator_processOneStep(
 
     let phase =
       op.phase +
-      op.modSourceOperatorA.output +
-      op.modSourceOperatorB.output +
-      op.modSourceOperatorC.output;
+      (modSourceBf & (1 << 0) ? ops[0].output : 0) +
+      (modSourceBf & (1 << 1) ? ops[1].output : 0) +
+      (modSourceBf & (1 << 2) ? ops[2].output : 0);
     if (sp.feedback > 0) {
       phase += op.output * power2(sp.feedback);
     }
@@ -229,9 +204,9 @@ function operator_processOneStep(
     op.phase += op.phaseInc;
     let basePhase =
       op.phase +
-      op.modSourceOperatorA.output +
-      op.modSourceOperatorB.output +
-      op.modSourceOperatorC.output;
+      (modSourceBf & (1 << 0) ? ops[0].output : 0) +
+      (modSourceBf & (1 << 1) ? ops[1].output : 0) +
+      (modSourceBf & (1 << 2) ? ops[2].output : 0);
     if (sp.feedback > 0) {
       basePhase += op.output * power2(sp.feedback);
     }
