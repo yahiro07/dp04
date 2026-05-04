@@ -102,9 +102,11 @@ const Editor2 = () => {
     duration: number;
   };
   type State = {
+    notes: Note[];
     tmpNote: Note | null;
   };
   const [state, setState] = createSignal<State>({
+    notes: [],
     tmpNote: null,
   });
 
@@ -161,6 +163,21 @@ const Editor2 = () => {
             },
           });
         },
+        onUp(e) {
+          const tmpNote = state().tmpNote;
+          if (!tmpNote) return;
+          if (tmpNote.duration > 0) {
+            setState((prev) => {
+              return {
+                ...prev,
+                notes: [...prev.notes, tmpNote],
+                tmpNote: null,
+              };
+            });
+          } else {
+            setState((prev) => ({ ...prev, tmpNote: null }));
+          }
+        },
       });
     },
     getTempNoteNumberY() {
@@ -203,6 +220,22 @@ const Editor2 = () => {
             }}
           />
         ))}
+        {state().notes.map((note) => {
+          return (
+            <div
+              class="absolute flex-ha text-[#888] border border-[#888] bg-[#cfcc]"
+              style={{
+                left: npx(helpers.notePositionToX(note.position)),
+                top: npx(helpers.noteNumberToY(note.noteNumber)),
+                width: npx(note.duration * (640 / 32)),
+                height: "20px",
+                transform: "translateY(-50%)",
+              }}
+            >
+              {note.noteNumber}
+            </div>
+          );
+        })}
         <Show when={!!state().tmpNote && state().tmpNote!.duration > 0}>
           <div
             class="absolute flex-ha text-[#888] border border-[#888] bg-[#cfcc]"
