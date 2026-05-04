@@ -6,6 +6,12 @@ import { createDefaultScene } from "@ds9/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { linerInterpolate, power2 } from "@lib/ax/number-utils";
 
+type AudioFrame = {
+  bufferL: Float32Array;
+  bufferR: Float32Array;
+  length: number;
+};
+
 type OperatorState = {
   phase: number;
   phaseInc: number;
@@ -239,6 +245,80 @@ function operator_processOneStep(
   }
 }
 
+function findNextVoice(voices: VoiceState[]) {
+  // find the voice that is inactive and has the highest getOffUptime value
+  // i.e., the one that has been silent the longest
+  let index = -1;
+  for (let i = 0; i < voices.length; i++) {
+    if (!voices[i].gateActive) {
+      if (index === -1) {
+        index = i;
+      } else {
+        if (voices[i].gateOffUptime > voices[index].gateOffUptime) {
+          index = i;
+        }
+      }
+    }
+  }
+  if (index !== -1) {
+    return voices[index];
+  }
+  // if all voices are active
+  // find the voice with the highest getOnUptime value
+  // i.e., the one that has been playing the longest
+  index = 0;
+  for (let i = 0; i < voices.length; i++) {
+    if (voices[i].gateOnUptime > voices[index].gateOnUptime) {
+      index = i;
+    }
+  }
+  return voices[index];
+}
+
+function voice_noteOn(voice: VoiceState, noteNumber: number) {
+  voice.noteNumber = noteNumber;
+  voice.gateActive = true;
+  voice.gateOnUptime = 0;
+  voice.gateTriggered = true;
+}
+
+function voice_noteOff(voice: VoiceState) {
+  voice.gateActive = false;
+  voice.gateOffUptime = 0;
+}
+
+function voice_processAudio(
+  audioFrame: AudioFrame,
+  bus: SynthesisBus,
+  voice: VoiceState,
+) {
+  voice_wireOperators(bus, voice);
+  for (let j = 0; j < 4; j++) {
+    operator_updateDelta(bus, voice, j);
+    operator_updateEg(bus, voice, j);
+  }
+  const ops = voice.operatorStates;
+  for (let i = 0; i < audioFrame.length; i++) {
+    for (let j = 0; j < 4; j++) {
+      operator_processOneStep(bus, voice, j);
+    }
+    const y =
+      ((ops[0].isCarrier ? ops[0].output : 0) +
+        (ops[1].isCarrier ? ops[1].output : 0) +
+        (ops[2].isCarrier ? ops[2].output : 0) +
+        (ops[3].isCarrier ? ops[3].output : 0)) /
+      4;
+    audioFrame.bufferL[i] = y;
+    audioFrame.bufferR[i] = y;
+  }
+  const timeElapsed = audioFrame.length / bus.sampleRate;
+  voice.gateOnUptime += timeElapsed;
+  if (!voice.gateActive) {
+    voice.gateOffUptime += timeElapsed;
+  }
+  voice.gateTriggered = false;
+}
+
 export function createSynthesizerRoot(): ISynthesizerRoot {
   const bus = createBus();
   return {
@@ -255,47 +335,22 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       bus.scene.modulationFlags = flags;
     },
     noteOn(noteNumber, _velocity) {
-      const voice = bus.voice;
-      voice.noteNumber = noteNumber;
-      voice.gateActive = true;
-      voice.gateOnUptime = 0;
-      voice.gateTriggered = true;
+      voice_noteOn(bus.voice, noteNumber);
     },
     noteOff(noteNumber) {
-      const voice = bus.voice;
-      if (noteNumber === voice.noteNumber && voice.gateActive) {
-        voice.gateActive = false;
-        voice.gateOffUptime = 0;
+      if (noteNumber === bus.voice.noteNumber && bus.voice.gateActive) {
+        voice_noteOff(bus.voice);
       }
     },
     processAudio(bufferL, bufferR, frames) {
       if (bus.sampleRate === 0) return;
       const voice = bus.voice;
-      voice_wireOperators(bus, voice);
-      for (let j = 0; j < 4; j++) {
-        operator_updateDelta(bus, voice, j);
-        operator_updateEg(bus, voice, j);
-      }
-      const ops = voice.operatorStates;
-      for (let i = 0; i < frames; i++) {
-        for (let j = 0; j < 4; j++) {
-          operator_processOneStep(bus, voice, j);
-        }
-        const y =
-          ((ops[0].isCarrier ? ops[0].output : 0) +
-            (ops[1].isCarrier ? ops[1].output : 0) +
-            (ops[2].isCarrier ? ops[2].output : 0) +
-            (ops[3].isCarrier ? ops[3].output : 0)) /
-          4;
-        bufferL[i] = y;
-        bufferR[i] = y;
-      }
-      const timeElapsed = frames / bus.sampleRate;
-      voice.gateOnUptime += timeElapsed;
-      if (!voice.gateActive) {
-        voice.gateOffUptime += timeElapsed;
-      }
-      voice.gateTriggered = false;
+      const audioFrame: AudioFrame = {
+        bufferL,
+        bufferR,
+        length: frames,
+      };
+      voice_processAudio(audioFrame, bus, voice);
     },
     applyCommand(_id, _value) {},
   };
