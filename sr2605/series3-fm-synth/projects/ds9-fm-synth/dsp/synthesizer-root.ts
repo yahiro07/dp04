@@ -117,10 +117,10 @@ function voice_wireOperators(rc: RenderingContext, voice: VoiceState) {
 function operator_updateDelta(
   rc: RenderingContext,
   voice: VoiceState,
-  operatorIndex: number,
+  opIndex: number,
 ) {
-  const sp = rc.scene.operatorParameters[operatorIndex];
-  const op = voice.operators[operatorIndex];
+  const sp = rc.scene.operatorParameters[opIndex];
+  const op = voice.operators[opIndex];
   const det = power2(sp.fine) * Math.sign(sp.fine);
   const noteNumber = voice.noteNumber + sp.octave * 12 + sp.semi + det;
   const freq = midiToFrequency(noteNumber) * sp.ratio;
@@ -136,10 +136,10 @@ const operatorEgConfig = {
 function operator_calculateEgLevel(
   rc: RenderingContext,
   voice: VoiceState,
-  operatorIndex: number,
+  opIndex: number,
 ): number {
-  const op = voice.operators[operatorIndex];
-  const sp = rc.scene.operatorParameters[operatorIndex];
+  const op = voice.operators[opIndex];
+  const sp = rc.scene.operatorParameters[opIndex];
   const egParams = {
     attack: sp.attack,
     decay: sp.decay,
@@ -168,10 +168,10 @@ function operator_calculateEgLevel(
 function operator_updateEg(
   rc: RenderingContext,
   voice: VoiceState,
-  operatorIndex: number,
+  opIndex: number,
 ) {
-  const op = voice.operators[operatorIndex];
-  op.egLevel = operator_calculateEgLevel(rc, voice, operatorIndex);
+  const op = voice.operators[opIndex];
+  op.egLevel = operator_calculateEgLevel(rc, voice, opIndex);
   if (voice.gateActive) {
     op.egGateOnLastLevel = op.egLevel;
   }
@@ -180,11 +180,11 @@ function operator_updateEg(
 function operator_processOneStep(
   rc: RenderingContext,
   voice: VoiceState,
-  operatorIndex: number,
+  opIndex: number,
 ) {
   const ops = voice.operators;
-  const op = ops[operatorIndex];
-  const sp = rc.scene.operatorParameters[operatorIndex];
+  const op = ops[opIndex];
+  const sp = rc.scene.operatorParameters[opIndex];
   const gain = sp.active ? power2(sp.level) : 0;
   const modSourceBf = op.modSourceBitFlags;
 
