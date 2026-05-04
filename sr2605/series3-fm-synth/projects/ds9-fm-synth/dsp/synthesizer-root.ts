@@ -36,9 +36,11 @@ type VoiceState = {
   operatorStates: OperatorState[];
 };
 
-type SynthesisBus = {
+type RenderingContext = {
   scene: Scene;
   sampleRate: number;
+};
+type SynthesisBus = {
   voices: VoiceState[];
 };
 
@@ -65,10 +67,15 @@ function createVoiceState(): VoiceState {
   };
 }
 
-function createBus(): SynthesisBus {
+function createRenderingContext(): RenderingContext {
   return {
     scene: createDefaultScene(),
     sampleRate: 0,
+  };
+}
+
+function createSynthesisBus(): SynthesisBus {
+  return {
     voices: seqNumbers(configs.numVoices).map(createVoiceState),
   };
 }
@@ -77,9 +84,9 @@ function midiToFrequency(noteNumber: number): number {
   return 440 * 2 ** ((noteNumber - 69) / 12);
 }
 
-function voice_wireOperators(bus: SynthesisBus, voice: VoiceState) {
+function voice_wireOperators(rc: RenderingContext, voice: VoiceState) {
   const ops = voice.operatorStates;
-  const mf = bus.scene.modulationFlags;
+  const mf = rc.scene.modulationFlags;
   const bp = ModulationFlagBitPosition;
 
   const modEn01 = mf & (1 << bp.mod01) ? 1 : 0;
@@ -108,16 +115,16 @@ function voice_wireOperators(bus: SynthesisBus, voice: VoiceState) {
 }
 
 function operator_updateDelta(
-  bus: SynthesisBus,
+  rc: RenderingContext,
   voice: VoiceState,
   operatorIndex: number,
 ) {
-  const sp = bus.scene.operatorParameters[operatorIndex];
+  const sp = rc.scene.operatorParameters[operatorIndex];
   const es = voice.operatorStates[operatorIndex];
   const det = power2(sp.fine) * Math.sign(sp.fine);
   const noteNumber = voice.noteNumber + sp.octave * 12 + sp.semi + det;
   const freq = midiToFrequency(noteNumber) * sp.ratio;
-  es.phaseInc = freq / bus.sampleRate;
+  es.phaseInc = freq / rc.sampleRate;
 }
 
 const operatorEgConfig = {
@@ -127,12 +134,12 @@ const operatorEgConfig = {
 };
 
 function operator_calculateEgLevel(
-  bus: SynthesisBus,
+  rc: RenderingContext,
   voice: VoiceState,
   operatorIndex: number,
 ): number {
   const op = voice.operatorStates[operatorIndex];
-  const sp = bus.scene.operatorParameters[operatorIndex];
+  const sp = rc.scene.operatorParameters[operatorIndex];
   const egParams = {
     attack: sp.attack,
     decay: sp.decay,
@@ -159,25 +166,25 @@ function operator_calculateEgLevel(
 }
 
 function operator_updateEg(
-  bus: SynthesisBus,
+  rc: RenderingContext,
   voice: VoiceState,
   operatorIndex: number,
 ) {
   const op = voice.operatorStates[operatorIndex];
-  op.egLevel = operator_calculateEgLevel(bus, voice, operatorIndex);
+  op.egLevel = operator_calculateEgLevel(rc, voice, operatorIndex);
   if (voice.gateActive) {
     op.egGateOnLastLevel = op.egLevel;
   }
 }
 
 function operator_processOneStep(
-  bus: SynthesisBus,
+  rc: RenderingContext,
   voice: VoiceState,
   operatorIndex: number,
 ) {
   const ops = voice.operatorStates;
   const op = ops[operatorIndex];
-  const sp = bus.scene.operatorParameters[operatorIndex];
+  const sp = rc.scene.operatorParameters[operatorIndex];
   const gain = sp.active ? power2(sp.level) : 0;
   const modSourceBf = op.modSourceBitFlags;
 
@@ -270,19 +277,19 @@ function voice_noteOff(voice: VoiceState) {
 }
 
 function voice_processAudio(
+  rc: RenderingContext,
   audioFrame: AudioFrame,
-  bus: SynthesisBus,
   voice: VoiceState,
 ) {
-  voice_wireOperators(bus, voice);
+  voice_wireOperators(rc, voice);
   for (let j = 0; j < 4; j++) {
-    operator_updateDelta(bus, voice, j);
-    operator_updateEg(bus, voice, j);
+    operator_updateDelta(rc, voice, j);
+    operator_updateEg(rc, voice, j);
   }
   const ops = voice.operatorStates;
   for (let i = 0; i < audioFrame.length; i++) {
     for (let j = 0; j < 4; j++) {
-      operator_processOneStep(bus, voice, j);
+      operator_processOneStep(rc, voice, j);
     }
     const y =
       ((ops[0].isCarrier ? ops[0].output : 0) +
@@ -293,7 +300,7 @@ function voice_processAudio(
     audioFrame.bufferL[i] += y;
     audioFrame.bufferR[i] += y;
   }
-  const timeElapsed = audioFrame.length / bus.sampleRate;
+  const timeElapsed = audioFrame.length / rc.sampleRate;
   voice.gateOnUptime += timeElapsed;
   if (!voice.gateActive) {
     voice.gateOffUptime += timeElapsed;
@@ -302,19 +309,20 @@ function voice_processAudio(
 }
 
 export function createSynthesizerRoot(): ISynthesizerRoot {
-  const bus = createBus();
+  const rc = createRenderingContext();
+  const bus = createSynthesisBus();
   return {
     prepareProcessing(_sampleRate, _maxFrameLength) {
-      bus.sampleRate = _sampleRate;
+      rc.sampleRate = _sampleRate;
     },
     setParameter(_id, _value) {},
     setOperatorParameter(operatorIndex, paramKey, value) {
-      (bus.scene.operatorParameters[operatorIndex][paramKey] as
+      (rc.scene.operatorParameters[operatorIndex][paramKey] as
         | number
         | boolean) = value;
     },
     setModulationFlags(flags) {
-      bus.scene.modulationFlags = flags;
+      rc.scene.modulationFlags = flags;
     },
     noteOn(noteNumber, velocity) {
       const nextVoice = findNextVoice(bus.voices);
@@ -336,7 +344,7 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         length: frames,
       };
       for (const voice of bus.voices) {
-        voice_processAudio(audioFrame, bus, voice);
+        voice_processAudio(rc, audioFrame, voice);
       }
       applyBufferGainRms(bufferL, configs.numVoices);
       applyBufferGainRms(bufferR, configs.numVoices);
