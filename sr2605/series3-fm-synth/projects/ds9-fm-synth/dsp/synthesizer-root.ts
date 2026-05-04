@@ -34,6 +34,7 @@ type VoiceState = {
   gateOffUptime: number; //seconds
   gateTriggered: boolean;
   operators: OperatorState[]; //[4]
+  processingActive: boolean;
 };
 
 type RenderingContext = {
@@ -64,6 +65,7 @@ function createVoiceState(): VoiceState {
     gateOffUptime: 0,
     gateTriggered: false,
     operators: seqNumbers(4).map(createOperatorState),
+    processingActive: false,
   };
 }
 
@@ -269,6 +271,7 @@ function voice_noteOn(
   voice.gateActive = true;
   voice.gateOnUptime = 0;
   voice.gateTriggered = true;
+  voice.processingActive = true;
 }
 
 function voice_noteOff(voice: VoiceState) {
@@ -306,6 +309,16 @@ function voice_processAudio(
     voice.gateOffUptime += timeElapsed;
   }
   voice.gateTriggered = false;
+  if (!voice.gateActive && voice.processingActive) {
+    let egLevel = 0;
+    for (const op of voice.operators) {
+      egLevel = Math.max(egLevel, op.egLevel);
+    }
+    //todo: check actual level if delay or reverb are added later
+    if (egLevel < 1e-3) {
+      voice.processingActive = false;
+    }
+  }
 }
 
 export function createSynthesizerRoot(): ISynthesizerRoot {
@@ -344,6 +357,7 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         length: frames,
       };
       for (const voice of bus.voices) {
+        if (!voice.processingActive) continue;
         voice_processAudio(rc, audioFrame, voice);
       }
       applyBufferGainRms(bufferL, configs.numVoices);
