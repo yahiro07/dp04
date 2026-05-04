@@ -1,10 +1,15 @@
 import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
 import { ISynthesizerRoot } from "@ds9/dsp/api";
+import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
 import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
 import { getWaveformSample } from "@ds9/dsp/waveform";
 import { createDefaultScene } from "@ds9/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { linerInterpolate, power2 } from "@lib/ax/number-utils";
+
+const configs = {
+  numVoices: 6,
+};
 
 type AudioFrame = {
   bufferL: Float32Array;
@@ -38,8 +43,7 @@ type VoiceState = {
 type SynthesisBus = {
   scene: Scene;
   sampleRate: number;
-  voice: VoiceState;
-  // voices: VoiceState[];  //polyphony
+  voices: VoiceState[];
 };
 
 const dummyZeroOperatorState: OperatorState = {
@@ -83,8 +87,7 @@ function createBus(): SynthesisBus {
   return {
     scene: createDefaultScene(),
     sampleRate: 0,
-    voice: createVoiceState(),
-    // voices: seqNumbers(4).map(createVoiceState),
+    voices: seqNumbers(configs.numVoices).map(createVoiceState),
   };
 }
 
@@ -275,7 +278,11 @@ function findNextVoice(voices: VoiceState[]) {
   return voices[index];
 }
 
-function voice_noteOn(voice: VoiceState, noteNumber: number) {
+function voice_noteOn(
+  voice: VoiceState,
+  noteNumber: number,
+  _velocity: number,
+) {
   voice.noteNumber = noteNumber;
   voice.gateActive = true;
   voice.gateOnUptime = 0;
@@ -308,8 +315,8 @@ function voice_processAudio(
         (ops[2].isCarrier ? ops[2].output : 0) +
         (ops[3].isCarrier ? ops[3].output : 0)) /
       4;
-    audioFrame.bufferL[i] = y;
-    audioFrame.bufferR[i] = y;
+    audioFrame.bufferL[i] += y;
+    audioFrame.bufferR[i] += y;
   }
   const timeElapsed = audioFrame.length / bus.sampleRate;
   voice.gateOnUptime += timeElapsed;
@@ -334,23 +341,30 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
     setModulationFlags(flags) {
       bus.scene.modulationFlags = flags;
     },
-    noteOn(noteNumber, _velocity) {
-      voice_noteOn(bus.voice, noteNumber);
+    noteOn(noteNumber, velocity) {
+      const nextVoice = findNextVoice(bus.voices);
+      voice_noteOn(nextVoice, noteNumber, velocity);
     },
     noteOff(noteNumber) {
-      if (noteNumber === bus.voice.noteNumber && bus.voice.gateActive) {
-        voice_noteOff(bus.voice);
+      for (const voice of bus.voices) {
+        if (voice.gateActive && voice.noteNumber === noteNumber) {
+          voice_noteOff(voice);
+        }
       }
     },
     processAudio(bufferL, bufferR, frames) {
-      if (bus.sampleRate === 0) return;
-      const voice = bus.voice;
+      clearBuffer(bufferL);
+      clearBuffer(bufferR);
       const audioFrame: AudioFrame = {
         bufferL,
         bufferR,
         length: frames,
       };
-      voice_processAudio(audioFrame, bus, voice);
+      for (const voice of bus.voices) {
+        voice_processAudio(audioFrame, bus, voice);
+      }
+      applyBufferGainRms(bufferL, configs.numVoices);
+      applyBufferGainRms(bufferR, configs.numVoices);
     },
     applyCommand(_id, _value) {},
   };
