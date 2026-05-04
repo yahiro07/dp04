@@ -113,7 +113,7 @@ export function OperatorEditor(props: {
           value={props.parameters.unisonDetune}
           onChange={(v) => props.setParameter("unisonDetune", v)}
         />
-        <FeKnob
+        {/* <FeKnob
           label="MIX"
           value={props.parameters.unisonMix}
           onChange={(v) => props.setParameter("unisonMix", v)}
@@ -122,7 +122,7 @@ export function OperatorEditor(props: {
           label="RND_PH"
           checked={props.parameters.unisonRndPhase}
           onChange={(v) => props.setParameter("unisonRndPhase", v)}
-        />
+        /> */}
       </div>
     </div>
   );
