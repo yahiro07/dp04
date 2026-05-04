@@ -75,19 +75,34 @@ function NoteInputBar_InScale() {
 
 function NoteInputBar_Narrow1() {
   return (
-    <div class="flex-v">
-      {seqNumbers(13).map((i) => {
-        const ni = (12 - i - 4) * 3;
-        const highlighted = ni % 12 === 0;
-        return (
-          <div
-            class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
-            style={{ background: highlighted ? "#ddf" : "#fff" }}
-          >
-            {ni}
-          </div>
-        );
-      })}
+    <div class="flex-h">
+      <div class="flex-v">
+        {seqNumbers(13).map((i) => {
+          const ni = (12 - i - 4) * 3;
+          const highlighted = ni % 12 === 0;
+          return (
+            <div
+              class="w-[60px] h-[20px] border border-[#888] flex-c text-[#888]"
+              style={{ background: highlighted ? "#ddf" : "#fff" }}
+            >
+              {ni}
+            </div>
+          );
+        })}
+      </div>
+      <div class="w-[60px] h-[260px] border border-[#888] relative">
+        {targetNotes.map((ni) => {
+          const ypos = 8 * 20 - ni * (20 / 3);
+          return (
+            <div
+              class="absolute w-[60px] h-[20px] border border-[#888] bg-[#cfc] flex-ha pl-1 text-[#888]"
+              style={{ top: `${ypos}px` }}
+            >
+              {ni}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
