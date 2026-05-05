@@ -1,10 +1,11 @@
+import { OperatorWave } from "@ds9/base/parameters";
 import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
 import { ISynthesizerRoot } from "@ds9/dsp/api";
 import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
 import { createDelayEffect } from "@ds9/dsp/delay-effect";
 import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
 import { createReverbSchroeder } from "@ds9/dsp/reverb-schroeder";
-import { getWaveformSample } from "@ds9/dsp/waveform";
+import { basicWaves, getOscWaveformPdSaw } from "@ds9/dsp/waveforms";
 import { createDefaultScene } from "@ds9/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { linerInterpolate, power2 } from "@lib/ax/number-utils";
@@ -178,6 +179,28 @@ function operator_updateEg(
   op.egLevel = operator_calculateEgLevel(rc, voice, opIndex);
   if (voice.gateActive) {
     op.egGateOnLastLevel = op.egLevel;
+  }
+}
+
+function getWaveformSample(
+  phase: number,
+  wave: OperatorWave,
+  prShape: number,
+): number {
+  if (wave === OperatorWave.Sine || wave === OperatorWave.SineCSF) {
+    return basicWaves.sine(phase);
+  } else if (wave === OperatorWave.Noise) {
+    return Math.random() * 2 - 1;
+  } else if (wave === OperatorWave.Saw) {
+    return basicWaves.saw(phase);
+  } else if (wave === OperatorWave.Square) {
+    return basicWaves.square(phase, prShape);
+  } else if (wave === OperatorWave.Triangle) {
+    return basicWaves.triangle(phase);
+  } else if (wave === OperatorWave.PdSaw) {
+    return getOscWaveformPdSaw(phase, prShape, false);
+  } else {
+    return 0;
   }
 }
 

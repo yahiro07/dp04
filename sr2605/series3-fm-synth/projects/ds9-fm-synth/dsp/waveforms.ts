@@ -1,6 +1,4 @@
-import { OperatorWave } from "@ds9/base/parameters";
-
-function getOscWaveformPdSaw(
+export function getOscWaveformPdSaw(
   _phase: number,
   pdLevel: number,
   narrow = false,
@@ -25,25 +23,18 @@ function getOscWaveformPdSaw(
   }
 }
 
-export function getWaveformSample(
-  phase: number,
-  wave: OperatorWave,
-  prShape: number,
-): number {
-  if (wave === OperatorWave.Sine || wave === OperatorWave.SineCSF) {
+export const basicWaves = {
+  sine(phase: number) {
     return Math.sin(phase * 2 * Math.PI);
-  } else if (wave === OperatorWave.Noise) {
-    return Math.random() * 2 - 1;
-  } else if (wave === OperatorWave.Saw) {
-    return phase * 2 - 1;
-  } else if (wave === OperatorWave.Square) {
+  },
+  square(phase: number, prShape: number): number {
     const pivot = 0.5 - prShape * 0.45;
     return phase < pivot ? 1 : -1;
-  } else if (wave === OperatorWave.Triangle) {
+  },
+  triangle(phase: number): number {
     return 1 - (2 * Math.abs(phase - 0.5) * 2 - 1);
-  } else if (wave === OperatorWave.PdSaw) {
-    return getOscWaveformPdSaw(phase, prShape, false);
-  } else {
-    return 0;
-  }
-}
+  },
+  saw(phase: number): number {
+    return phase * 2 - 1;
+  },
+};
