@@ -13,10 +13,10 @@ export function UiRoot(props: { unitEngine: UnitEngine }) {
     },
   };
   return (
-    <div class="h-[100px] flex-c border border-[#aaa]">
+    <div class="h-[100px] flex-c border border-[#aaa] p-4">
       <div>main synth</div>
 
-      <div class="flex-h">
+      <div class="flex-h gap-1">
         <HoldableButton
           text="note C"
           onDown={() => vm.noteOn(60)}
