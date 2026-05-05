@@ -30,6 +30,12 @@ export function createSequencer(args: {
         isToneActive(toneId: DrumKitToneId) {
           return currentToneId() === toneId;
         },
+        noteOn(noteNumber: number) {
+          mainSynthesizer.noteOn(0, noteNumber, 1);
+        },
+        noteOff(noteNumber: number) {
+          mainSynthesizer.noteOff(0, noteNumber);
+        },
       };
       return (
         <div class="w-dvw h-dvh flex-vc">
@@ -60,6 +66,10 @@ export function createSequencer(args: {
                 active={vm.isToneActive("closed-hi-hat")}
                 onClick={() => vm.playTone("closed-hi-hat")}
               />
+            </div>
+            <div class="flex-h">
+              <Button text="60 on" onClick={() => vm.noteOn(60)} />
+              <Button text="60 off" onClick={() => vm.noteOff(60)} />
             </div>
           </div>
         </div>
