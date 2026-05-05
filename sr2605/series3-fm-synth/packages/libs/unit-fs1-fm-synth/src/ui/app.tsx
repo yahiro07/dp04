@@ -6,7 +6,7 @@ import { OperatorEditor } from "@/ui/organisms/operator-editor";
 import { OperatorSchemeEditor } from "@/ui/organisms/operator-scheme-editor";
 import { OperatorSchemesPresetSelector } from "@/ui/organisms/operator-schemes-preset-selector";
 import { OperatorSummariesPart } from "@/ui/organisms/operator-summaries-part";
-import { initializeApp, store, uiOperations } from "@/ui/store";
+import { store, uiOperations } from "@/ui/store";
 
 function FmAlgorithmPart() {
   return (
@@ -50,7 +50,6 @@ function OperatorEditPart() {
 }
 
 function MainUi() {
-  void initializeApp();
   return (
     <div class="w-dvw h-dvh flex-c">
       <div class="flex-vc gap-6">

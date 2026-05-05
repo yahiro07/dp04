@@ -1,7 +1,18 @@
+export type WorkletNodeWrapper<TMessageIn, TMessageOut> = {
+  outputNode: AudioNode;
+  initialize(): Promise<void>;
+  resumeIfNeed(): Promise<void>;
+  sendMessage(message: TMessageIn): void;
+  setEventReceiver(fn: (ev: TMessageOut) => void): void;
+};
+
 export function createWorkletNodeWrapper<
   TMessageIn extends object,
   TMessageOut extends object,
->(audioContext: AudioContext, workerUrl: string) {
+>(
+  audioContext: AudioContext,
+  workerUrl: string,
+): WorkletNodeWrapper<TMessageIn, TMessageOut> {
   const outputNode = audioContext.createGain();
   outputNode.gain.value = 1;
 

@@ -42,12 +42,5 @@ export type MachineControlCommand =
 
 export type RootMachineCommand = SceneEditCommand | MachineControlCommand;
 
-export type RootMachine = {
-  initialize(): Promise<void>;
-  resumeIfNeed(): Promise<void>;
-  getSceneState(): Scene;
-  handleCommand(command: RootMachineCommand): void;
-};
-
 //used only in UI
 export type OperatorScheme = "C" | "M" | "J" | "J2";

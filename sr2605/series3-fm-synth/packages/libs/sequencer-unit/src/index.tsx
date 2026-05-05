@@ -3,7 +3,7 @@ import type {
   DrumSynthesizerUnit,
 } from "@my/drum-synthesizer-unit";
 import { JsxElement } from "@my/lib/ax-solid/types";
-import { resumeAudioContextIfNeed } from "@my/lib/mo-music-app/resume-audio-context";
+import { resumeAudioContextIfNeed } from "@my/lib/mo-music-app/audio-context-helper";
 import { Button } from "@my/lib/mo-solid/components/button";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
 import type { MainSynthesizerUnit } from "@my/main-synthesizer-unit";

@@ -1,6 +1,5 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
-import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createStore } from "solid-js/store";
 import {
   CommonParameterKey,
@@ -15,9 +14,7 @@ import {
   OperatorScheme,
   RootMachineCommand,
 } from "@/base/types";
-import { createRootMachine } from "@/machine/root-machine";
-
-const rootMachine = createRootMachine();
+import { rootMachine } from "@/machine/root-machine";
 
 type StoreState = {
   operatorSelectionIndex: number;
@@ -104,9 +101,9 @@ export const uiOperations = {
   },
 };
 
-export async function initializeApp() {
+export async function initializeApp(audioContext: AudioContext) {
   storeMutations.setLoading(true);
-  await rootMachine.initialize();
+  const outputNode = await rootMachine.initialize(audioContext);
   storeMutations.setLoading(false);
   const scene = rootMachine.getSceneState();
   storeMutations.setOperatorParameters(scene.operatorParameters);
@@ -120,7 +117,5 @@ export async function initializeApp() {
     // uiOperations.setOperatorParameter(3, "wave", OperatorWave.Saw);
     uiOperations.setOperatorParameter(3, "unisonNum", 5);
   }
-  setupMidiKeyboardInput({
-    noteCallback: uiOperations.handleNote,
-  });
+  return outputNode;
 }
