@@ -418,12 +418,14 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         bufferR,
         length: frames,
       };
+      let numActiveVoices = 0;
       for (const voice of bus.voices) {
         if (!voice.processingActive) continue;
         voice_processAudio(rc, audioFrame, voice);
+        numActiveVoices++;
       }
-      applyBufferGainRms(bufferL, frames, configs.numVoices);
-      applyBufferGainRms(bufferR, frames, configs.numVoices);
+      applyBufferGainRms(bufferL, frames, numActiveVoices);
+      applyBufferGainRms(bufferR, frames, numActiveVoices);
 
       const cp = rc.scene.commonParameters;
       if (cp.delayEnabled) {

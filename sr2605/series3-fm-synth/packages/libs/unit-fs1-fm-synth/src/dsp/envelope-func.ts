@@ -4,7 +4,7 @@ import {
   mapUnaryTo,
   power2,
 } from "@my/lib/ax/number-utils";
-import { curveMapper, mapInvExpCurve } from "@/dsp/curves";
+import { curveMapper, mapInvExpCurve } from "@my/lib/mo-dsp/curves";
 
 export function calculateShortAttackEgLevel(gateOnUptime: number): number {
   // slow attack after noteOn (0→1）
