@@ -1,4 +1,4 @@
-import { readBufferInterpolated } from "@/dsp/buffer-functions";
+import { readBufferInterpolated } from "@my/lib/mo-dsp/buffer-functions";
 
 export interface DelayLineRingBuffer {
   size(): number;

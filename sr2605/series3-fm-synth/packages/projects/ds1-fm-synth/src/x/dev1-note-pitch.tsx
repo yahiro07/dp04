@@ -1,7 +1,7 @@
 /* @refresh reload */
 
 import { seqNumbers } from "@my/lib/ax/array-utils";
-import { clampValue, linerInterpolate } from "@my/lib/ax/number-utils";
+import { clampValue, linearInterpolate } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { startDragSession } from "@my/lib/mo/drag-session";
 import { npx } from "@my/lib/mo/styling-utils";
@@ -141,10 +141,10 @@ function EditNoteInputBar_Narrow1() {
 
   const helpers = {
     yToNoteNumber(y: number) {
-      return Math.round(linerInterpolate(y, 0, 260, 24, -12, true));
+      return Math.round(linearInterpolate(y, 0, 260, 24, -12, true));
     },
     noteNumberToY(ni: number) {
-      return linerInterpolate(ni, -12, 24, 260, 0);
+      return linearInterpolate(ni, -12, 24, 260, 0);
     },
   };
   const vm = {

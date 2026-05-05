@@ -1,9 +1,12 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
-import { linerInterpolate, power2 } from "@my/lib/ax/number-utils";
+import { linearInterpolate, power2 } from "@my/lib/ax/number-utils";
+import {
+  applyBufferGainRms,
+  clearBuffer,
+} from "@my/lib/mo-dsp/buffer-functions";
 import { OperatorParameters, OperatorWave } from "@/base/parameters";
 import { ModulationFlagBitPosition, Scene } from "@/base/types";
 import { ISynthesizerRoot } from "@/dsp/api";
-import { applyBufferGainRms, clearBuffer } from "@/dsp/buffer-functions";
 import { createDelayEffect } from "@/dsp/delay-effect";
 import { getEnvelopeLevelADSR } from "@/dsp/envelope-func";
 import { createReverbSchroeder } from "@/dsp/reverb-schroeder";
@@ -270,7 +273,7 @@ function operator_processOneStep(
     const n = sp.unisonNum;
     let y = 0;
     for (let i = 0; i < n; i++) {
-      const w = linerInterpolate(i, 0, n - 1, -1, 1);
+      const w = linearInterpolate(i, 0, n - 1, -1, 1);
       let phase = basePhase * (1 + sp.unisonDetune * 0.03 * w);
       phase -= Math.floor(phase);
       y += getWaveformSample(op, phase, sp.wave, sp.shape);

@@ -3,7 +3,7 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
 import { assignTyped } from "@my/lib/ax/general-utils";
 import { mixValue, power3 } from "@my/lib/ax/number-utils";
-import { createDelayLineRingBuffer } from "@/dsp/delay-line-ring-buffer";
+import { createDelayLineRingBuffer } from "@my/lib/mo-dsp/delay-line-ring-buffer";
 
 type ReverbEffect = {
   prepare(sampleRate: number): void;

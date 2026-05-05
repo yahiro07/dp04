@@ -1,13 +1,17 @@
+import { m_floor, m_max, m_min } from "./math-utils";
+
 export function clampValue(value: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, value));
+  if (value < lo) return lo;
+  if (value > hi) return hi;
+  return value;
 }
 
 export function lowClip(value: number, lo: number) {
-  return Math.max(value, lo);
+  return m_max(value, lo);
 }
 
 export function highClip(value: number, hi: number) {
-  return Math.min(value, hi);
+  return m_min(value, hi);
 }
 
 export function mapUnaryTo(value: number, d0: number, d1: number) {
@@ -28,7 +32,7 @@ export function mapUnaryFrom(
   return v;
 }
 
-export function linerInterpolate(
+export function linearInterpolate(
   value: number,
   s0: number,
   s1: number,
@@ -39,8 +43,8 @@ export function linerInterpolate(
   if (s1 === s0) return d0;
   const v = ((value - s0) / (s1 - s0)) * (d1 - d0) + d0;
   if (clamp) {
-    const lo = Math.min(d0, d1);
-    const hi = Math.max(d0, d1);
+    const lo = m_min(d0, d1);
+    const hi = m_max(d0, d1);
     return clampValue(v, lo, hi);
   }
   return v;
@@ -60,4 +64,8 @@ export function invPower2(value: number) {
 
 export function power3(value: number) {
   return value * value * value;
+}
+
+export function fracPart(value: number) {
+  return value - m_floor(value);
 }

@@ -1,5 +1,5 @@
 import { clampValue, mixValue, power2 } from "@my/lib/ax/number-utils";
-import { createDelayLineRingBuffer } from "@/dsp/delay-line-ring-buffer";
+import { createDelayLineRingBuffer } from "@my/lib/mo-dsp/delay-line-ring-buffer";
 
 type DelayEffect = {
   prepare(sampleRate: number): void;
