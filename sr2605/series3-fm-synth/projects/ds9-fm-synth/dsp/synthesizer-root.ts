@@ -1,4 +1,4 @@
-import { OperatorWave } from "@ds9/base/parameters";
+import { OperatorParameters, OperatorWave } from "@ds9/base/parameters";
 import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
 import { ISynthesizerRoot } from "@ds9/dsp/api";
 import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
@@ -28,6 +28,8 @@ type OperatorState = {
   isCarrier: boolean;
   egLevel: number;
   egGateOnLastLevel: number;
+  sampleHoldValue: number;
+  sampleHoldCounter: number;
 };
 
 type VoiceState = {
@@ -57,6 +59,8 @@ function createOperatorState(): OperatorState {
     isCarrier: false,
     egLevel: 0,
     egGateOnLastLevel: 0,
+    sampleHoldValue: 0,
+    sampleHoldCounter: 0,
   };
 }
 
@@ -183,6 +187,7 @@ function operator_updateEg(
 }
 
 function getWaveformSample(
+  op: OperatorState,
   phase: number,
   wave: OperatorWave,
   prShape: number,
@@ -190,7 +195,7 @@ function getWaveformSample(
   if (wave === OperatorWave.Sine || wave === OperatorWave.SineCSF) {
     return basicWaves.sine(phase);
   } else if (wave === OperatorWave.Noise) {
-    return Math.random() * 2 - 1;
+    return op.sampleHoldValue;
   } else if (wave === OperatorWave.Saw) {
     return basicWaves.saw(phase);
   } else if (wave === OperatorWave.Square) {
@@ -204,6 +209,20 @@ function getWaveformSample(
   }
 }
 
+function operator_updateSampleHold(
+  op: OperatorState,
+  opParams: OperatorParameters,
+) {
+  if (opParams.wave === OperatorWave.Noise) {
+    op.sampleHoldCounter++;
+    const sampleHoldInterval = (power2(1 - opParams.feedback) * 200) >>> 0;
+    if (op.sampleHoldCounter >= sampleHoldInterval) {
+      op.sampleHoldValue = Math.random() * 2 - 1;
+      op.sampleHoldCounter = 0;
+    }
+  }
+}
+
 function operator_processOneStep(
   rc: RenderingContext,
   voice: VoiceState,
@@ -214,6 +233,8 @@ function operator_processOneStep(
   const sp = rc.scene.operatorParameters[opIndex];
   const gain = sp.active ? power2(sp.level) : 0;
   const modSourceBf = op.modSourceBitFlags;
+
+  operator_updateSampleHold(op, sp);
 
   if (voice.gateTriggered) {
     op.phase = 0;
@@ -232,7 +253,8 @@ function operator_processOneStep(
       phase += op.output * power2(sp.feedback);
     }
     phase -= Math.floor(phase);
-    const y = getWaveformSample(phase, sp.wave, sp.shape) * op.egLevel * gain;
+    const y =
+      getWaveformSample(op, phase, sp.wave, sp.shape) * op.egLevel * gain;
     op.output = y;
   } else {
     op.phase += op.phaseInc;
@@ -250,7 +272,7 @@ function operator_processOneStep(
       const w = linerInterpolate(i, 0, n - 1, -1, 1);
       let phase = basePhase * (1 + sp.unisonDetune * 0.03 * w);
       phase -= Math.floor(phase);
-      y += getWaveformSample(phase, sp.wave, sp.shape);
+      y += getWaveformSample(op, phase, sp.wave, sp.shape);
     }
     y /= n;
     op.output = y * op.egLevel * gain;
