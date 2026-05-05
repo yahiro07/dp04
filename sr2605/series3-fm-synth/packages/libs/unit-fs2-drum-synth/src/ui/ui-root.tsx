@@ -1,7 +1,7 @@
 import { Button } from "@my/lib/mo-solid/components/button";
-import { DrumKitToneId } from "./types";
+import { DrumKitToneId } from "../base/types";
+import { UnitEngine } from "../machine/unit-engine";
 import { createUiModel } from "./ui-model";
-import { UnitEngine } from "./unit-engine";
 
 export function UiRoot(props: {
   unitEngine: UnitEngine;

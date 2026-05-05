@@ -6,7 +6,7 @@ import { createUnitEngine } from "./unit-engine";
 export * from "./types";
 
 export type DrumSynthesizerUnit = {
-  setupEngine(audioContext: AudioContext): AudioNode;
+  setupEngine(audioContext: AudioContext): Promise<AudioNode>;
   playTone(toneId: DrumKitToneId): void;
   renderUi(props: { currentToneId: DrumKitToneId }): JsxElement;
 };
@@ -14,7 +14,7 @@ export type DrumSynthesizerUnit = {
 export function createDrumSynthesizerUnit(): DrumSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
-    setupEngine(audioContext) {
+    async setupEngine(audioContext) {
       return unitEngine.initialize(audioContext);
     },
     playTone(toneId) {

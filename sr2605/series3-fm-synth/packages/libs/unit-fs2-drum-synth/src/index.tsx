@@ -1,12 +1,12 @@
 import { JsxElement } from "@my/lib/ax-solid/types";
-import { DrumKitToneId } from "./types";
-import { UiRoot } from "./ui-root";
-import { createUnitEngine } from "./unit-engine";
+import { DrumKitToneId } from "./base/types";
+import { createUnitEngine } from "./machine/unit-engine";
+import { UiRoot } from "./ui/ui-root";
 
-export * from "./types";
+export * from "./base/types";
 
 export type UnitFs2DrumSynth = {
-  setupEngine(audioContext: AudioContext): AudioNode;
+  setupEngine(audioContext: AudioContext): Promise<AudioNode>;
   playTone(toneId: DrumKitToneId): void;
   renderUi(props: { currentToneId: DrumKitToneId }): JsxElement;
 };

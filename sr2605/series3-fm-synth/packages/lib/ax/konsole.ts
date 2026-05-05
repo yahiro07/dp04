@@ -1,4 +1,4 @@
-export const dspEnvs = {
+export const konsoleEnvs = {
   isDebug: false,
 };
 
@@ -9,19 +9,19 @@ export const konsole = {
     console.log(`[🔺app] ${message}`);
   },
   debugLog(message: string) {
-    if (!dspEnvs.isDebug) return;
+    if (!konsoleEnvs.isDebug) return;
     console.log(`[🔺app] ${message}`);
   },
 };
 
 export function debugAssert(cond: boolean, message: string) {
-  if (!dspEnvs.isDebug) return;
+  if (!konsoleEnvs.isDebug) return;
   if (!cond) {
     throw new Error(message);
   }
 }
 
 export function debugEmitError(message: string) {
-  if (!dspEnvs.isDebug) return;
+  if (!konsoleEnvs.isDebug) return;
   throw new Error(message);
 }

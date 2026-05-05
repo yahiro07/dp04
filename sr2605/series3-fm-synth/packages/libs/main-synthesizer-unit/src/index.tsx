@@ -3,7 +3,7 @@ import { UiRoot } from "@/ui-root";
 import { createUnitEngine } from "@/unit-engine";
 
 export type MainSynthesizerUnit = {
-  setupEngine(audioContext: AudioContext): AudioNode;
+  setupEngine(audioContext: AudioContext): Promise<AudioNode>;
   noteOn(ch: number, noteNumber: number, velocity: number): void;
   noteOff(ch: number, noteNumber: number): void;
   renderUi(): JsxElement;
@@ -11,7 +11,7 @@ export type MainSynthesizerUnit = {
 export function createMainSynthesizerUnit(): MainSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
-    setupEngine(audioContext) {
+    async setupEngine(audioContext) {
       return unitEngine.initialize(audioContext);
     },
     noteOn(ch, noteNumber, velocity) {

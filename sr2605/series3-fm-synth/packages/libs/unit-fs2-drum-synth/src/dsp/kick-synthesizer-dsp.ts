@@ -15,104 +15,13 @@ import { createInterpolator, Interpolator } from "@my/lib/mo-dsp/interpolator";
 import { getOscWaveformPdSaw } from "@my/lib/mo-dsp/pd-saw";
 import { applySoftClip } from "@my/lib/mo-dsp/soft-clip-shaper";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
-
-export enum KickEgWave {
-  ds,
-  d,
-  pd,
-}
-
-export type KickParametersSuit = {
-  oscPitch: number;
-  oscShape: number;
-  pitchEgWave: KickEgWave;
-  pitchEgTime: number;
-  pitchEgShape: number;
-  pitchEgAmount: number;
-  ampEgWave: KickEgWave;
-  ampEgTime: number;
-  ampEgShape: number;
-  ampDrive: number;
-  volume: number;
-};
-
-export enum KickPresetKey {
-  kick1,
-  kick2,
-  kick3,
-  kick4,
-  kick5,
-}
-
-const kickPresets = {
-  [KickPresetKey.kick1]: {
-    oscPitch: 0.44,
-    oscShape: 0.3,
-    pitchEgWave: KickEgWave.ds,
-    pitchEgTime: 0.3,
-    pitchEgShape: 0,
-    pitchEgAmount: 0.53,
-    ampEgWave: KickEgWave.d,
-    ampEgTime: 0.63,
-    ampEgShape: 0.6,
-    ampDrive: 0.05,
-    volume: 0.66,
-  },
-  [KickPresetKey.kick2]: {
-    oscPitch: 0.32,
-    oscShape: 0.5,
-    pitchEgWave: KickEgWave.ds,
-    pitchEgTime: 0.23,
-    pitchEgShape: 0.21,
-    pitchEgAmount: 0.74,
-    ampEgWave: KickEgWave.d,
-    ampEgTime: 0.52,
-    ampEgShape: 0.38,
-    ampDrive: 0.28,
-    volume: 1,
-  },
-  [KickPresetKey.kick3]: {
-    oscPitch: 0.34,
-    oscShape: 0.61,
-    pitchEgWave: KickEgWave.ds,
-    pitchEgTime: 0.26,
-    pitchEgShape: 0.12,
-    pitchEgAmount: 0.74,
-    ampEgWave: KickEgWave.pd,
-    ampEgTime: 0.41,
-    ampEgShape: 0.39,
-    ampDrive: 0,
-    volume: 0.61,
-  },
-  [KickPresetKey.kick4]: {
-    oscPitch: 0.32,
-    oscShape: 0.32,
-    pitchEgWave: KickEgWave.ds,
-    pitchEgTime: 0.29,
-    pitchEgShape: 0.23,
-    pitchEgAmount: 0.68,
-    ampEgWave: KickEgWave.pd,
-    ampEgTime: 0.55,
-    ampEgShape: 0.51,
-    ampDrive: 0,
-    volume: 0.46,
-  },
-  [KickPresetKey.kick5]: {
-    oscPitch: 0.34,
-    oscShape: 0.78,
-    pitchEgWave: KickEgWave.ds,
-    pitchEgTime: 0.42,
-    pitchEgShape: 0.07,
-    pitchEgAmount: 0.73,
-    ampEgWave: KickEgWave.d,
-    ampEgTime: 0.6,
-    ampEgShape: 0.38,
-    ampDrive: 0.21,
-    volume: 0.24,
-  },
-} satisfies Record<KickPresetKey, KickParametersSuit>;
-
-const defaultKickParameters = kickPresets[KickPresetKey.kick1];
+import {
+  createDefaultUnitParameters,
+  KickEgWave,
+  KickParameterKey,
+  KickParametersSuit,
+} from "../base/parameters";
+import { KickPresetKey, kickPresets } from "../base/presets";
 
 function getEgWaveCurve(wave: KickEgWave, x: number, w: number) {
   if (wave === KickEgWave.ds) {
@@ -251,9 +160,9 @@ function voicingAmp_processSamples(
   }
 }
 
-export function createStateBus(): StateBus {
+function createStateBus(): StateBus {
   return {
-    parameters: defaultKickParameters,
+    parameters: createDefaultUnitParameters(),
     sampleRate: 0,
     ampEgValue: 0,
     pitchEgValue: 0,
@@ -276,43 +185,58 @@ export function createStateBus(): StateBus {
   };
 }
 
-export class KickSynth {
-  private bus: StateBus = createStateBus();
+export type KickSynthesizerDsp = {
+  prepare(sampleRate: number, maxFrames: number): void;
+  applyPreset(presetKey: KickPresetKey): void;
+  setParameter(paramKey: KickParameterKey, value: number): void;
+  processSamples(
+    bufferL: Float32Array,
+    bufferR: Float32Array,
+    len: number,
+  ): void;
+  playTone(): void;
+  stopTone(): void;
+};
 
-  prepare(sampleRate: number, maxFrames: number) {
-    this.bus.sampleRate = sampleRate;
-    if (!(this.bus.workBuffer && this.bus.workBuffer.length === maxFrames)) {
-      this.bus.workBuffer = new Float32Array(maxFrames);
-    }
-  }
+export function createKickSynthesizerDsp(): KickSynthesizerDsp {
+  const bus = createStateBus();
 
-  applyPreset(presetKey: KickPresetKey) {
-    this.bus.parameters = kickPresets[presetKey];
-  }
-
-  processSamples(destBuffer: Float32Array, len: number) {
-    if (this.bus.sampleRate === 0 || !this.bus.workBuffer) return;
-    const buffer = this.bus.workBuffer;
-    buffer.fill(0);
-    const timeLength = len / this.bus.sampleRate;
-    pitchEg_advance(this.bus);
-    ampEg_advance(this.bus);
-    osc_processSamples(this.bus, buffer, len);
-    voicingAmp_processSamples(this.bus, buffer, len);
-    writeBuffer(destBuffer, buffer, len);
-    this.bus.currentTime += timeLength;
-    this.bus.gateTriggered = false;
-  }
-
-  playTone() {
-    this.bus.noteNumber = 32;
-    this.bus.currentTime = 0;
-    this.bus.gateOn = true;
-    this.bus.gateTriggered = true;
-  }
-
-  stopTone() {
-    this.bus.gateOn = false;
-    this.bus.currentTime = 0;
-  }
+  return {
+    prepare(sampleRate, maxFrames) {
+      bus.sampleRate = sampleRate;
+      if (!(bus.workBuffer && bus.workBuffer.length === maxFrames)) {
+        bus.workBuffer = new Float32Array(maxFrames);
+      }
+    },
+    applyPreset(presetKey) {
+      bus.parameters = kickPresets[presetKey];
+    },
+    setParameter(paramKey, value) {
+      bus.parameters[paramKey] = value;
+    },
+    processSamples(bufferL, bufferR, len) {
+      if (bus.sampleRate === 0 || !bus.workBuffer) return;
+      const buffer = bus.workBuffer;
+      buffer.fill(0);
+      const timeLength = len / bus.sampleRate;
+      pitchEg_advance(bus);
+      ampEg_advance(bus);
+      osc_processSamples(bus, buffer, len);
+      voicingAmp_processSamples(bus, buffer, len);
+      writeBuffer(bufferL, buffer, len);
+      writeBuffer(bufferR, buffer, len);
+      bus.currentTime += timeLength;
+      bus.gateTriggered = false;
+    },
+    playTone() {
+      bus.noteNumber = 32;
+      bus.currentTime = 0;
+      bus.gateOn = true;
+      bus.gateTriggered = true;
+    },
+    stopTone() {
+      bus.gateOn = false;
+      bus.currentTime = 0;
+    },
+  };
 }

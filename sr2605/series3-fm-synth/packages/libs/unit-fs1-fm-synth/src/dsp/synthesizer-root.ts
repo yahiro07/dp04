@@ -411,8 +411,8 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
       }
     },
     processAudio(bufferL, bufferR, frames) {
-      clearBuffer(bufferL);
-      clearBuffer(bufferR);
+      clearBuffer(bufferL, frames);
+      clearBuffer(bufferR, frames);
       const audioFrame: AudioFrame = {
         bufferL,
         bufferR,
@@ -422,8 +422,8 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         if (!voice.processingActive) continue;
         voice_processAudio(rc, audioFrame, voice);
       }
-      applyBufferGainRms(bufferL, configs.numVoices);
-      applyBufferGainRms(bufferR, configs.numVoices);
+      applyBufferGainRms(bufferL, frames, configs.numVoices);
+      applyBufferGainRms(bufferR, frames, configs.numVoices);
 
       const cp = rc.scene.commonParameters;
       if (cp.delayEnabled) {

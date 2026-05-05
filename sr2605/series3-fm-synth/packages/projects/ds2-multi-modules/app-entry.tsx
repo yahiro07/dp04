@@ -1,3 +1,4 @@
+import { iife } from "@my/lib/ax/general-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { configureAudioSessionPlayback } from "@my/lib/mo-music-app/audio-context-helper";
 import { createMainSynthesizerUnit } from "@my/main-synthesizer-unit";
@@ -14,12 +15,13 @@ function App() {
     drumSynthesizer,
     mainSynthesizer,
   });
-  const drumSynthOutputNode = drumSynthesizer.setupEngine(audioContext);
-  const mainSynthOutputNode = mainSynthesizer.setupEngine(audioContext);
-  sequencer.setupSequencerEngine();
-  drumSynthOutputNode.connect(audioContext.destination);
-  mainSynthOutputNode.connect(audioContext.destination);
-
+  iife(async () => {
+    const drumSynthOutputNode = await drumSynthesizer.setupEngine(audioContext);
+    const mainSynthOutputNode = await mainSynthesizer.setupEngine(audioContext);
+    sequencer.setupSequencerEngine();
+    drumSynthOutputNode.connect(audioContext.destination);
+    mainSynthOutputNode.connect(audioContext.destination);
+  });
   return <sequencer.renderUi />;
 }
 
