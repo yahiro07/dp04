@@ -22,6 +22,7 @@ function OperatorSelectButton(props: {
 
 function OperatorSummaryRow(props: {
   opIndex: number;
+  isCarrier: boolean;
   selected: boolean;
   handleSelect(): void;
   parameters: OperatorParameters;
@@ -29,6 +30,7 @@ function OperatorSummaryRow(props: {
 }) {
   return (
     <div class="flex-ha gap-3">
+      <div class="min-w-[16px]">{props.isCarrier ? "C" : "M"}</div>
       <OperatorSelectButton
         index={props.opIndex}
         selected={props.selected}
@@ -52,6 +54,9 @@ function OperatorSummaryRow(props: {
 
 export function OperatorSummariesPart() {
   const vm = {
+    isCarrier(index: number) {
+      return store.operatorSchemes[index] === "C";
+    },
     selIndex: () => store.operatorSelectionIndex,
   };
   return (
@@ -60,6 +65,7 @@ export function OperatorSummariesPart() {
         return (
           <OperatorSummaryRow
             opIndex={i}
+            isCarrier={vm.isCarrier(i)}
             selected={vm.selIndex() === i}
             handleSelect={() => uiOperations.selectOperator(i)}
             parameters={store.operatorParameters[i]}
