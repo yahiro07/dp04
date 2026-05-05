@@ -1,0 +1,6 @@
+{
+  "name": "@my/drum-synthesizer",
+  "exports": {
+    ".": "./src/index.tsx"
+  }
+}

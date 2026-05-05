@@ -1,6 +1,6 @@
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
-import { createUiModel } from "@/synth-units/main-synthesizer/ui-model";
-import { UnitEngine } from "@/synth-units/main-synthesizer/unit-engine";
+import { createUiModel } from "@/ui-model";
+import { UnitEngine } from "@/unit-engine";
 
 export function UiRoot(props: { unitEngine: UnitEngine }) {
   const uiModel = createUiModel(props.unitEngine);

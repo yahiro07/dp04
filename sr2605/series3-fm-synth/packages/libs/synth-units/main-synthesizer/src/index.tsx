@@ -1,6 +1,6 @@
 import { JsxElement } from "@my/lib/ax-solid/types";
-import { UiRoot } from "@/synth-units/main-synthesizer/ui-root";
-import { createUnitEngine } from "@/synth-units/main-synthesizer/unit-engine";
+import { UiRoot } from "@/ui-root";
+import { createUnitEngine } from "@/unit-engine";
 
 export type MainSynthesizerUnit = {
   setupEngine(audioContext: AudioContext): AudioNode;

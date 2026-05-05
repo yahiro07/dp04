@@ -1,11 +1,15 @@
+import type { DrumKitToneId, DrumSynthesizerUnit } from "@my/drum-synthesizer";
+import { JsxElement } from "@my/lib/ax-solid/types";
 import { resumeAudioContextIfNeed } from "@my/lib/mo-music-app/resume-audio-context";
 import { Button } from "@my/lib/mo-solid/components/button";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
+import type { MainSynthesizerUnit } from "@my/main-synthesizer";
 import { createSignal } from "solid-js";
-import { DrumKitToneId } from "@/synth-units/drum-synthesizer/types";
-import { DrumSynthesizerUnit } from "@/synth-units/drum-synthesizer/unit-root";
-import { MainSynthesizerUnit } from "@/synth-units/main-synthesizer/unit-root";
-import { SequencerUnit } from "./interface";
+
+export type SequencerUnit = {
+  setupSequencerEngine(): void;
+  renderUi(): JsxElement;
+};
 
 export function createSequencerUnit(args: {
   audioContext: AudioContext;

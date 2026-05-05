@@ -1,4 +1,4 @@
-import { DrumKitToneId } from "@/synth-units/drum-synthesizer/types";
+import { DrumKitToneId } from "./types";
 
 export type UnitEngineCommand = { type: "playTone"; toneId: DrumKitToneId };
 

@@ -1,11 +1,7 @@
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createStore } from "solid-js/store";
-import {
-  createDefaultUnitParameters,
-  UnitParameters,
-} from "@/synth-units/drum-synthesizer/parameters";
-import { DrumKitToneId } from "@/synth-units/drum-synthesizer/types";
-import { UnitEngine } from "@/synth-units/drum-synthesizer/unit-engine";
+import { createDefaultUnitParameters, UnitParameters } from "@/parameters";
+import { UnitEngine } from "@/unit-engine";
 
 export function createUiModel(unitEngine: UnitEngine) {
   type StoreState = {
@@ -20,8 +16,20 @@ export function createUiModel(unitEngine: UnitEngine) {
     setOscPitch(value: number) {
       storeMutations.setParameters({ oscPitch: value });
     },
-    playTone(toneId: DrumKitToneId) {
-      unitEngine.handleCommand({ type: "playTone", toneId });
+    noteOn(ch: number, noteNumber: number, velocity: number): void {
+      unitEngine.handleCommand({
+        type: "noteOn",
+        channel: ch,
+        noteNumber,
+        velocity,
+      });
+    },
+    noteOff(ch: number, noteNumber: number): void {
+      unitEngine.handleCommand({
+        type: "noteOff",
+        channel: ch,
+        noteNumber,
+      });
     },
   };
   return {
