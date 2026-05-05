@@ -25,6 +25,10 @@ function FmAlgorithmPart() {
 
 function OperatorEditPart() {
   const vm = {
+    isCarrier() {
+      const scheme = store.operatorSchemes[store.operatorSelectionIndex];
+      return scheme === "C";
+    },
     parameters() {
       return store.operatorParameters[store.operatorSelectionIndex];
     },
@@ -38,6 +42,7 @@ function OperatorEditPart() {
   };
   return (
     <OperatorEditor
+      isCarrier={vm.isCarrier()}
       parameters={vm.parameters()}
       setParameter={vm.setParameter}
     />

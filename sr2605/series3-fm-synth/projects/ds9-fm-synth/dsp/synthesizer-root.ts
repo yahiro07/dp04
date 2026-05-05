@@ -240,7 +240,8 @@ function operator_processOneStep(
     op.phase = 0;
   }
 
-  if (!sp.unisonOn) {
+  const unisonApplied = op.isCarrier && sp.unisonOn;
+  if (!unisonApplied) {
     op.phase += op.phaseInc;
     op.phase -= Math.floor(op.phase);
 

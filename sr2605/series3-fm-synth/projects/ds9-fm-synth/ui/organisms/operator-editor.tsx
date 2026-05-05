@@ -7,8 +7,10 @@ import { FeKnob } from "@ds9/ui/components/knob";
 import { FeNumberSliderBox } from "@ds9/ui/components/number-slider-box";
 import { FeSelectorBox } from "@ds9/ui/components/selector";
 import { FeToggleBox } from "@ds9/ui/components/toggle-box";
+import { Show } from "solid-js";
 
 export function OperatorEditor(props: {
+  isCarrier: boolean;
   parameters: OperatorParameters;
   setParameter: (name: OperatorParameterKey, value: number | boolean) => void;
 }) {
@@ -99,26 +101,28 @@ export function OperatorEditor(props: {
           value={props.parameters.shape}
           onChange={(v) => props.setParameter("shape", v)}
         />
-        <FeToggleBox
-          label="UNISON"
-          checked={props.parameters.unisonOn}
-          onChange={(v) => props.setParameter("unisonOn", v)}
-        />
-        <FeNumberSliderBox
-          label="NUM"
-          value={props.parameters.unisonNum}
-          onChange={(v) => props.setParameter("unisonNum", v)}
-          min={1}
-          max={7}
-          step={1}
-          fracDigits={0}
-        />
-        <FeKnob
-          label="DETUNE"
-          value={props.parameters.unisonDetune}
-          onChange={(v) => props.setParameter("unisonDetune", v)}
-        />
-        {/* <FeKnob
+        <Show when={props.isCarrier}>
+          <div class="flex-ha gap-4">
+            <FeToggleBox
+              label="UNISON"
+              checked={props.parameters.unisonOn}
+              onChange={(v) => props.setParameter("unisonOn", v)}
+            />
+            <FeNumberSliderBox
+              label="NUM"
+              value={props.parameters.unisonNum}
+              onChange={(v) => props.setParameter("unisonNum", v)}
+              min={1}
+              max={7}
+              step={1}
+              fracDigits={0}
+            />
+            <FeKnob
+              label="DETUNE"
+              value={props.parameters.unisonDetune}
+              onChange={(v) => props.setParameter("unisonDetune", v)}
+            />
+            {/* <FeKnob
           label="MIX"
           value={props.parameters.unisonMix}
           onChange={(v) => props.setParameter("unisonMix", v)}
@@ -128,6 +132,8 @@ export function OperatorEditor(props: {
           checked={props.parameters.unisonRndPhase}
           onChange={(v) => props.setParameter("unisonRndPhase", v)}
         /> */}
+          </div>
+        </Show>
       </div>
     </div>
   );
