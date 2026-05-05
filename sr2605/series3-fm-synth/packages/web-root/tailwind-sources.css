@@ -2,5 +2,5 @@
 @import "tailwindcss";
 
 @source "../lib/mo-solid/**/*.tsx";
-@source "../libs/synth-units/**/*.tsx";
+@source "../libs/**/*.tsx";
 @source "../projects/**/*.tsx";
