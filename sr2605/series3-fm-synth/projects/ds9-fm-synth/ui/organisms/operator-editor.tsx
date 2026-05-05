@@ -50,12 +50,12 @@ export function OperatorEditor(props: {
           max={1}
         />
         <FeKnob
-          label="FBK"
+          label="FB"
           value={props.parameters.feedback}
           onChange={(v) => props.setParameter("feedback", v)}
         />
         <FeToggleBox
-          label="ACTIVE"
+          label="ON"
           checked={props.parameters.active}
           onChange={(v) => props.setParameter("active", v)}
         />
