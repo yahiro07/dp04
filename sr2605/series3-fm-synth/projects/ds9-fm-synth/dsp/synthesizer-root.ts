@@ -215,7 +215,7 @@ function operator_updateSampleHold(
 ) {
   if (opParams.wave === OperatorWave.Noise) {
     op.sampleHoldCounter++;
-    const sampleHoldInterval = (power2(1 - opParams.feedback) * 200) >>> 0;
+    const sampleHoldInterval = (power2(opParams.feedback) * 200) >>> 0;
     if (op.sampleHoldCounter >= sampleHoldInterval) {
       op.sampleHoldValue = Math.random() * 2 - 1;
       op.sampleHoldCounter = 0;
