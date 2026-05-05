@@ -1,3 +1,4 @@
+import { mergeProps } from "solid-js";
 import { KnobFrame } from "./knob-frame";
 import { UnitFrame } from "./unit-frame";
 
@@ -12,7 +13,7 @@ export function NumberSliderBoxView(props: {
   );
 }
 
-export function FeNumberSliderBox(props: {
+export function FeNumberSliderBox(inputProps: {
   label: string;
   value: number;
   min?: number;
@@ -21,18 +22,17 @@ export function FeNumberSliderBox(props: {
   fracDigits?: number;
   onChange: (value: number) => void;
 }) {
-  const vm = {
-    min: () => props.min ?? 0,
-    max: () => props.max ?? 1,
-    step: () => props.step ?? 0.01,
-  };
+  const props = mergeProps(
+    { min: 0, max: 1, step: 0.01, fracDigits: 2 },
+    inputProps,
+  );
   return (
     <UnitFrame label={props.label}>
       <KnobFrame
         value={props.value}
-        min={vm.min()}
-        max={vm.max()}
-        step={vm.step()}
+        min={props.min}
+        max={props.max}
+        step={props.step}
         onChange={props.onChange}
       >
         <NumberSliderBoxView

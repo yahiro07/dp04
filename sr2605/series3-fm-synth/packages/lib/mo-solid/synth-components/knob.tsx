@@ -1,4 +1,5 @@
 import { mapUnaryTo } from "@my/lib/ax/number-utils";
+import { mergeProps } from "solid-js";
 import { KnobFrame } from "./knob-frame";
 import { UnitFrame } from "./unit-frame";
 
@@ -26,27 +27,23 @@ export function KnobView(props: { value: number; min: number; max: number }) {
   );
 }
 
-export function Knob(props: {
+export function Knob(inputProps: {
   value: number;
   min?: number;
   max?: number;
   step?: number;
   onChange: (value: number) => void;
 }) {
-  const vm = {
-    min: () => props.min ?? 0,
-    max: () => props.max ?? 1,
-    step: () => props.step ?? 0.01,
-  };
+  const props = mergeProps({ min: 0, max: 1, step: 0.01 }, inputProps);
   return (
     <KnobFrame
       value={props.value}
-      min={vm.min()}
-      max={vm.max()}
-      step={vm.step()}
+      min={props.min}
+      max={props.max}
+      step={props.step}
       onChange={props.onChange}
     >
-      <KnobView value={props.value} min={vm.min()} max={vm.max()} />
+      <KnobView value={props.value} min={props.min} max={props.max} />
     </KnobFrame>
   );
 }
