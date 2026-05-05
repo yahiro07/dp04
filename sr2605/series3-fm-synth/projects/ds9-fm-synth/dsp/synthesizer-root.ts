@@ -209,7 +209,7 @@ function operator_processOneStep(
       phase += op.output * power2(sp.shape);
     }
     phase -= Math.floor(phase);
-    const y = getWaveformSample(phase, sp.wave) * op.egLevel * gain;
+    const y = getWaveformSample(phase, sp.wave, sp.shape) * op.egLevel * gain;
     op.output = y;
   } else {
     op.phase += op.phaseInc;
@@ -227,7 +227,7 @@ function operator_processOneStep(
       const w = linerInterpolate(i, 0, n - 1, -1, 1);
       let phase = basePhase * (1 + sp.unisonDetune * 0.03 * w);
       phase -= Math.floor(phase);
-      y += getWaveformSample(phase, sp.wave);
+      y += getWaveformSample(phase, sp.wave, sp.shape);
     }
     y /= n;
     op.output = y * op.egLevel * gain;

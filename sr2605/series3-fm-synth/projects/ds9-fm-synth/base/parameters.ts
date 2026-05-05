@@ -2,17 +2,21 @@ import { createEnumOptions } from "@lib/mo/selector-option";
 
 export enum OperatorWave {
   Sine = 0,
-  Triangle = 1,
-  Square = 2,
-  Saw = 3,
-  Noise = 4,
+  Noise,
+  Saw,
+  Square,
+  Triangle,
+  SineCSF,
+  PdSaw,
 }
 export const operatorWaveformOptions = createEnumOptions([
   [OperatorWave.Sine, "SINE"],
-  [OperatorWave.Triangle, "TRI"],
-  [OperatorWave.Square, "RECT"],
-  [OperatorWave.Saw, "SAW"],
   [OperatorWave.Noise, "NOISE"],
+  [OperatorWave.Saw, "SAW"],
+  [OperatorWave.Square, "RECT"],
+  [OperatorWave.Triangle, "TRI"],
+  [OperatorWave.SineCSF, "SINE_CSF"],
+  [OperatorWave.PdSaw, "PD_SAW"],
 ]);
 
 export type OperatorParameters = {
