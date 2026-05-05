@@ -4,6 +4,7 @@ import {
 } from "@ds2/synth-units/drum-synthesizer/interface";
 import { resumeAudioContextIfNeed } from "@lib/mo-music-app/resume-audio-context";
 import { Button } from "@lib/mo-solid/components/button";
+import { HoldableButton } from "@lib/mo-solid/components/holdable-button";
 import { createSignal } from "solid-js";
 import { MainSynthesizerUnit } from "../main-synthesizer/interface";
 import { SequencerUnit } from "./interface";
@@ -68,8 +69,21 @@ export function createSequencer(args: {
               />
             </div>
             <div class="flex-h">
-              <Button text="60 on" onClick={() => vm.noteOn(60)} />
-              <Button text="60 off" onClick={() => vm.noteOff(60)} />
+              <HoldableButton
+                text="note C"
+                onDown={() => vm.noteOn(60)}
+                onUp={() => vm.noteOff(60)}
+              />
+              <HoldableButton
+                text="note D"
+                onDown={() => vm.noteOn(62)}
+                onUp={() => vm.noteOff(62)}
+              />
+              <HoldableButton
+                text="note E"
+                onDown={() => vm.noteOn(64)}
+                onUp={() => vm.noteOff(64)}
+              />
             </div>
           </div>
         </div>
