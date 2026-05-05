@@ -1,6 +1,6 @@
 import { DrumKitToneId, DrumSynthesizerUnit } from "./interface";
 
-export function createDrumSynthesizer(
+export function createDrumSynthesizerUnit(
   audioContext: AudioContext,
 ): DrumSynthesizerUnit {
   return {

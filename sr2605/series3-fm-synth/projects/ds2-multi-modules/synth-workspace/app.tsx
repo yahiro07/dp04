@@ -1,18 +1,20 @@
-import { createDrumSynthesizer } from "@ds2/synth-units/drum-synthesizer/unit-root";
-import { createMainSynthesizer } from "@ds2/synth-units/main-synthesizer/unit-root";
-import { createSequencer } from "@ds2/synth-units/sequencer/unit-root";
+import {
+  createDrumSynthesizerUnit,
+  createMainSynthesizerUnit,
+  createSequencerUnit,
+} from "@ds2/synth-units";
 
 export function App() {
   const audioContext = new AudioContext();
-  const drumSynthesizer = createDrumSynthesizer(audioContext);
-  const mainSynthesizer = createMainSynthesizer(audioContext);
-  const sequencer = createSequencer({
+  const drumSynthesizer = createDrumSynthesizerUnit(audioContext);
+  const mainSynthesizer = createMainSynthesizerUnit();
+  const sequencer = createSequencerUnit({
     audioContext,
     drumSynthesizer,
     mainSynthesizer,
   });
   const drumSynthOutputNode = drumSynthesizer.setupEngine();
-  const mainSynthOutputNode = mainSynthesizer.setupEngine();
+  const mainSynthOutputNode = mainSynthesizer.setupEngine(audioContext);
   sequencer.setupSequencerEngine();
   drumSynthOutputNode.connect(audioContext.destination);
   mainSynthOutputNode.connect(audioContext.destination);

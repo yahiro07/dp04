@@ -1,27 +1,36 @@
-import { MainSynthesizerUnit } from "@ds2/synth-units/main-synthesizer/interface";
+import { UiRoot } from "@ds2/synth-units/main-synthesizer/ui-root";
+import { createUnitEngine } from "@ds2/synth-units/main-synthesizer/unit-engine";
+import { JsxElement } from "@lib/ax-solid/types";
 
-export function createMainSynthesizer(
-  audioContext: AudioContext,
-): MainSynthesizerUnit {
+export type MainSynthesizerUnit = {
+  setupEngine(audioContext: AudioContext): AudioNode;
+  noteOn(ch: number, noteNumber: number, velocity: number): void;
+  noteOff(ch: number, noteNumber: number): void;
+  renderUi(): JsxElement;
+};
+export function createMainSynthesizerUnit(): MainSynthesizerUnit {
+  const unitEngine = createUnitEngine();
   return {
-    setupEngine(): AudioNode {
-      const node = new GainNode(audioContext);
-      return node;
+    setupEngine(audioContext: AudioContext): AudioNode {
+      return unitEngine.initialize(audioContext);
     },
     noteOn(ch: number, noteNumber: number, velocity: number): void {
-      console.log(
-        `noteOn: ch=${ch}, noteNumber=${noteNumber}, velocity=${velocity}`,
-      );
+      unitEngine.handleCommand({
+        type: "noteOn",
+        channel: ch,
+        noteNumber,
+        velocity,
+      });
     },
     noteOff(ch: number, noteNumber: number): void {
-      console.log(`noteOff: ch=${ch}, noteNumber=${noteNumber}`);
+      unitEngine.handleCommand({
+        type: "noteOff",
+        channel: ch,
+        noteNumber,
+      });
     },
     renderUi() {
-      return (
-        <div class="w-[200px] h-[100px] flex-c border border-[#aaa]">
-          main synth
-        </div>
-      );
+      return <UiRoot unitEngine={unitEngine} />;
     },
   };
 }

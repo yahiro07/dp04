@@ -2,14 +2,14 @@ import {
   DrumKitToneId,
   DrumSynthesizerUnit,
 } from "@ds2/synth-units/drum-synthesizer/interface";
+import { MainSynthesizerUnit } from "@ds2/synth-units/main-synthesizer/unit-root";
 import { resumeAudioContextIfNeed } from "@lib/mo-music-app/resume-audio-context";
 import { Button } from "@lib/mo-solid/components/button";
 import { HoldableButton } from "@lib/mo-solid/components/holdable-button";
 import { createSignal } from "solid-js";
-import { MainSynthesizerUnit } from "../main-synthesizer/interface";
 import { SequencerUnit } from "./interface";
 
-export function createSequencer(args: {
+export function createSequencerUnit(args: {
   audioContext: AudioContext;
   drumSynthesizer: DrumSynthesizerUnit;
   mainSynthesizer: MainSynthesizerUnit;
