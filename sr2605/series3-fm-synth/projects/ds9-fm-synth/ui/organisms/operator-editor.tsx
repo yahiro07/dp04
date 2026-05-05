@@ -1,6 +1,7 @@
 import {
   OperatorParameterKey,
   OperatorParameters,
+  OperatorWave,
   operatorWaveformOptions,
 } from "@ds9/base/parameters";
 import { FeKnob } from "@ds9/ui/components/knob";
@@ -49,11 +50,13 @@ export function OperatorEditor(props: {
           min={-1}
           max={1}
         />
-        <FeKnob
-          label="FB"
-          value={props.parameters.feedback}
-          onChange={(v) => props.setParameter("feedback", v)}
-        />
+        <div class="flex-c min-w-[55px]">
+          <FeKnob
+            label={props.parameters.wave === OperatorWave.Sine ? "FB" : "SHAPE"}
+            value={props.parameters.shape}
+            onChange={(v) => props.setParameter("shape", v)}
+          />
+        </div>
         <FeToggleBox
           label="ON"
           checked={props.parameters.active}
