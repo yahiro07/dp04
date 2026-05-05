@@ -1,0 +1,6 @@
+{
+  "name": "@my/unit-fs2-drum-synth",
+  "exports": {
+    ".": "./src/index.tsx"
+  }
+}
