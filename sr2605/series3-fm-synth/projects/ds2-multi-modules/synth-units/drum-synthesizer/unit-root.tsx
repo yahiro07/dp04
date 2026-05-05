@@ -1,8 +1,10 @@
 import { DrumKitToneId, DrumSynthesizerUnit } from "./interface";
 
-export function createDrumSynthesizer(): DrumSynthesizerUnit {
+export function createDrumSynthesizer(
+  audioContext: AudioContext,
+): DrumSynthesizerUnit {
   return {
-    setupEngine(audioContext: AudioContext): AudioNode {
+    setupEngine(): AudioNode {
       const node = new GainNode(audioContext);
       return node;
     },

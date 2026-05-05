@@ -9,16 +9,14 @@ import { PartSynthesizerUnit } from "../part-synthesizer/interface";
 import { SequencerUnit } from "./interface";
 
 export function createSequencer(args: {
+  audioContext: AudioContext;
   drumSynthesizer: DrumSynthesizerUnit;
   partSynthesizer: PartSynthesizerUnit;
 }): SequencerUnit {
-  const { drumSynthesizer, partSynthesizer } = args;
-  let audioContext: AudioContext;
+  const { audioContext, drumSynthesizer, partSynthesizer } = args;
 
   return {
-    setupSequencerEngine(_audioContext: AudioContext): void {
-      audioContext = _audioContext;
-    },
+    setupSequencerEngine(): void {},
     renderUi() {
       const [currentToneId, setCurrentToneId] =
         createSignal<DrumKitToneId>("kick");

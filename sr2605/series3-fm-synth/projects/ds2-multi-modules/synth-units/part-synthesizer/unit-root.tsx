@@ -1,8 +1,10 @@
 import { PartSynthesizerUnit } from "@ds2/synth-units/part-synthesizer/interface";
 
-export function createPartSynthesizer(): PartSynthesizerUnit {
+export function createPartSynthesizer(
+  audioContext: AudioContext,
+): PartSynthesizerUnit {
   return {
-    setupEngine(audioContext: AudioContext): AudioNode {
+    setupEngine(): AudioNode {
       const node = new GainNode(audioContext);
       return node;
     },
