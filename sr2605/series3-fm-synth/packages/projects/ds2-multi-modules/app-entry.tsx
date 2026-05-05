@@ -1,6 +1,10 @@
 import { iife } from "@my/lib/ax/general-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
-import { configureAudioSessionPlayback } from "@my/lib/mo-music-app/audio-context-helper";
+import {
+  configureAudioSessionPlayback,
+  resumeAudioContextIfNeed,
+} from "@my/lib/mo-music-app/audio-context-helper";
+import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createMainSynthesizerUnit } from "@my/main-synthesizer-unit";
 import { createSequencerUnit } from "@my/sequencer-unit";
 import { createUnitFs2DrumSynth } from "@my/unit-fs2-drum-synth";
@@ -21,6 +25,14 @@ function App() {
     sequencer.setupSequencerEngine();
     drumSynthOutputNode.connect(audioContext.destination);
     mainSynthOutputNode.connect(audioContext.destination);
+    setupMidiKeyboardInput({
+      async noteCallback(_noteNumber, velocity) {
+        await resumeAudioContextIfNeed(audioContext);
+        if (velocity > 0) {
+          drumSynthesizer.playTone("kick");
+        }
+      },
+    });
   });
   return <sequencer.renderUi />;
 }

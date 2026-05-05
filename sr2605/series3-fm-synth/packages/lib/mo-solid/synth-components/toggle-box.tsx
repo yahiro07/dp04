@@ -1,5 +1,5 @@
-import { ButtonFrame } from "@/ui/components/button-frame";
-import { UnitFrame } from "@/ui/components/unit-frame";
+import { ButtonFrame } from "./button-frame";
+import { UnitFrame } from "./unit-frame";
 
 function ToggleBoxView(props: { checked: boolean }) {
   return (

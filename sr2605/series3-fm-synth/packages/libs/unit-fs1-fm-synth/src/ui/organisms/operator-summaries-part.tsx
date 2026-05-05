@@ -1,7 +1,6 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
+import { Knob, ToggleBox } from "@my/lib/mo-solid/synth-components";
 import { OperatorParameterKey, OperatorParameters } from "@/base/parameters";
-import { Knob } from "@/ui/components/knob";
-import { ToggleBox } from "@/ui/components/toggle-box";
 import { store, uiOperations } from "@/ui/store";
 
 function OperatorSelectButton(props: {

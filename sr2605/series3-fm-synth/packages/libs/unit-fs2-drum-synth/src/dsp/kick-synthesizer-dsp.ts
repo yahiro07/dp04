@@ -20,8 +20,8 @@ import {
   KickEgWave,
   KickParameterKey,
   KickParametersSuit,
-} from "../base/parameters";
-import { KickPresetKey, kickPresets } from "../base/presets";
+} from "@/base/parameters";
+import { KickPresetKey, kickPresets } from "@/base/presets";
 
 function getEgWaveCurve(wave: KickEgWave, x: number, w: number) {
   if (wave === KickEgWave.ds) {
@@ -30,7 +30,7 @@ function getEgWaveCurve(wave: KickEgWave, x: number, w: number) {
   } else if (wave === KickEgWave.d) {
     const scaler = mapUnaryTo(1 - w, 1, 16);
     return mapExpCurve(1 - x, scaler);
-  } else if (wave === KickEgWave.pd) {
+  } else if (wave === KickEgWave.hd) {
     if (x <= w) {
       return 1;
     } else {
@@ -39,6 +39,18 @@ function getEgWaveCurve(wave: KickEgWave, x: number, w: number) {
     }
   }
   return 0;
+}
+export function kickSynthExports_getEgWaveCurveFunction(
+  wave: KickEgWave,
+): (x: number, w: number) => number {
+  switch (wave) {
+    case KickEgWave.ds:
+      return (x, w) => getEgWaveCurve(KickEgWave.ds, x, w);
+    case KickEgWave.d:
+      return (x, w) => getEgWaveCurve(KickEgWave.d, x, w);
+    case KickEgWave.hd:
+      return (x, w) => getEgWaveCurve(KickEgWave.hd, x, w);
+  }
 }
 
 function calcOscDelta(noteNumber: number, prPitch: number, sampleRate: number) {

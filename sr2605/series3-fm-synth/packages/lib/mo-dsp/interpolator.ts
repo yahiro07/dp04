@@ -1,4 +1,4 @@
-import { debugEmitError } from "@dsp/base/konsole";
+import { debugEmitError } from "@my/lib/ax/konsole";
 
 export type Interpolator = {
   feed(nextValue: number, n: number): void;

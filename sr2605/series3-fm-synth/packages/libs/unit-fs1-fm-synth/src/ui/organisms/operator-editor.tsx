@@ -1,13 +1,15 @@
+import {
+  FeKnob,
+  FeNumberSliderBox,
+  FeSelectorBox,
+  FeToggleBox,
+} from "@my/lib/mo-solid/synth-components";
 import { Show } from "solid-js";
 import {
   OperatorParameterKey,
   OperatorParameters,
   operatorWaveformOptions,
 } from "@/base/parameters";
-import { FeKnob } from "@/ui/components/knob";
-import { FeNumberSliderBox } from "@/ui/components/number-slider-box";
-import { FeSelectorBox } from "@/ui/components/selector";
-import { FeToggleBox } from "@/ui/components/toggle-box";
 
 export function OperatorEditor(props: {
   isCarrier: boolean;

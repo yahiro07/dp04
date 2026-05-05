@@ -1,8 +1,16 @@
+import { SelectorOption } from "@my/lib/mo/selector-option";
+
 export enum KickEgWave {
   ds,
   d,
-  pd,
+  hd,
 }
+
+export const KickEgWaveOptions: SelectorOption<KickEgWave>[] = [
+  { label: "DS", value: KickEgWave.ds },
+  { label: "D", value: KickEgWave.d },
+  { label: "HD", value: KickEgWave.hd },
+];
 
 export type UnitParameters = {
   oscPitch: number;

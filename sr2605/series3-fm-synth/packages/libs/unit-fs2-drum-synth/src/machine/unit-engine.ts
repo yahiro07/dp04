@@ -2,10 +2,13 @@ import {
   createWorkletNodeWrapper,
   WorkletNodeWrapper,
 } from "@my/lib/mo-music-app/worklet-node-wrapper";
-import { KickParameterKey } from "../base/parameters";
-import { DrumKitToneId } from "../base/types";
+import { KickParameterKey } from "@/base/parameters";
+import { DrumKitToneId } from "@/base/types";
+import {
+  WorkletInputMessage,
+  WorkletOutputMessage,
+} from "@/machine/worklet-types";
 import workletUrl from "./worklet.ts?worker&url";
-import { WorkletInputMessage, WorkletOutputMessage } from "./worklet-types";
 
 export type UnitEngineCommand =
   | { type: "playTone"; toneId: DrumKitToneId }

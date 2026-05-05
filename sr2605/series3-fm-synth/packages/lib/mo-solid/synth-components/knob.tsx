@@ -1,6 +1,6 @@
 import { mapUnaryTo } from "@my/lib/ax/number-utils";
-import { KnobFrame } from "@/ui/components/knob-frame";
-import { UnitFrame } from "@/ui/components/unit-frame";
+import { KnobFrame } from "./knob-frame";
+import { UnitFrame } from "./unit-frame";
 
 export function KnobView(props: { value: number; min: number; max: number }) {
   const vm = {

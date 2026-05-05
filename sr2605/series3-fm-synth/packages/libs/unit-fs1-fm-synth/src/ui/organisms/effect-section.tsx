@@ -1,6 +1,5 @@
+import { FeKnob, FeToggleBox } from "@my/lib/mo-solid/synth-components";
 import { CommonParameterKey, CommonParameters } from "@/base/parameters";
-import { FeKnob } from "@/ui/components/knob";
-import { FeToggleBox } from "@/ui/components/toggle-box";
 
 export function EffectSection(props: {
   parameters: CommonParameters;

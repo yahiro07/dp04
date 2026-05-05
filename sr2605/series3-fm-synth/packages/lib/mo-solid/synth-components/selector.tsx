@@ -1,6 +1,6 @@
 import { SelectorOption } from "@my/lib/mo/selector-option";
-import { ButtonFrame } from "@/ui/components/button-frame";
-import { UnitFrame } from "@/ui/components/unit-frame";
+import { ButtonFrame } from "./button-frame";
+import { UnitFrame } from "./unit-frame";
 
 export function SelectorBoxView(props: { valueText: string }) {
   return (

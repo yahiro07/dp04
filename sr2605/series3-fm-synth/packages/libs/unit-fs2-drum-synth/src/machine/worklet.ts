@@ -2,8 +2,8 @@ import { konsoleEnvs } from "@my/lib/ax/konsole";
 import {
   createKickSynthesizerDsp,
   KickSynthesizerDsp,
-} from "../dsp/kick-synthesizer-dsp";
-import { WorkletInputMessage } from "./worklet-types";
+} from "@/dsp/kick-synthesizer-dsp";
+import { WorkletInputMessage } from "@/machine/worklet-types";
 
 konsoleEnvs.isDebug = import.meta.env.DEV;
 

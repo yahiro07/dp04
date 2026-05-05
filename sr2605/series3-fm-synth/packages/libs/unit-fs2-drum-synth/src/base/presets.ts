@@ -1,4 +1,4 @@
-import { KickEgWave, KickParametersSuit } from "./parameters";
+import { KickEgWave, KickParametersSuit } from "@/base/parameters";
 
 export enum KickPresetKey {
   kick1,
@@ -42,7 +42,7 @@ export const kickPresets = {
     pitchEgTime: 0.26,
     pitchEgShape: 0.12,
     pitchEgAmount: 0.74,
-    ampEgWave: KickEgWave.pd,
+    ampEgWave: KickEgWave.hd,
     ampEgTime: 0.41,
     ampEgShape: 0.39,
     ampDrive: 0,
@@ -55,7 +55,7 @@ export const kickPresets = {
     pitchEgTime: 0.29,
     pitchEgShape: 0.23,
     pitchEgAmount: 0.68,
-    ampEgWave: KickEgWave.pd,
+    ampEgWave: KickEgWave.hd,
     ampEgTime: 0.55,
     ampEgShape: 0.51,
     ampDrive: 0,

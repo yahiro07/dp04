@@ -1,5 +1,5 @@
-import { KnobFrame } from "@/ui/components/knob-frame";
-import { UnitFrame } from "@/ui/components/unit-frame";
+import { KnobFrame } from "./knob-frame";
+import { UnitFrame } from "./unit-frame";
 
 export function NumberSliderBoxView(props: {
   value: number;

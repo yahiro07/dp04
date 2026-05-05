@@ -4,9 +4,9 @@ import {
   createDefaultUnitParameters,
   KickParameterKey,
   UnitParameters,
-} from "../base/parameters";
-import { DrumKitToneId } from "../base/types";
-import { UnitEngine } from "../machine/unit-engine";
+} from "@/base/parameters";
+import { DrumKitToneId } from "@/base/types";
+import { UnitEngine } from "@/machine/unit-engine";
 
 export function createUiModel(unitEngine: UnitEngine) {
   type StoreState = {
