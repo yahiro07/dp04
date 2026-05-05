@@ -31,6 +31,7 @@ export type OperatorParameters = {
   decay: number;
   sustain: number;
   release: number;
+  feedback: number;
   shape: number;
   unisonOn: boolean;
   unisonNum: number;
@@ -53,6 +54,7 @@ export function createOperatorParameters(): OperatorParameters {
     decay: 0,
     sustain: 1,
     release: 0,
+    feedback: 0,
     shape: 0,
     unisonOn: false,
     unisonNum: 7,
