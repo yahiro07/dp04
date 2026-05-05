@@ -206,7 +206,7 @@ function operator_processOneStep(
       (modSourceBf & (1 << 1) ? ops[1].output : 0) +
       (modSourceBf & (1 << 2) ? ops[2].output : 0);
     if (sp.shape > 0) {
-      phase += op.output * power2(sp.shape);
+      // phase += op.output * power2(sp.shape);
     }
     phase -= Math.floor(phase);
     const y = getWaveformSample(phase, sp.wave, sp.shape) * op.egLevel * gain;
@@ -219,7 +219,7 @@ function operator_processOneStep(
       (modSourceBf & (1 << 1) ? ops[1].output : 0) +
       (modSourceBf & (1 << 2) ? ops[2].output : 0);
     if (sp.shape > 0) {
-      basePhase += op.output * power2(sp.shape);
+      // basePhase += op.output * power2(sp.shape);
     }
     const n = sp.unisonNum;
     let y = 0;
