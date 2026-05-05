@@ -5,15 +5,15 @@ import {
 import { resumeAudioContextIfNeed } from "@lib/mo-music-app/resume-audio-context";
 import { Button } from "@lib/mo-solid/components/button";
 import { createSignal } from "solid-js";
-import { PartSynthesizerUnit } from "../part-synthesizer/interface";
+import { MainSynthesizerUnit } from "../main-synthesizer/interface";
 import { SequencerUnit } from "./interface";
 
 export function createSequencer(args: {
   audioContext: AudioContext;
   drumSynthesizer: DrumSynthesizerUnit;
-  partSynthesizer: PartSynthesizerUnit;
+  mainSynthesizer: MainSynthesizerUnit;
 }): SequencerUnit {
-  const { audioContext, drumSynthesizer, partSynthesizer } = args;
+  const { audioContext, drumSynthesizer, mainSynthesizer } = args;
 
   return {
     setupSequencerEngine(): void {},
@@ -35,7 +35,7 @@ export function createSequencer(args: {
         <div class="w-dvw h-dvh flex-vc">
           <div>
             <drumSynthesizer.renderUi currentToneId={currentToneId()} />
-            <partSynthesizer.renderUi />
+            <mainSynthesizer.renderUi />
           </div>
           <div class="w-[600px] flex-vl border border-[#aaa] gap-2 p-4">
             <div>sequencer</div>

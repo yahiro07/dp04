@@ -1,6 +1,6 @@
 import { JsxElement } from "@lib/ax-solid/types";
 
-export type PartSynthesizerUnit = {
+export type MainSynthesizerUnit = {
   setupEngine(): AudioNode;
   renderUi(): JsxElement;
 };
