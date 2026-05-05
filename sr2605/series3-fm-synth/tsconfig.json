@@ -26,6 +26,9 @@
       "@ds1/*": [
         "./projects/ds1-fm-synth/*"
       ],
+      "@ds2/*": [
+        "./projects/ds2-multi-modules/*"
+      ],
     }
   },
   "include": [

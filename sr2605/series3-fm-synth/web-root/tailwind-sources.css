@@ -2,4 +2,5 @@
 @import "tailwindcss";
 
 @source "../lib/mo-solid/**/*.{ts,tsx}";
-@source "../projects/ds1-fm-synth/**/*.tsx";
+@source "../projects/ds1-fm-synth/**/*.{ts,tsx}";
+@source "../projects/ds2-multi-modules/**/*.tsx";
