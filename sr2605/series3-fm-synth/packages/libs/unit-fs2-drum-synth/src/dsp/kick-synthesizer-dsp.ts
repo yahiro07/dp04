@@ -40,17 +40,18 @@ function getEgWaveCurve(wave: KickEgWave, x: number, w: number) {
   }
   return 0;
 }
+
+const egWaveCurveFunctions = {
+  [KickEgWave.ds]: (x: number, w: number) =>
+    getEgWaveCurve(KickEgWave.ds, x, w),
+  [KickEgWave.d]: (x: number, w: number) => getEgWaveCurve(KickEgWave.d, x, w),
+  [KickEgWave.hd]: (x: number, w: number) =>
+    getEgWaveCurve(KickEgWave.hd, x, w),
+};
 export function kickSynthExports_getEgWaveCurveFunction(
   wave: KickEgWave,
 ): (x: number, w: number) => number {
-  switch (wave) {
-    case KickEgWave.ds:
-      return (x, w) => getEgWaveCurve(KickEgWave.ds, x, w);
-    case KickEgWave.d:
-      return (x, w) => getEgWaveCurve(KickEgWave.d, x, w);
-    case KickEgWave.hd:
-      return (x, w) => getEgWaveCurve(KickEgWave.hd, x, w);
-  }
+  return egWaveCurveFunctions[wave];
 }
 
 function calcOscDelta(noteNumber: number, prPitch: number, sampleRate: number) {

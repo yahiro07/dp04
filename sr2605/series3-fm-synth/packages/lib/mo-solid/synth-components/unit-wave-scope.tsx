@@ -1,5 +1,6 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
 import { npx } from "@my/lib/mo/styling-utils";
+import { createMemo, mergeProps } from "solid-js";
 
 export const createUnitWaveScopeWavePath = ({
   waveFn,
@@ -35,32 +36,28 @@ export const createUnitWaveScopeWavePath = ({
   ].join(" ");
 };
 
-export const UnitWaveScope = (props: {
+export const UnitWaveScope = (inputProps: {
   waveFn: (x: number, shape: number) => number;
   shape: number;
   invertY?: boolean;
   nx?: number;
   baseSize?: number;
 }) => {
-  const vm = {
-    waveFn: () => props.waveFn,
-    shape: () => props.shape,
-    invertY: () => props.invertY ?? false,
-    nx: () => props.nx ?? 1,
-    baseSize: () => props.baseSize ?? 36,
-    pathD() {
-      return createUnitWaveScopeWavePath({
-        waveFn: vm.waveFn(),
-        shape: vm.shape(),
-        nx: vm.nx(),
-        baseSize: vm.baseSize(),
-        ny: 1,
-        invertY: vm.invertY(),
-      });
-    },
-  };
-  const width = vm.baseSize() * vm.nx();
-  const height = vm.baseSize();
+  const props = mergeProps({ invertY: false, nx: 1, baseSize: 36 }, inputProps);
+
+  const width = props.baseSize * props.nx;
+  const height = props.baseSize;
+
+  const pathD = createMemo(() => {
+    return createUnitWaveScopeWavePath({
+      waveFn: props.waveFn,
+      shape: props.shape,
+      nx: props.nx,
+      baseSize: props.baseSize,
+      ny: 1,
+      invertY: props.invertY,
+    });
+  });
 
   return (
     <svg
@@ -69,12 +66,12 @@ export const UnitWaveScope = (props: {
       style={{
         width: npx(width),
         height: npx(height),
-        transform: vm.invertY() ? "scale(1, -1)" : undefined,
+        transform: props.invertY ? "scale(1, -1)" : undefined,
       }}
       viewBox={`0 0 ${width} ${height}`}
     >
       <path
-        d={vm.pathD()}
+        d={pathD()}
         fill="#0af"
         fill-opacity={0.25}
         stroke="#0af"

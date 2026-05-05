@@ -1,3 +1,4 @@
+import { iife } from "@my/lib/ax/general-utils";
 import { Button } from "@my/lib/mo-solid/components/button";
 import { FeKnob, FeSelectorBox } from "@my/lib/mo-solid/synth-components";
 import { UnitWaveScope } from "@my/lib/mo-solid/synth-components/unit-wave-scope";
@@ -12,6 +13,16 @@ export function UiRoot(props: {
   currentToneId: DrumKitToneId;
 }) {
   const uiModel = createUiModel(props.unitEngine);
+
+  const _paramSetters = iife(() => {
+    const obj = {} as Record<KickParameterKey, (v: number) => void>;
+    for (const _key of Object.keys(uiModel.state.parameters)) {
+      const key = _key as KickParameterKey;
+      obj[key] = (v: number) => uiModel.setParameter(key, v);
+    }
+    return obj;
+  });
+
   const vm = {
     parameters() {
       return uiModel.state.parameters;
@@ -20,12 +31,7 @@ export function UiRoot(props: {
       uiModel.setParameter(key, value);
     },
     paramSetters() {
-      const obj = {} as Record<KickParameterKey, (v: number) => void>;
-      for (const _key of Object.keys(vm.parameters())) {
-        const key = _key as KickParameterKey;
-        obj[key] = (v: number) => uiModel.setParameter(key, v);
-      }
-      return obj;
+      return _paramSetters;
     },
     playTone(toneId: DrumKitToneId) {
       uiModel.playTone(toneId);
