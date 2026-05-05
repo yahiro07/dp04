@@ -54,11 +54,6 @@ export function OperatorEditor(props: {
           value={props.parameters.feedback}
           onChange={(v) => props.setParameter("feedback", v)}
         />
-        <FeKnob
-          label="SHAPE"
-          value={props.parameters.shape}
-          onChange={(v) => props.setParameter("shape", v)}
-        />
         <FeToggleBox
           label="ON"
           checked={props.parameters.active}
@@ -98,6 +93,11 @@ export function OperatorEditor(props: {
           options={operatorWaveformOptions}
           value={props.parameters.wave}
           onChange={(v) => props.setParameter("wave", v)}
+        />
+        <FeKnob
+          label="SHAPE"
+          value={props.parameters.shape}
+          onChange={(v) => props.setParameter("shape", v)}
         />
         <FeToggleBox
           label="UNISON"
