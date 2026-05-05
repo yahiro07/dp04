@@ -1,12 +1,12 @@
-import { OperatorParameters, OperatorWave } from "@ds9/base/parameters";
-import { ModulationFlagBitPosition, Scene } from "@ds9/base/types";
-import { ISynthesizerRoot } from "@ds9/dsp/api";
-import { applyBufferGainRms, clearBuffer } from "@ds9/dsp/buffer-functions";
-import { createDelayEffect } from "@ds9/dsp/delay-effect";
-import { getEnvelopeLevelADSR } from "@ds9/dsp/envelope-func";
-import { createReverbSchroeder } from "@ds9/dsp/reverb-schroeder";
-import { basicWaves, getOscWaveformPdSaw } from "@ds9/dsp/waveforms";
-import { createDefaultScene } from "@ds9/machine/default-scene";
+import { OperatorParameters, OperatorWave } from "@ds1/base/parameters";
+import { ModulationFlagBitPosition, Scene } from "@ds1/base/types";
+import { ISynthesizerRoot } from "@ds1/dsp/api";
+import { applyBufferGainRms, clearBuffer } from "@ds1/dsp/buffer-functions";
+import { createDelayEffect } from "@ds1/dsp/delay-effect";
+import { getEnvelopeLevelADSR } from "@ds1/dsp/envelope-func";
+import { createReverbSchroeder } from "@ds1/dsp/reverb-schroeder";
+import { basicWaves, getOscWaveformPdSaw } from "@ds1/dsp/waveforms";
+import { createDefaultScene } from "@ds1/machine/default-scene";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { linerInterpolate, power2 } from "@lib/ax/number-utils";
 

@@ -3,7 +3,7 @@ import {
   CommonParameters,
   OperatorParameterKey,
   OperatorParameters,
-} from "@ds9/base/parameters";
+} from "@ds1/base/parameters";
 
 export enum ModulationFlagBitPosition {
   mod01 = 0,

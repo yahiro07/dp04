@@ -1,7 +1,7 @@
-import { ISynthesizerRoot } from "@ds9/dsp/api";
-import { dspEnvs } from "@ds9/dsp/konsole";
-import { createSynthesizerRoot } from "@ds9/dsp/synthesizer-root";
-import { WorkletInputMessage } from "@ds9/machine/worklet-types";
+import { ISynthesizerRoot } from "@ds1/dsp/api";
+import { dspEnvs } from "@ds1/dsp/konsole";
+import { createSynthesizerRoot } from "@ds1/dsp/synthesizer-root";
+import { WorkletInputMessage } from "@ds1/machine/worklet-types";
 
 dspEnvs.isDebug = import.meta.env.DEV;
 

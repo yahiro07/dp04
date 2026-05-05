@@ -1,4 +1,4 @@
-import { curveMapper, mapInvExpCurve } from "@ds9/dsp/curves";
+import { curveMapper, mapInvExpCurve } from "@ds1/dsp/curves";
 import {
   clampValue,
   mapUnaryFrom,

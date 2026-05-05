@@ -1,5 +1,5 @@
-import { ButtonFrame } from "@ds9/ui/components/button-frame";
-import { UnitFrame } from "@ds9/ui/components/unit-frame";
+import { ButtonFrame } from "@ds1/ui/components/button-frame";
+import { UnitFrame } from "@ds1/ui/components/unit-frame";
 import { SelectorOption } from "@lib/mo/selector-option";
 
 export function SelectorBoxView(props: { valueText: string }) {

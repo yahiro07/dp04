@@ -5,13 +5,13 @@ import {
   createOperatorParameters,
   OperatorParameterKey,
   OperatorParameters,
-} from "@ds9/base/parameters";
+} from "@ds1/base/parameters";
 import {
   ModulationFlagBitPosition,
   OperatorScheme,
   RootMachineCommand,
-} from "@ds9/base/types";
-import { createRootMachine } from "@ds9/machine/root-machine";
+} from "@ds1/base/types";
+import { createRootMachine } from "@ds1/machine/root-machine";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { createStoreMutations } from "@lib/ax-solid/store-mutations";
 import { setupMidiKeyboardInput } from "@lib/mo-music-app/midi-keyboard-input";

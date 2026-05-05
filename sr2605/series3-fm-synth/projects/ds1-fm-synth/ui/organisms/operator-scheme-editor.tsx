@@ -1,4 +1,4 @@
-import { OperatorScheme } from "@ds9/base/types";
+import { OperatorScheme } from "@ds1/base/types";
 import { replaceArrayItem } from "@lib/ax/array-utils";
 import { iife } from "@lib/ax/general-utils";
 import { createMemo, Show } from "solid-js";

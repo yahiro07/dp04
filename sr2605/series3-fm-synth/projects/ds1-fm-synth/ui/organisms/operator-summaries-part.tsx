@@ -1,7 +1,7 @@
-import { OperatorParameterKey, OperatorParameters } from "@ds9/base/parameters";
-import { Knob } from "@ds9/ui/components/knob";
-import { ToggleBox } from "@ds9/ui/components/toggle-box";
-import { store, uiOperations } from "@ds9/ui/store";
+import { OperatorParameterKey, OperatorParameters } from "@ds1/base/parameters";
+import { Knob } from "@ds1/ui/components/knob";
+import { ToggleBox } from "@ds1/ui/components/toggle-box";
+import { store, uiOperations } from "@ds1/ui/store";
 import { seqNumbers } from "@lib/ax/array-utils";
 
 function OperatorSelectButton(props: {

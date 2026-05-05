@@ -23,8 +23,8 @@
       "@lib/*": [
         "./lib/*"
       ],
-      "@ds9/*": [
-        "./projects/ds9-fm-synth/*"
+      "@ds1/*": [
+        "./projects/ds1-fm-synth/*"
       ],
     }
   },

@@ -1,12 +1,12 @@
 /* @refresh reload */
 
-import { OperatorParameterKey } from "@ds9/base/parameters";
-import { EffectSection } from "@ds9/ui/organisms/effect-section";
-import { OperatorEditor } from "@ds9/ui/organisms/operator-editor";
-import { OperatorSchemeEditor } from "@ds9/ui/organisms/operator-scheme-editor";
-import { OperatorSchemesPresetSelector } from "@ds9/ui/organisms/operator-schemes-preset-selector";
-import { OperatorSummariesPart } from "@ds9/ui/organisms/operator-summaries-part";
-import { initializeApp, store, uiOperations } from "@ds9/ui/store";
+import { OperatorParameterKey } from "@ds1/base/parameters";
+import { EffectSection } from "@ds1/ui/organisms/effect-section";
+import { OperatorEditor } from "@ds1/ui/organisms/operator-editor";
+import { OperatorSchemeEditor } from "@ds1/ui/organisms/operator-scheme-editor";
+import { OperatorSchemesPresetSelector } from "@ds1/ui/organisms/operator-schemes-preset-selector";
+import { OperatorSummariesPart } from "@ds1/ui/organisms/operator-summaries-part";
+import { initializeApp, store, uiOperations } from "@ds1/ui/store";
 
 function FmAlgorithmPart() {
   return (

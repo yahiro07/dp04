@@ -1,8 +1,8 @@
 import {
   createCommonParameters,
   createOperatorParameters,
-} from "@ds9/base/parameters";
-import { Scene } from "@ds9/base/types";
+} from "@ds1/base/parameters";
+import { Scene } from "@ds1/base/types";
 import { seqNumbers } from "@lib/ax/array-utils";
 
 export function createDefaultScene(): Scene {

@@ -1,4 +1,4 @@
-import { createDelayLineRingBuffer } from "@ds9/dsp/delay-line-ring-buffer";
+import { createDelayLineRingBuffer } from "@ds1/dsp/delay-line-ring-buffer";
 import { clampValue, mixValue, power2 } from "@lib/ax/number-utils";
 
 type DelayEffect = {

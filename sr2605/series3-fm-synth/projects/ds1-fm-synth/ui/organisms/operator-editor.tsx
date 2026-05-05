@@ -2,11 +2,11 @@ import {
   OperatorParameterKey,
   OperatorParameters,
   operatorWaveformOptions,
-} from "@ds9/base/parameters";
-import { FeKnob } from "@ds9/ui/components/knob";
-import { FeNumberSliderBox } from "@ds9/ui/components/number-slider-box";
-import { FeSelectorBox } from "@ds9/ui/components/selector";
-import { FeToggleBox } from "@ds9/ui/components/toggle-box";
+} from "@ds1/base/parameters";
+import { FeKnob } from "@ds1/ui/components/knob";
+import { FeNumberSliderBox } from "@ds1/ui/components/number-slider-box";
+import { FeSelectorBox } from "@ds1/ui/components/selector";
+import { FeToggleBox } from "@ds1/ui/components/toggle-box";
 import { Show } from "solid-js";
 
 export function OperatorEditor(props: {

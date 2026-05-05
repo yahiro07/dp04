@@ -1,4 +1,4 @@
-import type { OperatorScheme } from "@ds9/base/types";
+import type { OperatorScheme } from "@ds1/base/types";
 import { setupHandleClickOutside } from "@lib/mo/handle-click-outside";
 import { Button } from "@lib/mo-solid/components/button";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";

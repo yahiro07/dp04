@@ -1,9 +1,9 @@
-import { RootMachine } from "@ds9/base/types";
-import { createDefaultScene } from "@ds9/machine/default-scene";
+import { RootMachine } from "@ds1/base/types";
+import { createDefaultScene } from "@ds1/machine/default-scene";
 import {
   WorkletInputMessage,
   WorkletOutputMessage,
-} from "@ds9/machine/worklet-types";
+} from "@ds1/machine/worklet-types";
 import { createWorkletNodeWrapper } from "@lib/mo-music-app/worklet-node-wrapper";
 import workletUrl from "./worklet.ts?worker&url";
 

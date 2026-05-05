@@ -1,6 +1,6 @@
 // reference: http://www.ari-web.com/service/soft/reverb-2.htm (japanese article)
 
-import { createDelayLineRingBuffer } from "@ds9/dsp/delay-line-ring-buffer";
+import { createDelayLineRingBuffer } from "@ds1/dsp/delay-line-ring-buffer";
 import { seqNumbers } from "@lib/ax/array-utils";
 import { assignTyped } from "@lib/ax/general-utils";
 import { mixValue, power3 } from "@lib/ax/number-utils";

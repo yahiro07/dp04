@@ -1,4 +1,4 @@
-import { CommonParameterKey, OperatorParameterKey } from "@ds9/base/parameters";
+import { CommonParameterKey, OperatorParameterKey } from "@ds1/base/parameters";
 
 export type WorkletInputMessage =
   | { type: "setParameter"; id: number; value: number }

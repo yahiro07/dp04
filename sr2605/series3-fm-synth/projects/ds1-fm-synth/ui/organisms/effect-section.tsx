@@ -1,6 +1,6 @@
-import { CommonParameterKey, CommonParameters } from "@ds9/base/parameters";
-import { FeKnob } from "@ds9/ui/components/knob";
-import { FeToggleBox } from "@ds9/ui/components/toggle-box";
+import { CommonParameterKey, CommonParameters } from "@ds1/base/parameters";
+import { FeKnob } from "@ds1/ui/components/knob";
+import { FeToggleBox } from "@ds1/ui/components/toggle-box";
 
 export function EffectSection(props: {
   parameters: CommonParameters;
