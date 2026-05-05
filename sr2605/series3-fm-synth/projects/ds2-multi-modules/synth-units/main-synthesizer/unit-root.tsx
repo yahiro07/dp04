@@ -11,10 +11,10 @@ export type MainSynthesizerUnit = {
 export function createMainSynthesizerUnit(): MainSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
-    setupEngine(audioContext: AudioContext): AudioNode {
+    setupEngine(audioContext) {
       return unitEngine.initialize(audioContext);
     },
-    noteOn(ch: number, noteNumber: number, velocity: number): void {
+    noteOn(ch, noteNumber, velocity) {
       unitEngine.handleCommand({
         type: "noteOn",
         channel: ch,
@@ -22,7 +22,7 @@ export function createMainSynthesizerUnit(): MainSynthesizerUnit {
         velocity,
       });
     },
-    noteOff(ch: number, noteNumber: number): void {
+    noteOff(ch, noteNumber) {
       unitEngine.handleCommand({
         type: "noteOff",
         channel: ch,

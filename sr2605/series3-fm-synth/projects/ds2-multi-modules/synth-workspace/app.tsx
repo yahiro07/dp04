@@ -6,14 +6,14 @@ import {
 
 export function App() {
   const audioContext = new AudioContext();
-  const drumSynthesizer = createDrumSynthesizerUnit(audioContext);
+  const drumSynthesizer = createDrumSynthesizerUnit();
   const mainSynthesizer = createMainSynthesizerUnit();
   const sequencer = createSequencerUnit({
     audioContext,
     drumSynthesizer,
     mainSynthesizer,
   });
-  const drumSynthOutputNode = drumSynthesizer.setupEngine();
+  const drumSynthOutputNode = drumSynthesizer.setupEngine(audioContext);
   const mainSynthOutputNode = mainSynthesizer.setupEngine(audioContext);
   sequencer.setupSequencerEngine();
   drumSynthOutputNode.connect(audioContext.destination);

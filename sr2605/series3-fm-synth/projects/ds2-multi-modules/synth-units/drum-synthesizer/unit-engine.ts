@@ -1,6 +1,6 @@
-export type UnitEngineCommand =
-  | { type: "noteOn"; channel: number; noteNumber: number; velocity: number }
-  | { type: "noteOff"; channel: number; noteNumber: number };
+import { DrumKitToneId } from "@ds2/synth-units/drum-synthesizer/types";
+
+export type UnitEngineCommand = { type: "playTone"; toneId: DrumKitToneId };
 
 export type UnitEngine = {
   initialize(audioContext: AudioContext): AudioNode;
