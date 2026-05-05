@@ -1,12 +1,69 @@
+import {
+  DrumKitToneId,
+  DrumSynthesizerUnit,
+} from "@ds2/synth-units/drum-synthesizer/interface";
+import { resumeAudioContextIfNeed } from "@lib/mo-music-app/resume-audio-context";
+import { Button } from "@lib/mo-solid/components/button";
+import { createSignal } from "solid-js";
+import { PartSynthesizerUnit } from "../part-synthesizer/interface";
 import { SequencerUnit } from "./interface";
 
-export function createSequencer(): SequencerUnit {
+export function createSequencer(args: {
+  drumSynthesizer: DrumSynthesizerUnit;
+  partSynthesizer: PartSynthesizerUnit;
+}): SequencerUnit {
+  const { drumSynthesizer, partSynthesizer } = args;
+  let audioContext: AudioContext;
+
   return {
-    setupSequencerEngine(audioContext: AudioContext): void {},
+    setupSequencerEngine(_audioContext: AudioContext): void {
+      audioContext = _audioContext;
+    },
     renderUi() {
+      const [currentToneId, setCurrentToneId] =
+        createSignal<DrumKitToneId>("kick");
+
+      const vm = {
+        async playTone(toneId: DrumKitToneId) {
+          await resumeAudioContextIfNeed(audioContext);
+          drumSynthesizer.playTone(toneId);
+          setCurrentToneId(toneId);
+        },
+        isToneActive(toneId: DrumKitToneId) {
+          return currentToneId() === toneId;
+        },
+      };
       return (
-        <div class="w-[200px] h-[100px] flex-c border border-[#aaa]">
-          sequencer
+        <div class="w-dvw h-dvh flex-vc">
+          <div>
+            <drumSynthesizer.renderUi currentToneId={currentToneId()} />
+            <partSynthesizer.renderUi />
+          </div>
+          <div class="w-[600px] flex-vl border border-[#aaa] gap-2 p-4">
+            <div>sequencer</div>
+            <div class="flex-v gap-2">
+              <Button
+                text="Kick"
+                active={vm.isToneActive("kick")}
+                onClick={() => vm.playTone("kick")}
+              />
+              <Button
+                text="Snare"
+                active={vm.isToneActive("snare")}
+                onClick={() => vm.playTone("snare")}
+              />
+              <Button
+                text="HiHat"
+                active={vm.isToneActive("open-hi-hat")}
+                onClick={() => vm.playTone("open-hi-hat")}
+              />
+              <Button
+                text="ClHiHat"
+                active={vm.isToneActive("closed-hi-hat")}
+                onClick={() => vm.playTone("closed-hi-hat")}
+              />
+            </div>
+          </div>
         </div>
       );
     },

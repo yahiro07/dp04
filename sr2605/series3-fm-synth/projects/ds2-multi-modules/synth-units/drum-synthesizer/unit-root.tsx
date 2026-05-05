@@ -1,4 +1,4 @@
-import { DrumSynthesizerUnit } from "./interface";
+import { DrumKitToneId, DrumSynthesizerUnit } from "./interface";
 
 export function createDrumSynthesizer(): DrumSynthesizerUnit {
   return {
@@ -6,10 +6,13 @@ export function createDrumSynthesizer(): DrumSynthesizerUnit {
       const node = new GainNode(audioContext);
       return node;
     },
-    renderUi() {
+    playTone(toneId: DrumKitToneId): void {
+      console.log("playTone", toneId);
+    },
+    renderUi(props: { currentToneId: DrumKitToneId }) {
       return (
         <div class="w-[200px] h-[100px] flex-c border border-[#aaa]">
-          drum synth
+          drum synth {props.currentToneId}
         </div>
       );
     },
