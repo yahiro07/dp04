@@ -1,8 +1,16 @@
 import { iife } from "@my/lib/ax/general-utils";
 import { Button } from "@my/lib/mo-solid/components/button";
-import { FeKnob, FeSelectorBox } from "@my/lib/mo-solid/synth-components";
+import {
+  FeKnob,
+  FeSelectorBox,
+  FeToggleBox,
+} from "@my/lib/mo-solid/synth-components";
 import { UnitWaveScope } from "@my/lib/mo-solid/synth-components/unit-wave-scope";
-import { KickEgWaveOptions, KickParameterKey } from "@/base/parameters";
+import {
+  KickEgWaveOptions,
+  KickParameterKey,
+  KickParametersSuit,
+} from "@/base/parameters";
 import { DrumKitToneId } from "@/base/types";
 import { kickSynthExports_getEgWaveCurveFunction } from "@/dsp/kick-synthesizer-dsp";
 import { UnitEngine } from "@/machine/unit-engine";
@@ -15,10 +23,12 @@ export function UiRoot(props: {
   const uiModel = createUiModel(props.unitEngine);
 
   const _paramSetters = iife(() => {
-    const obj = {} as Record<KickParameterKey, (v: number) => void>;
+    const obj = {} as {
+      [K in KickParameterKey]: (v: KickParametersSuit[K]) => void;
+    };
     for (const _key of Object.keys(uiModel.state.parameters)) {
       const key = _key as KickParameterKey;
-      obj[key] = (v: number) => uiModel.setParameter(key, v);
+      obj[key] = (v: number | boolean) => uiModel.setParameter(key, v);
     }
     return obj;
   });
@@ -49,6 +59,11 @@ export function UiRoot(props: {
             label="shape"
             value={vm.parameters().oscShape}
             onChange={vm.paramSetters().oscShape}
+          />
+          <FeToggleBox
+            label="noise"
+            checked={vm.parameters().oscWaveNoise}
+            onChange={vm.paramSetters().oscWaveNoise}
           />
         </div>
         <div class="flex-ha gap-2">

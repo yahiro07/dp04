@@ -10,8 +10,9 @@ export enum KickPresetKey {
 
 export const kickPresets = {
   [KickPresetKey.kick1]: {
-    oscPitch: 0.44,
+    oscWaveNoise: false,
     oscShape: 0.3,
+    oscPitch: 0.44,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.3,
     pitchEgShape: 0,
@@ -23,8 +24,9 @@ export const kickPresets = {
     volume: 0.66,
   },
   [KickPresetKey.kick2]: {
-    oscPitch: 0.32,
+    oscWaveNoise: false,
     oscShape: 0.5,
+    oscPitch: 0.32,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.23,
     pitchEgShape: 0.21,
@@ -36,8 +38,9 @@ export const kickPresets = {
     volume: 1,
   },
   [KickPresetKey.kick3]: {
-    oscPitch: 0.34,
+    oscWaveNoise: false,
     oscShape: 0.61,
+    oscPitch: 0.34,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.26,
     pitchEgShape: 0.12,
@@ -49,8 +52,9 @@ export const kickPresets = {
     volume: 0.61,
   },
   [KickPresetKey.kick4]: {
-    oscPitch: 0.32,
+    oscWaveNoise: false,
     oscShape: 0.32,
+    oscPitch: 0.32,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.29,
     pitchEgShape: 0.23,
@@ -62,8 +66,9 @@ export const kickPresets = {
     volume: 0.46,
   },
   [KickPresetKey.kick5]: {
-    oscPitch: 0.34,
+    oscWaveNoise: false,
     oscShape: 0.78,
+    oscPitch: 0.34,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.42,
     pitchEgShape: 0.07,

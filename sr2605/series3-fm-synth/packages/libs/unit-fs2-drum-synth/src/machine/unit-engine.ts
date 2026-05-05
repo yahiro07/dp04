@@ -12,7 +12,11 @@ import workletUrl from "./worklet.ts?worker&url";
 
 export type UnitEngineCommand =
   | { type: "playTone"; toneId: DrumKitToneId }
-  | { type: "setParameter"; paramKey: KickParameterKey; value: number };
+  | {
+      type: "setParameter";
+      paramKey: KickParameterKey;
+      value: number | boolean;
+    };
 
 export type UnitEngine = {
   initialize(audioContext: AudioContext): Promise<AudioNode>;

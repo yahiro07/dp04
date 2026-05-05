@@ -1,3 +1,4 @@
+import { m_random } from "@my/lib/ax/math-utils";
 import {
   clampValue,
   fracPart,
@@ -108,7 +109,12 @@ function osc_processSamples(bus: StateBus, buffer: Float32Array, len: number) {
     const phaseDelta = miPhaseDelta.advance();
     const prShape = miShape.advance();
     osc.phaseAcc = fracPart(osc.phaseAcc + phaseDelta);
-    const y = getOscWaveformPdSaw(osc.phaseAcc, prShape);
+    let y = 0;
+    if (sp.oscWaveNoise) {
+      y = m_random() * 2 - 1;
+    } else {
+      y = getOscWaveformPdSaw(osc.phaseAcc, prShape);
+    }
     buffer[i] = y;
   }
 }
@@ -201,7 +207,10 @@ function createStateBus(): StateBus {
 export type KickSynthesizerDsp = {
   prepare(sampleRate: number, maxFrames: number): void;
   applyPreset(presetKey: KickPresetKey): void;
-  setParameter(paramKey: KickParameterKey, value: number): void;
+  setParameter<K extends KickParameterKey>(
+    paramKey: K,
+    value: KickParametersSuit[K],
+  ): void;
   processSamples(
     bufferL: Float32Array,
     bufferR: Float32Array,

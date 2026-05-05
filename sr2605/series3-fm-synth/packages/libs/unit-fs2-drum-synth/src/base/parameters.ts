@@ -13,8 +13,9 @@ export const KickEgWaveOptions: SelectorOption<KickEgWave>[] = [
 ];
 
 export type UnitParameters = {
-  oscPitch: number;
+  oscWaveNoise: boolean;
   oscShape: number;
+  oscPitch: number;
   pitchEgWave: KickEgWave;
   pitchEgTime: number;
   pitchEgShape: number;
@@ -32,8 +33,9 @@ export type KickParametersSuit = UnitParameters;
 
 export function createDefaultUnitParameters(): UnitParameters {
   return {
-    oscPitch: 0.44,
+    oscWaveNoise: false,
     oscShape: 0.3,
+    oscPitch: 0.44,
     pitchEgWave: KickEgWave.ds,
     pitchEgTime: 0.3,
     pitchEgShape: 0,
