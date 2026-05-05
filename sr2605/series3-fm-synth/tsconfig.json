@@ -19,19 +19,5 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "paths": {
-      "@lib/*": [
-        "./lib/*"
-      ],
-      "@ds1/*": [
-        "./projects/ds1-fm-synth/*"
-      ],
-      "@ds2/*": [
-        "./projects/ds2-multi-modules/*"
-      ],
-    }
-  },
-  "include": [
-    "lib/**/*"
-  ]
+  }
 }

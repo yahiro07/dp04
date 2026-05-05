@@ -1,0 +1,6 @@
+{
+  "name": "@my/ds1-fm-synth",
+  "exports": {
+    ".": "./src/index.tsx"
+  }
+}

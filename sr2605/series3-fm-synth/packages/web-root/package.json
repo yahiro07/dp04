@@ -1,0 +1,7 @@
+{
+  "name": "@my/web-root",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  }
+}
