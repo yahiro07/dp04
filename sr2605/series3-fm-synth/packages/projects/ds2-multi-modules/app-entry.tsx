@@ -1,7 +1,7 @@
-import { createDrumSynthesizerUnit } from "@my/drum-synthesizer";
+import { createDrumSynthesizerUnit } from "@my/drum-synthesizer-unit";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
-import { createMainSynthesizerUnit } from "@my/main-synthesizer";
-import { createSequencerUnit } from "@my/sequencer";
+import { createMainSynthesizerUnit } from "@my/main-synthesizer-unit";
+import { createSequencerUnit } from "@my/sequencer-unit";
 
 function App() {
   const audioContext = new AudioContext();

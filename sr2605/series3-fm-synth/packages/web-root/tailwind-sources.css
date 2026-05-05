@@ -3,5 +3,4 @@
 
 @source "../lib/mo-solid/**/*.tsx";
 @source "../libs/synth-units/**/*.tsx";
-@source "../projects/ds1-fm-synth/src/**/*.tsx";
-@source "../projects/ds2-multi-modules/src/**/*.tsx";
+@source "../projects/**/*.tsx";

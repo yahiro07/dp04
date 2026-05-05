@@ -1,5 +1,5 @@
 {
-  "name": "@my/drum-synthesizer",
+  "name": "@my/sequencer-unit",
   "exports": {
     ".": "./src/index.tsx"
   }
