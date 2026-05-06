@@ -1,6 +1,5 @@
 /* @refresh reload */
 
-import { iife } from "@my/lib/ax/general-utils";
 import { mapUnaryTo } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
@@ -8,27 +7,52 @@ import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createScriptProcessorSoundEngine } from "@my/lib/mo-music-app/script-processor-engine";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
-import { FeKnob } from "@my/lib/mo-solid/synth-components";
+import { FeKnob, Knob } from "@my/lib/mo-solid/synth-components";
 import { createStore } from "solid-js/store";
 
 const soundEngine = createScriptProcessorSoundEngine();
+
+type EgParams = {
+  hold: number;
+  decay1: number;
+  decay2: number;
+  amount: number;
+};
 
 type UnitParameters = {
   oscPitch: number;
   oscVolume: number;
   noiseVolume: number;
+  pitchEg: EgParams;
+  volumeEg: EgParams;
+  noiseVolumeEg: EgParams;
 };
 type UnitParameterKey = keyof UnitParameters;
 
-const defaultUnitParameters: UnitParameters = {
-  oscPitch: 0.5,
-  oscVolume: 0.5,
-  noiseVolume: 0.5,
-};
+type EgKey = "pitchEg" | "volumeEg" | "noiseVolumeEg";
+
+type EgFieldKey = "hold" | "decay1" | "decay2" | "amount";
+
+function createDefaultUnitParameters(): UnitParameters {
+  const defaultEgParams = {
+    hold: 0,
+    decay1: 0.5,
+    decay2: 0.5,
+    amount: 1,
+  };
+  return {
+    oscPitch: 0.5,
+    oscVolume: 0.5,
+    noiseVolume: 0.5,
+    volumeEg: { ...defaultEgParams },
+    pitchEg: { ...defaultEgParams },
+    noiseVolumeEg: { ...defaultEgParams },
+  };
+}
 
 const bus = {
   sampleRate: soundEngine.sampleRate,
-  parameters: { ...defaultUnitParameters },
+  parameters: createDefaultUnitParameters(),
   gateOn: false,
 };
 
@@ -64,6 +88,9 @@ function createSynthesizer() {
     ) {
       bus.parameters[paramKey] = value;
     },
+    setEgParameter(egKey: EgKey, egFieldKey: EgFieldKey, value: number) {
+      bus.parameters[egKey][egFieldKey] = value;
+    },
     playTone() {
       bus.gateOn = true;
     },
@@ -81,11 +108,10 @@ const synthesizer = createSynthesizer();
 type StoreState = {
   parameters: UnitParameters;
 };
-
+const initialState: StoreState = {
+  parameters: createDefaultUnitParameters(),
+};
 function createUiModel() {
-  const initialState: StoreState = {
-    parameters: defaultUnitParameters,
-  };
   const [state, setState] = createStore<StoreState>(initialState);
   const storeMutations = createStoreMutations(setState, initialState);
 
@@ -95,7 +121,17 @@ function createUiModel() {
       value: UnitParameters[K],
     ) {
       storeMutations.setParameters((prev) => ({ ...prev, [paramKey]: value }));
-      bus.parameters[paramKey] = value;
+      synthesizer.setParameter(paramKey, value);
+    },
+    setEgParameter(egKey: EgKey, egFieldKey: EgFieldKey, value: number) {
+      storeMutations.setParameters((prev) => ({
+        ...prev,
+        [egKey]: {
+          ...prev[egKey],
+          [egFieldKey]: value,
+        },
+      }));
+      synthesizer.setEgParameter(egKey, egFieldKey, value);
     },
     async playTone() {
       await synthesizer.startOnUserAction();
@@ -105,42 +141,73 @@ function createUiModel() {
       synthesizer.stopTone();
     },
   };
-  return { state, ...actions };
+  return {
+    get parameters() {
+      return state.parameters;
+    },
+    ...actions,
+  };
 }
 const uiModel = createUiModel();
 
-function ParametersPanel() {
-  const _paramSetters = iife(() => {
-    const obj = {} as {
-      [K in UnitParameterKey]: (v: UnitParameters[K]) => void;
-    };
-    for (const _key of Object.keys(defaultUnitParameters)) {
-      const key = _key as UnitParameterKey;
-      obj[key] = (v: number) => uiModel.setParameter(key, v);
-    }
-    return obj;
-  });
-  const vm = {
-    parameters: () => uiModel.state.parameters,
-    paramSetters: () => _paramSetters,
-  };
+function EgEditKnobs(props: { egKey: EgKey }) {
   return (
-    <div>
+    <div class="flex-ha gap-4">
       <FeKnob
-        label="pitch"
-        value={vm.parameters().oscPitch}
-        onChange={vm.paramSetters().oscPitch}
+        label="hold"
+        value={uiModel.parameters[props.egKey].hold}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "hold", v)}
       />
       <FeKnob
-        label="volume"
-        value={vm.parameters().oscVolume}
-        onChange={vm.paramSetters().oscVolume}
+        label="decay1"
+        value={uiModel.parameters[props.egKey].decay1}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "decay1", v)}
       />
       <FeKnob
-        label="noise_vol"
-        value={vm.parameters().noiseVolume}
-        onChange={vm.paramSetters().noiseVolume}
+        label="decay2"
+        value={uiModel.parameters[props.egKey].decay2}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "decay2", v)}
       />
+      <FeKnob
+        label="amount"
+        value={uiModel.parameters[props.egKey].amount}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "amount", v)}
+      />
+    </div>
+  );
+}
+
+function ParametersPanel() {
+  const h3class = "min-w-[100px]";
+  return (
+    <div class="flex-v gap-2">
+      <div class="flex-ha gap-2">
+        <h3 class={h3class}>osc pitch</h3>
+        <Knob
+          value={uiModel.parameters.oscPitch}
+          onChange={(v) => uiModel.setParameter("oscPitch", v)}
+        />
+        <div>|</div>
+        <EgEditKnobs egKey="pitchEg" />
+      </div>
+      <div class="flex-ha gap-2">
+        <h3 class={h3class}>osc volume</h3>
+        <Knob
+          value={uiModel.parameters.oscVolume}
+          onChange={(v) => uiModel.setParameter("oscVolume", v)}
+        />
+        <div>|</div>
+        <EgEditKnobs egKey="volumeEg" />
+      </div>
+      <div class="flex-ha gap-2">
+        <h3 class={h3class}>noise volume</h3>
+        <Knob
+          value={uiModel.parameters.noiseVolume}
+          onChange={(v) => uiModel.setParameter("noiseVolume", v)}
+        />
+        <div>|</div>
+        <EgEditKnobs egKey="noiseVolumeEg" />
+      </div>
     </div>
   );
 }
