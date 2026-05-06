@@ -1,7 +1,8 @@
 /* @refresh reload */
 
+import { seqNumbers } from "@my/lib/ax/array-utils";
 import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
-import { mapUnaryTo, power2, power3 } from "@my/lib/ax/number-utils";
+import { mapUnaryTo, mixValue, power2, power3 } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createPlainSelectorOptions } from "@my/lib/mo/selector-option";
@@ -25,12 +26,13 @@ const oscWaveOptions = createPlainSelectorOptions([
   "sawtooth",
 ]);
 
-type OscShapeMode = "fmFeed" | "speed" | "accel";
+type OscShapeMode = "fmFeed" | "speed" | "accel" | "sdm";
 
 const oscShapeModeOptions = createPlainSelectorOptions([
   "fmFeed",
   "speed",
   "accel",
+  "sdm",
 ]);
 
 type EgParams = {
@@ -83,10 +85,10 @@ function createDefaultUnitParameters(): UnitParameters {
   };
   return {
     oscWave: "sine",
-    oscShapeMode: "fmFeed",
+    oscShapeMode: "sdm",
     oscShape: 0.5,
     oscPitch: 0.5,
-    oscVolume: 0.5,
+    oscVolume: 0.25,
     noiseVolume: 0,
     ampDrive: 0.5,
     oscShapeEg: { ...defaultEgParams },
@@ -100,6 +102,7 @@ function createDefaultUnitParameters(): UnitParameters {
 const bus = {
   sampleRate: soundEngine.sampleRate,
   parameters: createDefaultUnitParameters(),
+  noteNumber: 60,
   gateOn: false,
   oscPhaseAcc: 0,
   miOscShape: createInterpolator(),
@@ -118,11 +121,14 @@ function getOscWaveform(wave: OscWave, phase: number) {
   }
 }
 
+const randomSequence = seqNumbers(1000).map(() => Math.random());
+
 function applyPhaseModifier(
   phase: number,
   colorMode: OscShapeMode,
   color: number,
 ): number {
+  const color2 = power2(color);
   const color3 = power3(color);
 
   if (colorMode === "fmFeed") {
@@ -134,6 +140,20 @@ function applyPhaseModifier(
   } else if (colorMode === "accel") {
     const speedRate = 1 + power2(phase) * color3 * 100;
     return phase * speedRate;
+  } else if (colorMode === "sdm") {
+    const speedRate = mapUnaryTo(color3, 1, 1000);
+    const indexF = phase * speedRate;
+    const i0 = Math.floor(indexF);
+    const i1 = i0 + 1;
+    const m = indexF - i0;
+    const y1 = phase;
+    const y2 = mixValue(
+      i0 === 0 ? 0 : randomSequence[i0],
+      randomSequence[i1],
+      m,
+    );
+    const y3 = mixValue(y1, y2, color);
+    return y3;
   } else {
     return phase;
   }
@@ -142,7 +162,7 @@ function applyPhaseModifier(
 function processOsc(buffer: Float32Array) {
   const len = buffer.length;
   const sp = bus.parameters;
-  const noteNumber = 48 + mapUnaryTo(sp.oscPitch, -12, 12);
+  const noteNumber = bus.noteNumber + mapUnaryTo(sp.oscPitch, -24, 24);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
   bus.miOscShape.feed(sp.oscShape, len);
@@ -196,7 +216,8 @@ function createSynthesizer() {
     setEgParameter(egKey: EgKey, egFieldKey: EgFieldKey, value: number) {
       bus.parameters[egKey][egFieldKey] = value;
     },
-    playTone() {
+    playTone(noteNumber: number) {
+      bus.noteNumber = noteNumber;
       bus.gateOn = true;
     },
     stopTone() {
@@ -238,9 +259,9 @@ function createUiModel() {
       }));
       synthesizer.setEgParameter(egKey, egFieldKey, value);
     },
-    async playTone() {
+    async playTone(noteNumber: number) {
       await synthesizer.startOnUserAction();
-      synthesizer.playTone();
+      synthesizer.playTone(noteNumber);
     },
     stopTone() {
       synthesizer.stopTone();
@@ -393,8 +414,8 @@ function MainUi() {
       <ParametersPanel />
       <HoldableButton
         text="play"
-        onDown={uiModel.playTone}
-        onUp={uiModel.stopTone}
+        onDown={() => uiModel.playTone(48)}
+        onUp={() => uiModel.stopTone()}
       />
     </div>
   );
@@ -402,9 +423,9 @@ function MainUi() {
 
 function App() {
   setupMidiKeyboardInput({
-    noteCallback(_noteNumber, velocity) {
+    noteCallback(noteNumber, velocity) {
       if (velocity > 0) {
-        uiModel.playTone();
+        uiModel.playTone(noteNumber);
       } else {
         uiModel.stopTone();
       }
