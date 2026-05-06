@@ -1,4 +1,3 @@
-import { m_random } from "@my/lib/ax/math-utils";
 import {
   clampValue,
   fracPart,
@@ -109,12 +108,7 @@ function osc_processSamples(bus: StateBus, buffer: Float32Array, len: number) {
     const phaseDelta = miPhaseDelta.advance();
     const prShape = miShape.advance();
     osc.phaseAcc = fracPart(osc.phaseAcc + phaseDelta);
-    let y = 0;
-    if (sp.oscWaveNoise) {
-      y = m_random() * 2 - 1;
-    } else {
-      y = getOscWaveformPdSaw(osc.phaseAcc, prShape);
-    }
+    const y = getOscWaveformPdSaw(osc.phaseAcc, prShape);
     buffer[i] = y;
   }
 }

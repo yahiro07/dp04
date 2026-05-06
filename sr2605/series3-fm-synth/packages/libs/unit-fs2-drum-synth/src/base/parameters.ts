@@ -13,7 +13,8 @@ export const KickEgWaveOptions: SelectorOption<KickEgWave>[] = [
 ];
 
 export type UnitParameters = {
-  oscWaveNoise: boolean;
+  oscOn: boolean;
+  noiseOn: boolean;
   oscShape: number;
   oscPitch: number;
   pitchEgWave: KickEgWave;
@@ -25,6 +26,10 @@ export type UnitParameters = {
   ampEgShape: number;
   ampDrive: number;
   volume: number;
+  noiseEgWave: KickEgWave;
+  noiseEgTime: number;
+  noiseEgShape: number;
+  noiseVolume: number;
 };
 
 export type KickParameterKey = keyof UnitParameters;
@@ -33,7 +38,8 @@ export type KickParametersSuit = UnitParameters;
 
 export function createDefaultUnitParameters(): UnitParameters {
   return {
-    oscWaveNoise: false,
+    oscOn: true,
+    noiseOn: true,
     oscShape: 0.3,
     oscPitch: 0.44,
     pitchEgWave: KickEgWave.ds,
@@ -45,5 +51,9 @@ export function createDefaultUnitParameters(): UnitParameters {
     ampEgShape: 0.6,
     ampDrive: 0.05,
     volume: 0.66,
+    noiseEgWave: KickEgWave.d,
+    noiseEgTime: 0.3,
+    noiseEgShape: 0,
+    noiseVolume: 0,
   };
 }

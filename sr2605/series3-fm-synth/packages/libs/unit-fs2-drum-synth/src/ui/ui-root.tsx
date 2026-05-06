@@ -1,10 +1,6 @@
 import { iife } from "@my/lib/ax/general-utils";
 import { Button } from "@my/lib/mo-solid/components/button";
-import {
-  FeKnob,
-  FeSelectorBox,
-  FeToggleBox,
-} from "@my/lib/mo-solid/synth-components";
+import { FeKnob, FeSelectorBox } from "@my/lib/mo-solid/synth-components";
 import { UnitWaveScope } from "@my/lib/mo-solid/synth-components/unit-wave-scope";
 import {
   KickEgWaveOptions,
@@ -59,11 +55,6 @@ export function UiRoot(props: {
             label="shape"
             value={vm.parameters().oscShape}
             onChange={vm.paramSetters().oscShape}
-          />
-          <FeToggleBox
-            label="noise"
-            checked={vm.parameters().oscWaveNoise}
-            onChange={vm.paramSetters().oscWaveNoise}
           />
         </div>
         <div class="flex-ha gap-2">
@@ -138,6 +129,37 @@ export function UiRoot(props: {
             onChange={vm.paramSetters().volume}
           />
         </div>
+      </div>
+      <div class="flex-ha gap-2">
+        <h3 class={headerClass}>noise</h3>
+        <UnitWaveScope
+          waveFn={kickSynthExports_getEgWaveCurveFunction(
+            vm.parameters().noiseEgWave,
+          )}
+          shape={vm.parameters().noiseEgShape}
+        />
+        <FeSelectorBox
+          label="type"
+          options={KickEgWaveOptions}
+          value={vm.parameters().noiseEgWave}
+          onChange={vm.paramSetters().noiseEgWave}
+        />
+        <FeKnob
+          label="curve"
+          value={vm.parameters().noiseEgShape}
+          onChange={vm.paramSetters().noiseEgShape}
+        />
+        <FeKnob
+          label="time"
+          value={vm.parameters().noiseEgTime}
+          onChange={vm.paramSetters().noiseEgTime}
+        />
+        <div>|</div>
+        <FeKnob
+          label="volume"
+          value={vm.parameters().noiseVolume}
+          onChange={vm.paramSetters().noiseVolume}
+        />
       </div>
     </div>
   );
