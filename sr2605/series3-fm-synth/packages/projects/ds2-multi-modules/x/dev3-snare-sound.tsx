@@ -378,11 +378,11 @@ function processNoiseOsc(buffer: Float32Array, len: number) {
   }
 }
 
-function calcEgLevel(egParams: EgParams): number {
+function calcEgLevel(egParams: EgParams, keepSustain?: boolean): number {
   const decay = egParams.decay;
   const maxT = 2;
   if (decay === 1) {
-    return bus.gateOn ? 1 : 0;
+    return bus.gateOn || keepSustain ? 1 : 0;
   } else {
     const decayT = Math.max(power2(decay) * maxT, 0.001);
     return linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
@@ -390,11 +390,11 @@ function calcEgLevel(egParams: EgParams): number {
 }
 
 function updateEgs() {
-  bus.egLevels.oscShape = calcEgLevel(bus.parameters.oscShapeEg);
-  bus.egLevels.oscPitch = calcEgLevel(bus.parameters.oscPitchEg);
+  bus.egLevels.oscShape = calcEgLevel(bus.parameters.oscShapeEg, true);
+  bus.egLevels.oscPitch = calcEgLevel(bus.parameters.oscPitchEg, true);
   bus.egLevels.oscVolume = calcEgLevel(bus.parameters.oscVolumeEg);
   bus.egLevels.noiseVolume = calcEgLevel(bus.parameters.noiseVolumeEg);
-  bus.egLevels.ampDrive = calcEgLevel(bus.parameters.ampDriveEg);
+  bus.egLevels.ampDrive = calcEgLevel(bus.parameters.ampDriveEg, true);
 
   {
     const hi = bus.parameters.oscShape;
