@@ -5,6 +5,7 @@ import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
 import {
   clampValue,
   linearInterpolate,
+  mapUnaryFrom,
   mapUnaryTo,
   mixValue,
   power2,
@@ -108,7 +109,7 @@ function createDefaultUnitParameters(): UnitParameters {
   return {
     oscWave: "sine",
     oscShapeMode: "ws1",
-    oscShape: 0.5,
+    oscShape: 0,
     oscPitch: 0.5,
     oscVolume: 0.25,
     noiseVolume: 0,
@@ -131,6 +132,20 @@ const bus = {
   oscPhaseAcc: 0,
   miOscShape: createInterpolator(),
   miAmpGain: createInterpolator(),
+  egLevels: {
+    oscShape: 0,
+    oscPitch: 0,
+    oscVolume: 0,
+    noiseVolume: 0,
+    ampDrive: 0,
+  },
+  modParams: {
+    oscShape: 0,
+    oscPitch: 0,
+    oscVolume: 0,
+    noiseVolume: 0,
+    ampDrive: 0,
+  },
 };
 
 function getOscWaveform(wave: OscWave, phase: number) {
@@ -329,10 +344,14 @@ function applyShaper(x: number, shaperMode: OscShapeMode, prLevel: number) {
 function processOsc(buffer: Float32Array) {
   const len = buffer.length;
   const sp = bus.parameters;
-  const noteNumber = bus.noteNumber + mapUnaryTo(sp.oscPitch, -24, 24);
+  const noteNumber =
+    bus.noteNumber + mapUnaryTo(bus.modParams.oscPitch, -24, 24);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
-  bus.miOscShape.feed(sp.oscShape, len);
+  if (bus.gateTriggered) {
+    bus.miOscShape.reset();
+  }
+  bus.miOscShape.feed(bus.modParams.oscShape, len);
   for (let i = 0; i < buffer.length; i++) {
     const shape = bus.miOscShape.advance();
     bus.oscPhaseAcc += delta;
@@ -378,21 +397,37 @@ function processAmp(buffer: Float32Array) {
   }
 }
 
-function processFrame(buffer: Float32Array) {
-  buffer.fill(0);
-  processOsc(buffer);
-  processNoiseOsc(buffer);
-  processAmp(buffer);
-  bus.gateTriggered = false;
-  bus.gateOnUptime += buffer.length / bus.sampleRate;
+function calcEgLevel(egParams: EgParams): number {
+  const decay = egParams.decay;
+  if (decay === 1) {
+    return 1;
+  } else {
+    const decayT = Math.max(power2(decay) * 2.0, 0.001);
+    return linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
+  }
+}
+
+function updateEgs() {
+  bus.egLevels.oscShape = calcEgLevel(bus.parameters.oscShapeEg);
+  bus.egLevels.oscPitch = calcEgLevel(bus.parameters.oscPitchEg);
+  bus.egLevels.oscVolume = calcEgLevel(bus.parameters.oscVolumeEg);
+  bus.egLevels.noiseVolume = calcEgLevel(bus.parameters.noiseVolumeEg);
+  bus.egLevels.ampDrive = calcEgLevel(bus.parameters.ampDriveEg);
+
+  {
+    const hi = bus.parameters.oscShape;
+    const lo = bus.parameters.oscShape * (1 - bus.parameters.oscShapeEg.amount);
+    bus.modParams.oscShape = mapUnaryFrom(bus.egLevels.oscShape, lo, hi, true);
+  }
+  {
+    const hi = bus.parameters.oscPitch;
+    const lo = bus.parameters.oscPitch * (1 - bus.parameters.oscPitchEg.amount);
+    bus.modParams.oscPitch = mapUnaryFrom(bus.egLevels.oscPitch, lo, hi, true);
+  }
 }
 
 function createSynthesizer() {
-  soundEngine.addProcessorFn(processFrame);
   return {
-    async startOnUserAction() {
-      await soundEngine.startOnUserAction();
-    },
     setParameter<K extends UnitParameterKey>(
       paramKey: K,
       value: UnitParameters[K],
@@ -412,9 +447,19 @@ function createSynthesizer() {
     stopTone() {
       bus.gateOn = false;
     },
+    processFrame(buffer: Float32Array) {
+      updateEgs();
+      buffer.fill(0);
+      processOsc(buffer);
+      processNoiseOsc(buffer);
+      processAmp(buffer);
+      bus.gateTriggered = false;
+      bus.gateOnUptime += buffer.length / bus.sampleRate;
+    },
   };
 }
 const synthesizer = createSynthesizer();
+soundEngine.addProcessorFn(synthesizer.processFrame);
 
 //dsp
 //---
@@ -449,7 +494,7 @@ function createUiModel() {
       synthesizer.setEgParameter(egKey, egFieldKey, value);
     },
     async playTone(noteNumber: number) {
-      await synthesizer.startOnUserAction();
+      await soundEngine.startOnUserAction();
       synthesizer.playTone(noteNumber);
     },
     stopTone() {
