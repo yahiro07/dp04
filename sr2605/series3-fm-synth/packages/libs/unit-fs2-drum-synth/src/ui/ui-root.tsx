@@ -132,6 +132,11 @@ export function UiRoot(props: {
             value={vm.parameters().ampDrive}
             onChange={vm.paramSetters().ampDrive}
           />
+          <FeKnob
+            label="volume"
+            value={vm.parameters().volume}
+            onChange={vm.paramSetters().volume}
+          />
         </div>
       </div>
     </div>
