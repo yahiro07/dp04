@@ -13,6 +13,7 @@ import {
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createPlainSelectorOptions } from "@my/lib/mo/selector-option";
+import { calcBufferMaxLevel } from "@my/lib/mo-dsp/buffer-functions";
 import { tunableSigmoid } from "@my/lib/mo-dsp/curves";
 import { createInterpolator } from "@my/lib/mo-dsp/interpolator";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
@@ -133,6 +134,7 @@ const bus = {
   miOscVolume: createInterpolator(),
   miNoiseVolume: createInterpolator(),
   miAmpGain: createInterpolator(),
+  processingActive: false,
   egLevels: {
     oscShape: 0,
     oscPitch: 0,
@@ -431,11 +433,13 @@ function createSynthesizer() {
       bus.gateOn = true;
       bus.gateTriggered = true;
       bus.gateOnUptime = 0;
+      bus.processingActive = true;
     },
     stopTone() {
       bus.gateOn = false;
     },
     processFrame(buffer: Float32Array) {
+      if (!bus.processingActive) return;
       const len = buffer.length;
       updateEgs();
       buffer.fill(0);
@@ -443,6 +447,10 @@ function createSynthesizer() {
       processNoiseOsc(buffer, len);
       bus.gateTriggered = false;
       bus.gateOnUptime += buffer.length / bus.sampleRate;
+      const maxLevel = calcBufferMaxLevel(buffer, len);
+      if (maxLevel < 1e-4) {
+        bus.processingActive = false;
+      }
     },
   };
 }

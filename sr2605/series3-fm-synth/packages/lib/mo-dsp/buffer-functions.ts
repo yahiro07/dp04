@@ -66,3 +66,11 @@ export function readBufferInterpolated(
   const fraction = fIndex - idx0;
   return mixValue(buffer[idx0], buffer[idx1], fraction);
 }
+
+export function calcBufferMaxLevel(buffer: Float32Array, len: number) {
+  let maxLevel = 0;
+  for (let i = 0; i < len; i++) {
+    maxLevel = Math.max(maxLevel, Math.abs(buffer[i]));
+  }
+  return maxLevel;
+}
