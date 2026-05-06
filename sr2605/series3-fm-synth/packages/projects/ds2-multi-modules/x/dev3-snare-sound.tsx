@@ -174,15 +174,15 @@ function applyPhaseModifier(
 
   if (colorMode === "fmFeed") {
     const fmOscValue = m_sin(phase * m_two_pi);
-    return phase + fmOscValue * color3 * 10;
+    return phase + fmOscValue * color3 * 100;
   } else if (colorMode === "speed") {
-    const speedRate = 1 + color3 * 10;
+    const speedRate = 1 + color3 * 100;
     return phase * speedRate;
   } else if (colorMode === "accel") {
-    const speedRate = 1 + power2(phase) * color3 * 10;
+    const speedRate = 1 + power2(phase) * color3 * 100;
     return phase * speedRate;
   } else if (colorMode === "sdm") {
-    const speedRate = mapUnaryTo(color3, 1, 10);
+    const speedRate = mapUnaryTo(color3, 1, 1000);
     const indexF = phase * speedRate;
     const i0 = Math.floor(indexF);
     const i1 = i0 + 1;
