@@ -8,6 +8,7 @@ import {
 } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
+import { tunableSigmoid } from "@my/lib/mo-dsp/curves";
 import { applySoftClip } from "@my/lib/mo-dsp/soft-clip-shaper";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
@@ -59,7 +60,7 @@ function createSynthesizer() {
       );
       const buffer = audioBuffer.getChannelData(0);
 
-      function processing0_grainedNoise() {
+      function processing0_granular() {
         const modNoteNumber = linearInterpolate(
           noteNumber,
           48,
@@ -83,11 +84,25 @@ function createSynthesizer() {
           }
         }
 
+        function placeGrainEx(inputOffset: number, driveK: number) {
+          const offset = inputOffset >>> 0;
+          for (let i = 0; i < grainDur; i++) {
+            const pp = i / grainDur;
+            let y = m_sin(pp * m_two_pi) * 0.5;
+            y = tunableSigmoid(y, driveK);
+            // if (pp > 0.5) y = 0;
+            buffer[offset + i] += y;
+          }
+        }
+
         let pos = 0;
         for (let i = 0; i < buffer.length; i++) {
           // placeGrain(pos);
-          const jitter = randomBipolar() * grainDur * 0.1;
-          placeGrain(pos + jitter);
+          // const jitter = randomBipolar() * grainDur * 0.1;
+          // placeGrain(pos + jitter);
+
+          const rr = randomBipolar() * 0.05;
+          placeGrainEx(pos, -0.5 + rr);
           pos += grainDur;
         }
 
@@ -103,8 +118,8 @@ function createSynthesizer() {
         }
       }
 
-      // processing0_grainedNoise();
-      processing1_normRandom();
+      processing0_granular();
+      // processing1_normRandom();
 
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
