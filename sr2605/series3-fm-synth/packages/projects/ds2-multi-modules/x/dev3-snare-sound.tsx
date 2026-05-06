@@ -5,7 +5,6 @@ import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
 import {
   clampValue,
   linearInterpolate,
-  mapUnaryFrom,
   mapUnaryTo,
   mixValue,
   power2,
@@ -102,7 +101,7 @@ type EgFieldKey = "hold" | "decay" | "curve" | "amount";
 function createDefaultUnitParameters(): UnitParameters {
   const defaultEgParams: EgParams = {
     hold: 0,
-    decay: 0.5,
+    decay: 1,
     curve: 0.5,
     amount: 1,
   };
@@ -153,7 +152,7 @@ function getOscWaveform(wave: OscWave, phase: number) {
     case "sine":
       return Math.sin(phase * 2 * Math.PI);
     case "triangle":
-      return 1 - Math.abs(phase - 0.5) * 2;
+      return (1 - Math.abs(phase - 0.5) * 2) * 2 - 1;
     case "square":
       return phase < 0.5 ? 1 : -1;
     case "sawtooth":
@@ -173,15 +172,15 @@ function applyPhaseModifier(
 
   if (colorMode === "fmFeed") {
     const fmOscValue = m_sin(phase * m_two_pi);
-    return phase + fmOscValue * color3 * 100;
+    return phase + fmOscValue * color3 * 10;
   } else if (colorMode === "speed") {
-    const speedRate = 1 + color3 * 1000;
+    const speedRate = 1 + color3 * 10;
     return phase * speedRate;
   } else if (colorMode === "accel") {
-    const speedRate = 1 + power2(phase) * color3 * 1000;
+    const speedRate = 1 + power2(phase) * color3 * 10;
     return phase * speedRate;
   } else if (colorMode === "sdm") {
-    const speedRate = mapUnaryTo(color3, 1, 1000);
+    const speedRate = mapUnaryTo(color3, 1, 10);
     const indexF = phase * speedRate;
     const i0 = Math.floor(indexF);
     const i1 = i0 + 1;
@@ -402,7 +401,7 @@ function calcEgLevel(egParams: EgParams): number {
   if (decay === 1) {
     return 1;
   } else {
-    const decayT = Math.max(power2(decay) * 2.0, 0.001);
+    const decayT = Math.max(power2(decay) * 3.0, 0.001);
     return linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
   }
 }
@@ -417,12 +416,16 @@ function updateEgs() {
   {
     const hi = bus.parameters.oscShape;
     const lo = bus.parameters.oscShape * (1 - bus.parameters.oscShapeEg.amount);
-    bus.modParams.oscShape = mapUnaryFrom(bus.egLevels.oscShape, lo, hi, true);
+    bus.modParams.oscShape = mapUnaryTo(bus.egLevels.oscShape, lo, hi);
   }
   {
     const hi = bus.parameters.oscPitch;
-    const lo = bus.parameters.oscPitch * (1 - bus.parameters.oscPitchEg.amount);
-    bus.modParams.oscPitch = mapUnaryFrom(bus.egLevels.oscPitch, lo, hi, true);
+    const lo = bus.parameters.oscPitch - bus.parameters.oscPitchEg.amount; //could be negative
+    bus.modParams.oscPitch = mapUnaryTo(bus.egLevels.oscPitch, lo, hi);
+  }
+
+  if (bus.gateOn && 0) {
+    console.log(bus.egLevels.oscPitch, bus.modParams.oscPitch);
   }
 }
 
