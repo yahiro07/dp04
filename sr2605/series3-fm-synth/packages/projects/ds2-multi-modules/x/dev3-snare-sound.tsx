@@ -4,6 +4,7 @@ import { seqNumbers } from "@my/lib/ax/array-utils";
 import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
 import {
   clampValue,
+  linearInterpolate,
   mapUnaryTo,
   mixValue,
   power2,
@@ -125,8 +126,11 @@ const bus = {
   parameters: createDefaultUnitParameters(),
   noteNumber: 60,
   gateOn: false,
+  gateTriggered: false,
+  gateOnUptime: 0,
   oscPhaseAcc: 0,
   miOscShape: createInterpolator(),
+  miAmpGain: createInterpolator(),
 };
 
 function getOscWaveform(wave: OscWave, phase: number) {
@@ -352,9 +356,25 @@ function processNoiseOsc(buffer: Float32Array) {
 }
 
 function processAmp(buffer: Float32Array) {
-  const voiceGain = bus.gateOn ? 1 : 0;
-  for (let i = 0; i < buffer.length; i++) {
-    buffer[i] *= voiceGain;
+  const len = buffer.length;
+  const sp = bus.parameters;
+  let envGain = 0;
+
+  const decay = sp.oscVolumeEg.decay;
+  if (decay === 1) {
+    envGain = bus.gateOn ? 1 : 0;
+  } else {
+    const decayT = Math.max(power2(decay) * 2.0, 0.001);
+    const env = linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
+    envGain = env * env;
+  }
+  {
+    const ampGain = envGain * sp.oscVolume;
+    bus.miAmpGain.feed(ampGain, len);
+  }
+  for (let i = 0; i < len; i++) {
+    const ampGain = bus.miAmpGain.advance();
+    buffer[i] *= ampGain;
   }
 }
 
@@ -363,6 +383,8 @@ function processFrame(buffer: Float32Array) {
   processOsc(buffer);
   processNoiseOsc(buffer);
   processAmp(buffer);
+  bus.gateTriggered = false;
+  bus.gateOnUptime += buffer.length / bus.sampleRate;
 }
 
 function createSynthesizer() {
@@ -384,6 +406,8 @@ function createSynthesizer() {
     playTone(noteNumber: number) {
       bus.noteNumber = noteNumber;
       bus.gateOn = true;
+      bus.gateTriggered = true;
+      bus.gateOnUptime = 0;
     },
     stopTone() {
       bus.gateOn = false;
