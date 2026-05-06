@@ -2,10 +2,17 @@
 
 import { seqNumbers } from "@my/lib/ax/array-utils";
 import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
-import { mapUnaryTo, mixValue, power2, power3 } from "@my/lib/ax/number-utils";
+import {
+  clampValue,
+  mapUnaryTo,
+  mixValue,
+  power2,
+  power3,
+} from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createPlainSelectorOptions } from "@my/lib/mo/selector-option";
+import { tunableSigmoid } from "@my/lib/mo-dsp/curves";
 import { createInterpolator } from "@my/lib/mo-dsp/interpolator";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
@@ -26,13 +33,27 @@ const oscWaveOptions = createPlainSelectorOptions([
   "sawtooth",
 ]);
 
-type OscShapeMode = "fmFeed" | "speed" | "accel" | "sdm";
+type OscShapeMode =
+  | "fmFeed"
+  | "speed"
+  | "accel"
+  | "sdm"
+  | "ws1"
+  | "ws2"
+  | "ws3"
+  | "ws4"
+  | "ws5";
 
 const oscShapeModeOptions = createPlainSelectorOptions([
   "fmFeed",
   "speed",
   "accel",
   "sdm",
+  "ws1",
+  "ws2",
+  "ws3",
+  "ws4",
+  "ws5",
 ]);
 
 type EgParams = {
@@ -85,7 +106,7 @@ function createDefaultUnitParameters(): UnitParameters {
   };
   return {
     oscWave: "sine",
-    oscShapeMode: "sdm",
+    oscShapeMode: "ws1",
     oscShape: 0.5,
     oscPitch: 0.5,
     oscVolume: 0.25,
@@ -159,6 +180,148 @@ function applyPhaseModifier(
   }
 }
 
+function wrapBipolar<T extends unknown[]>(
+  fn: (x: number, ...restArgs: T) => number,
+) {
+  return (_x: number, ...restArgs: T) => {
+    const sign = Math.sign(_x);
+    const x = Math.abs(_x);
+    const y = fn(x, ...restArgs);
+    return sign * y;
+  };
+}
+
+const shaperCore = {
+  foldSine(x: number) {
+    return Math.sin(x * Math.PI * 0.5);
+  },
+  // foldSineHalf: wrapBipolar((_x) => {
+  //   const sign = Math.sign(_x);
+  //   const x = Math.abs(_x);
+  //   let y = 0;
+  //   if (x < 1) {
+  //     y = Math.sin(x * m_half_pi);
+  //   } else {
+  //     y = 1 - (1 - Math.sin(x * m_half_pi) ** 2);
+  //   }
+  //   return sign * y;
+  // }),
+  foldTriangle(x: number) {
+    const t = (((x + 1) % 4) + 4) % 4;
+    return t < 2 ? t - 1 : 3 - t;
+  },
+  // foldTriangleHalf: wrapBipolar((x) => {
+  //   return Math.abs(((x + 1) % 2) - 1);
+  // }),
+  foldSaw: wrapBipolar((x) => {
+    let y = x - Math.floor(x);
+    if (((x >> 0) & 1) === 1) y -= 1;
+    return y;
+  }),
+  // foldSawHalf(x: number) {
+  //   const sign = Math.sign(x);
+  //   let level = Math.abs(x);
+  //   level %= 1;
+  //   return sign * level;
+  // },
+  foldPolyHalf: wrapBipolar((x) => {
+    if (x < 1) return x;
+    if (0) {
+      return (x & 1) === 1 ? 1 : 0;
+    } else {
+      if (x < 2) return 1;
+      return ((x / 2) & 1) === 0 ? 1 : 0;
+    }
+  }),
+  foldBlend(x: number, a: number) {
+    const f = shaperCore.foldTriangle(x);
+    const s = Math.sin(x * Math.PI * 2);
+    return mixValue(f, s, a);
+  },
+  foldCharpSine: wrapBipolar((x) => {
+    const xa = x < 1 ? x : power2(1 + (x - 1) * 0.5);
+    return Math.sin(xa * Math.PI * 0.5);
+  }),
+  drive1(x: number, a: number) {
+    const k = mapUnaryTo(a, 0, -0.9);
+    return tunableSigmoid(x, k);
+  },
+  drive2(x: number, a: number) {
+    if (x < 0) return x;
+    const k = mapUnaryTo(a, 0, -0.9);
+    return tunableSigmoid(x, k);
+  },
+  drive3(x: number, a: number) {
+    const gain = mapUnaryTo(power2(a), 1, 42);
+    const dry = x;
+    x = x * gain;
+    const wet = x / (1 + Math.abs(x));
+    return mixValue(dry, wet, a);
+  },
+  crush(x: number, a: number) {
+    const step = mapUnaryTo(a, 32, 1);
+    return Math.round(x * step) / step;
+  },
+  hardClip(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 20);
+    x *= g;
+    return Math.max(-1, Math.min(1, x));
+  },
+  softAtan(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 30);
+    const k = (2 / Math.PI) * Math.atan(x * g);
+    return k;
+  },
+  softTanh(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 25);
+    const y = Math.tanh(x * g);
+    return y;
+  },
+  diode(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 40);
+    x *= g;
+    const p = Math.max(0, x);
+    const n = Math.min(0, x);
+    const y = p / (1 + p) + (n / (1 + Math.abs(n))) * 0.4;
+    return Math.max(-1, Math.min(1, y));
+  },
+  asymClip(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 30);
+    x *= g;
+    const pos = 0.6;
+    const neg = 1.0;
+    const y = x >= 0 ? Math.min(x, pos) : Math.max(x, -neg);
+    return y;
+  },
+  fuzzPow(x: number, a: number) {
+    const g = mapUnaryTo(power2(a), 1, 60);
+    x *= g;
+    const s = Math.sign(x);
+    const ax = Math.min(1, Math.abs(x));
+    const p = mapUnaryTo(a, 0.7, 0.2);
+    return s * Math.pow(ax, p);
+  },
+};
+
+function applyShaper(x: number, shaperMode: OscShapeMode, prLevel: number) {
+  const prLevel3 = power3(prLevel);
+  const y = x * (1 + prLevel3 * 1000);
+  if (shaperMode === "ws1") {
+    return shaperCore.foldSine(y);
+  } else if (shaperMode === "ws2") {
+    const y = x * (1 + prLevel3 * 70);
+    return shaperCore.foldSaw(y);
+  } else if (shaperMode === "ws3") {
+    const y = x * (1 + prLevel3 * 70);
+    return shaperCore.foldCharpSine(y);
+  } else if (shaperMode === "ws4") {
+    return shaperCore.foldBlend(y, prLevel);
+  } else if (shaperMode === "ws5") {
+    return shaperCore.foldTriangle(y);
+  }
+  return x;
+}
+
 function processOsc(buffer: Float32Array) {
   const len = buffer.length;
   const sp = bus.parameters;
@@ -173,8 +336,10 @@ function processOsc(buffer: Float32Array) {
     let phase = bus.oscPhaseAcc;
     phase = applyPhaseModifier(phase, sp.oscShapeMode, shape);
     phase -= Math.floor(phase);
-    const y = getOscWaveform(sp.oscWave, phase) * sp.oscVolume;
-    buffer[i] += y;
+    let y = getOscWaveform(sp.oscWave, phase);
+    y = applyShaper(y, sp.oscShapeMode, shape);
+    y = clampValue(y, -1, 1);
+    buffer[i] += y * sp.oscVolume;
   }
 }
 
