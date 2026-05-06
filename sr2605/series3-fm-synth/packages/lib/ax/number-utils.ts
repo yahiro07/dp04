@@ -1,4 +1,4 @@
-import { m_floor, m_max, m_min } from "./math-utils";
+import { m_floor, m_max, m_min, m_random } from "./math-utils";
 
 export function clampValue(value: number, lo: number, hi: number) {
   if (value < lo) return lo;
@@ -68,4 +68,8 @@ export function power3(value: number) {
 
 export function fracPart(value: number) {
   return value - m_floor(value);
+}
+
+export function randomBipolar() {
+  return m_random() * 2 - 1;
 }
