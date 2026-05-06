@@ -1,4 +1,5 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
+import { assignTyped } from "@my/lib/ax/general-utils";
 import {
   clampValue,
   fracPart,
@@ -276,6 +277,7 @@ export type KickSynthesizerDsp = {
     paramKey: K,
     value: KickParametersSuit[K],
   ): void;
+  setAllParameters(ch: number, parameters: UnitParameters): void;
   processSamples(
     bufferL: Float32Array,
     bufferR: Float32Array,
@@ -287,6 +289,7 @@ export type KickSynthesizerDsp = {
 
 export function createKickSynthesizerDsp(): KickSynthesizerDsp {
   const bus = createSynthesisBus();
+  const numChannels = bus.voices.length;
 
   return {
     prepare(sampleRate, maxFrames) {
@@ -299,10 +302,16 @@ export function createKickSynthesizerDsp(): KickSynthesizerDsp {
       }
     },
     applyPreset(ch, presetKey) {
+      if (ch >= numChannels) return;
       bus.voiceParameters[ch] = kickPresets[presetKey];
     },
     setParameter(ch, paramKey, value) {
+      if (ch >= numChannels) return;
       bus.voiceParameters[ch][paramKey] = value;
+    },
+    setAllParameters(ch, parameters) {
+      if (ch >= numChannels) return;
+      assignTyped(bus.voiceParameters[ch], parameters);
     },
     processSamples(bufferL, bufferR, len) {
       if (bus.sampleRate === 0 || !bus.workBuffer) return;
@@ -333,6 +342,7 @@ export function createKickSynthesizerDsp(): KickSynthesizerDsp {
       copyBuffer(bufferR, bufferL, len);
     },
     playTone(ch) {
+      if (ch >= numChannels) return;
       const voice = bus.voices[ch];
       voice.noteNumber = 32;
       voice.gateOnUptime = 0;
@@ -340,6 +350,7 @@ export function createKickSynthesizerDsp(): KickSynthesizerDsp {
       voice.gateTriggered = true;
     },
     stopTone(ch) {
+      if (ch >= numChannels) return;
       const voice = bus.voices[ch];
       voice.gateOn = false;
       voice.gateOnUptime = 0;

@@ -1,6 +1,7 @@
-import { KickParameterKey } from "../base/parameters";
+import { KickParameterKey, UnitParameters } from "../base/parameters";
 
 export type WorkletInputMessage =
+  | { type: "setFullParameters"; ch: number; parameters: UnitParameters }
   | {
       type: "setParameter";
       ch: number;

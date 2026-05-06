@@ -8,6 +8,7 @@ import { createSignal } from "solid-js";
 
 export type SequencerUnit = {
   setupSequencerEngine(): void;
+  handleMidiInput(noteNumber: number, velocity: number): void;
   renderUi(): JsxElement;
 };
 
@@ -29,10 +30,26 @@ export function createSequencerUnit(args: {
 
   return {
     setupSequencerEngine(): void {},
+    handleMidiInput(noteNumber, velocity) {
+      if (noteNumber === 48) {
+        if (velocity > 0) {
+          drumSynthesizer.playTone(toneIdToChannelMap["kick"]);
+        }
+      } else if (noteNumber === 49) {
+        if (velocity > 0) {
+          drumSynthesizer.playTone(toneIdToChannelMap["snare"]);
+        }
+      } else {
+        if (velocity > 0) {
+          mainSynthesizer.noteOn(0, noteNumber, velocity);
+        } else {
+          mainSynthesizer.noteOff(0, noteNumber);
+        }
+      }
+    },
     renderUi() {
       const [currentToneId, setCurrentToneId] =
         createSignal<DrumKitToneId>("kick");
-
       const vm = {
         async playTone(toneId: DrumKitToneId) {
           await resumeAudioContextIfNeed(audioContext);

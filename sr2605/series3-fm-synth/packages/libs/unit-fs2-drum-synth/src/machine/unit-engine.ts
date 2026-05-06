@@ -2,7 +2,8 @@ import {
   createWorkletNodeWrapper,
   WorkletNodeWrapper,
 } from "@my/lib/mo-music-app/worklet-node-wrapper";
-import { KickParameterKey } from "@/base/parameters";
+import { KickParameterKey, UnitParameters } from "@/base/parameters";
+import { defaultKickPreset, snarePreset1 } from "@/base/presets";
 import {
   WorkletInputMessage,
   WorkletOutputMessage,
@@ -21,6 +22,7 @@ export type UnitEngineCommand =
 export type UnitEngine = {
   initialize(audioContext: AudioContext): Promise<AudioNode>;
   resumeIfNeed(): Promise<void>;
+  getFullParameters(ch: number): UnitParameters;
   handleCommand(command: UnitEngineCommand): void;
 };
 
@@ -30,16 +32,42 @@ export function createUnitEngine(): UnitEngine {
     WorkletOutputMessage
   >;
   let nodeWrapper: MyWorkletNodeWrapper;
+
+  const voiceParameters: UnitParameters[] = [
+    { ...defaultKickPreset },
+    { ...snarePreset1 },
+  ];
+
+  function sendInitialParameters() {
+    voiceParameters.forEach((voiceParameters, ch) => {
+      nodeWrapper.sendMessage({
+        type: "setFullParameters",
+        ch,
+        parameters: voiceParameters,
+      });
+    });
+  }
   return {
     async initialize(audioContext) {
       nodeWrapper = createWorkletNodeWrapper(audioContext, workletUrl);
       await nodeWrapper.initialize();
+      sendInitialParameters();
       return nodeWrapper.outputNode;
     },
     async resumeIfNeed() {
       await nodeWrapper.resumeIfNeed();
     },
+    getFullParameters(ch) {
+      if (ch >= voiceParameters.length) {
+        return { ...defaultKickPreset };
+      }
+      return voiceParameters[ch];
+    },
     handleCommand(command) {
+      if (command.type === "setParameter") {
+        const { ch, paramKey, value } = command;
+        (voiceParameters[ch][paramKey] as number | boolean) = value;
+      }
       nodeWrapper.sendMessage(command);
     },
   };

@@ -13,14 +13,18 @@ export function createUiModel(unitEngine: UnitEngine) {
     parameters: UnitParameters;
   };
   const initialState: StoreState = {
-    currentChannel: 0,
+    currentChannel: -1,
     parameters: createDefaultUnitParameters(),
   };
   const [state, setState] = createStore<StoreState>(initialState);
   const storeMutations = createStoreMutations(setState, initialState);
   const actions = {
     setCurrentChannel(ch: number) {
-      storeMutations.setCurrentChannel(ch);
+      if (state.currentChannel !== ch) {
+        storeMutations.setCurrentChannel(ch);
+        const params = unitEngine.getFullParameters(ch);
+        storeMutations.setParameters(params);
+      }
     },
     setParameter<K extends KickParameterKey>(
       paramKey: K,
@@ -28,11 +32,15 @@ export function createUiModel(unitEngine: UnitEngine) {
     ) {
       storeMutations.setParameters((prev) => ({ ...prev, [paramKey]: value }));
       const ch = state.currentChannel;
-      unitEngine.handleCommand({ type: "setParameter", ch, paramKey, value });
+      if (ch !== -1) {
+        unitEngine.handleCommand({ type: "setParameter", ch, paramKey, value });
+      }
     },
     playTone() {
       const ch = state.currentChannel;
-      unitEngine.handleCommand({ type: "playTone", ch });
+      if (ch !== -1) {
+        unitEngine.handleCommand({ type: "playTone", ch });
+      }
     },
     dumpParameters() {
       console.log(JSON.stringify(state.parameters, null, " "));

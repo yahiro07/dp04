@@ -26,11 +26,9 @@ function App() {
     drumSynthOutputNode.connect(audioContext.destination);
     mainSynthOutputNode.connect(audioContext.destination);
     setupMidiKeyboardInput({
-      async noteCallback(_noteNumber, velocity) {
+      async noteCallback(noteNumber, velocity) {
         await resumeAudioContextIfNeed(audioContext);
-        if (velocity > 0) {
-          drumSynthesizer.playTone(0);
-        }
+        sequencer.handleMidiInput(noteNumber, velocity);
       },
     });
   });
