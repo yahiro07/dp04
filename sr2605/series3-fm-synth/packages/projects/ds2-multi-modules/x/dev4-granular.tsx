@@ -1,7 +1,11 @@
 /* @refresh reload */
 
 import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
-import { linearInterpolate, randomBipolar } from "@my/lib/ax/number-utils";
+import {
+  clampValue,
+  linearInterpolate,
+  randomBipolar,
+} from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { applySoftClip } from "@my/lib/mo-dsp/soft-clip-shaper";
@@ -10,6 +14,13 @@ import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
 import { FeKnob } from "@my/lib/mo-solid/synth-components";
 import { createStore } from "solid-js/store";
+
+function normalRandomWave(stdDev = 0.33) {
+  const u1 = Math.random();
+  const u2 = Math.random();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return clampValue(z0 * stdDev, -1, 1);
+}
 
 type UnitParameters = {
   basePitch: number;
@@ -48,40 +59,52 @@ function createSynthesizer() {
       );
       const buffer = audioBuffer.getChannelData(0);
 
-      const modNoteNumber = linearInterpolate(
-        noteNumber,
-        48,
-        80,
-        36,
-        140,
-        true,
-      );
+      function processing0_grainedNoise() {
+        const modNoteNumber = linearInterpolate(
+          noteNumber,
+          48,
+          80,
+          36,
+          140,
+          true,
+        );
 
-      const baseFreq = midiToFrequency(modNoteNumber);
-      console.log(baseFreq);
-      const grainDur = sampleRate / baseFreq;
+        const baseFreq = midiToFrequency(modNoteNumber);
+        console.log(baseFreq);
+        const grainDur = sampleRate / baseFreq;
 
-      function placeGrain(inputOffset: number) {
-        const offset = inputOffset >>> 0;
-        for (let i = 0; i < grainDur; i++) {
-          const pp = i / grainDur;
-          let y = m_sin(pp * m_two_pi) * 0.5;
-          // if (pp > 0.5) y = 0;
-          buffer[offset + i] += y;
+        function placeGrain(inputOffset: number) {
+          const offset = inputOffset >>> 0;
+          for (let i = 0; i < grainDur; i++) {
+            const pp = i / grainDur;
+            let y = m_sin(pp * m_two_pi) * 0.5;
+            // if (pp > 0.5) y = 0;
+            buffer[offset + i] += y;
+          }
+        }
+
+        let pos = 0;
+        for (let i = 0; i < buffer.length; i++) {
+          // placeGrain(pos);
+          const jitter = randomBipolar() * grainDur * 0.1;
+          placeGrain(pos + jitter);
+          pos += grainDur;
+        }
+
+        for (let i = 0; i < buffer.length; i++) {
+          buffer[i] = applySoftClip(buffer[i]);
         }
       }
 
-      let pos = 0;
-      for (let i = 0; i < buffer.length; i++) {
-        // placeGrain(pos);
-        const jitter = randomBipolar() * grainDur * 0.1;
-        placeGrain(pos + jitter);
-        pos += grainDur;
+      function processing1_normRandom() {
+        for (let i = 0; i < buffer.length; i++) {
+          buffer[i] = normalRandomWave(0.33);
+          // buffer[i] = randomBipolar();
+        }
       }
 
-      for (let i = 0; i < buffer.length; i++) {
-        buffer[i] = applySoftClip(buffer[i]);
-      }
+      // processing0_grainedNoise();
+      processing1_normRandom();
 
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
