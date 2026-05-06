@@ -15,11 +15,13 @@ const soundEngine = createScriptProcessorSoundEngine();
 
 type UnitParameters = {
   oscPitch: number;
+  oscVolume: number;
 };
 type UnitParameterKey = keyof UnitParameters;
 
 const defaultUnitParameters: UnitParameters = {
   oscPitch: 0.5,
+  oscVolume: 0.5,
 };
 
 const bus = {
@@ -35,11 +37,12 @@ function processFrame(buffer: Float32Array) {
   const noteNumber = 48 + mapUnaryTo(sp.oscPitch, -12, 12);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
-  const gain = bus.gateOn ? 1 : 0;
+  const gain = bus.gateOn ? sp.oscVolume : 0;
   for (let i = 0; i < buffer.length; i++) {
     phase = phase + delta;
     phase = phase - Math.floor(phase);
-    const y = Math.sin(phase * 2 * Math.PI);
+    // const y = Math.sin(phase * 2 * Math.PI);
+    const y = (1 - phase) * 2 - 1;
     buffer[i] = y * gain;
   }
 }
@@ -122,6 +125,11 @@ function ParametersPanel() {
         label="pitch"
         value={vm.parameters().oscPitch}
         onChange={vm.paramSetters().oscPitch}
+      />
+      <FeKnob
+        label="volume"
+        value={vm.parameters().oscVolume}
+        onChange={vm.paramSetters().oscVolume}
       />
     </div>
   );
