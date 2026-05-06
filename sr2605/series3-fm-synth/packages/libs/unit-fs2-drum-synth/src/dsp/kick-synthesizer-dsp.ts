@@ -277,9 +277,13 @@ export function createKickSynthesizerDsp(): KickSynthesizerDsp {
       pitchEg_advance(bus);
       ampEg_advance(bus);
       noiseEg_advance(bus);
-      osc_processSamples(bus, buffer, len);
-      voicingAmp_processSamples(bus, buffer, len);
-      noiseOsc_processSamples(bus, buffer, len);
+      if (bus.parameters.oscOn) {
+        osc_processSamples(bus, buffer, len);
+        voicingAmp_processSamples(bus, buffer, len);
+      }
+      if (bus.parameters.noiseOn) {
+        noiseOsc_processSamples(bus, buffer, len);
+      }
       writeBuffer(bufferL, buffer, len);
       writeBuffer(bufferR, buffer, len);
       bus.currentTime += timeLength;

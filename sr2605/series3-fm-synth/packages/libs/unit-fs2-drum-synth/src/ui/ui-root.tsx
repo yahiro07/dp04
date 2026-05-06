@@ -1,6 +1,10 @@
 import { iife } from "@my/lib/ax/general-utils";
 import { Button } from "@my/lib/mo-solid/components/button";
-import { FeKnob, FeSelectorBox } from "@my/lib/mo-solid/synth-components";
+import {
+  FeKnob,
+  FeSelectorBox,
+  FeToggleBox,
+} from "@my/lib/mo-solid/synth-components";
 import { UnitWaveScope } from "@my/lib/mo-solid/synth-components/unit-wave-scope";
 import {
   KickEgWaveOptions,
@@ -55,6 +59,16 @@ export function UiRoot(props: {
             label="shape"
             value={vm.parameters().oscShape}
             onChange={vm.paramSetters().oscShape}
+          />
+          <FeToggleBox
+            label="osc on"
+            checked={vm.parameters().oscOn}
+            onChange={vm.paramSetters().oscOn}
+          />
+          <FeToggleBox
+            label="noise on"
+            checked={vm.parameters().noiseOn}
+            onChange={vm.paramSetters().noiseOn}
           />
         </div>
         <div class="flex-ha gap-2">
