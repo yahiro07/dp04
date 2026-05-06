@@ -68,10 +68,12 @@ type StateBus = {
   sampleRate: number;
   ampEgValue: number;
   pitchEgValue: number;
+  noiseEgValue: number;
   noteNumber: number;
   currentTime: number;
   gateOn: boolean;
-  ampToleLevel: number;
+  ampTopLevel: number;
+  noiseTopLevel: number;
   gateTriggered: boolean;
   workBuffer: Float32Array | undefined;
   osc: {
@@ -83,6 +85,7 @@ type StateBus = {
     miGain: Interpolator;
     miDrive: Interpolator;
     miVolume: Interpolator;
+    miNoiseGain: Interpolator;
   };
 };
 
@@ -136,13 +139,34 @@ function ampEg_advance(bus: StateBus) {
       timeMax === 0 ? 1 : clampValue(bus.currentTime / timeMax, 0, 1);
     const y = getEgWaveCurve(prWave, timePos, prShape);
     bus.ampEgValue = y;
-    bus.ampToleLevel = y;
+    bus.ampTopLevel = y;
   } else {
     const releaseTimeMs = 20;
     const releaseTimeSec = releaseTimeMs / 1000;
     const t = clampValue(bus.currentTime / releaseTimeSec, 0, 1);
     const y = 1 - curveMapper.riseInvCosine(t);
-    bus.ampEgValue = y * bus.ampToleLevel;
+    bus.ampEgValue = y * bus.ampTopLevel;
+  }
+}
+
+function noiseEg_advance(bus: StateBus) {
+  if (bus.gateOn) {
+    const sp = bus.parameters;
+    const prWave = sp.noiseEgWave;
+    const prTime = sp.noiseEgTime;
+    const prShape = sp.noiseEgShape;
+    const timeMax = power3(prTime) * 4;
+    const timePos =
+      timeMax === 0 ? 1 : clampValue(bus.currentTime / timeMax, 0, 1);
+    const y = getEgWaveCurve(prWave, timePos, prShape);
+    bus.noiseEgValue = y;
+    bus.noiseTopLevel = y;
+  } else {
+    const releaseTimeMs = 20;
+    const releaseTimeSec = releaseTimeMs / 1000;
+    const t = clampValue(bus.currentTime / releaseTimeSec, 0, 1);
+    const y = 1 - curveMapper.riseInvCosine(t);
+    bus.noiseEgValue = y * bus.noiseTopLevel;
   }
 }
 
@@ -152,15 +176,11 @@ function voicingAmp_processSamples(
   len: number,
 ) {
   const { miGain, miDrive, miVolume } = bus.voicingAmp;
-  if (bus.gateTriggered) {
-    miGain.reset();
-    miDrive.reset();
-    miVolume.reset();
-  }
   const sp = bus.parameters;
-  miGain.feed(bus.ampEgValue, len);
-  miDrive.feed(sp.ampDrive, len);
-  miVolume.feed(sp.volume, len);
+  const reset = bus.gateTriggered;
+  miGain.feed(bus.ampEgValue, len, reset);
+  miDrive.feed(sp.ampDrive, len, reset);
+  miVolume.feed(sp.volume, len, reset);
   for (let i = 0; i < len; i++) {
     const gain = miGain.advance();
     const drive = miDrive.advance();
@@ -173,16 +193,34 @@ function voicingAmp_processSamples(
   }
 }
 
+function noiseOsc_processSamples(
+  bus: StateBus,
+  buffer: Float32Array,
+  len: number,
+) {
+  const { miNoiseGain } = bus.voicingAmp;
+  const sp = bus.parameters;
+  const reset = bus.gateTriggered;
+  miNoiseGain.feed(bus.noiseEgValue, len, reset);
+  const noiseVolume = sp.noiseVolume;
+  for (let i = 0; i < len; i++) {
+    const gain = miNoiseGain.advance();
+    buffer[i] += (Math.random() * 2 - 1) * gain * noiseVolume;
+  }
+}
+
 function createStateBus(): StateBus {
   return {
     parameters: createDefaultUnitParameters(),
     sampleRate: 0,
     ampEgValue: 0,
     pitchEgValue: 0,
+    noiseEgValue: 0,
     noteNumber: 60,
     currentTime: 0,
     gateOn: false,
-    ampToleLevel: 0,
+    ampTopLevel: 0,
+    noiseTopLevel: 0,
     gateTriggered: false,
     workBuffer: undefined,
     osc: {
@@ -194,6 +232,7 @@ function createStateBus(): StateBus {
       miGain: createInterpolator(),
       miDrive: createInterpolator(),
       miVolume: createInterpolator(),
+      miNoiseGain: createInterpolator(),
     },
   };
 }
@@ -237,8 +276,10 @@ export function createKickSynthesizerDsp(): KickSynthesizerDsp {
       const timeLength = len / bus.sampleRate;
       pitchEg_advance(bus);
       ampEg_advance(bus);
+      noiseEg_advance(bus);
       osc_processSamples(bus, buffer, len);
       voicingAmp_processSamples(bus, buffer, len);
+      noiseOsc_processSamples(bus, buffer, len);
       writeBuffer(bufferL, buffer, len);
       writeBuffer(bufferR, buffer, len);
       bus.currentTime += timeLength;

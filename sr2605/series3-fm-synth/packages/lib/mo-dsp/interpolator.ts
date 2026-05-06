@@ -1,17 +1,17 @@
 import { debugEmitError } from "@my/lib/ax/konsole";
 
 export type Interpolator = {
-  feed(nextValue: number, n: number): void;
+  feed(nextValue: number, n: number, reset?: boolean): void;
   advance(): number;
   reset(): void;
 };
 
-export function createInterpolator() {
+export function createInterpolator(): Interpolator {
   let value: number | undefined;
   let delta = 0;
 
   return {
-    feed(nextValue: number, n: number, reset?: boolean) {
+    feed(nextValue, n, reset) {
       if (value === undefined || reset) {
         value = nextValue;
       }
