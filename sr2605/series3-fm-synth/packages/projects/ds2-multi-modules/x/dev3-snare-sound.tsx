@@ -348,12 +348,9 @@ function processOsc(buffer: Float32Array, len: number) {
     bus.noteNumber + mapUnaryTo(bus.intermediate.pmxOscPitch, -24, 24);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
-  if (bus.gateTriggered) {
-    bus.miOscShape.reset();
-    bus.miOscVolume.reset();
-  }
-  bus.miOscShape.feed(bus.intermediate.pmxOscShape, len);
-  bus.miOscVolume.feed(bus.intermediate.oscVolume, len);
+
+  bus.miOscShape.feed(bus.intermediate.pmxOscShape, len, bus.gateTriggered);
+  bus.miOscVolume.feed(bus.intermediate.oscVolume, len, bus.gateTriggered);
 
   for (let i = 0; i < buffer.length; i++) {
     const shape = bus.miOscShape.advance();
@@ -371,10 +368,10 @@ function processOsc(buffer: Float32Array, len: number) {
 }
 
 function processNoiseOsc(buffer: Float32Array, len: number) {
-  bus.miNoiseVolume.feed(bus.intermediate.noiseVolume, len);
+  bus.miNoiseVolume.feed(bus.intermediate.noiseVolume, len, bus.gateTriggered);
   for (let i = 0; i < len; i++) {
-    const noiseVolume = bus.miNoiseVolume.advance();
-    const y = (Math.random() * 2 - 1) * noiseVolume;
+    const volume = bus.miNoiseVolume.advance();
+    const y = (Math.random() * 2 - 1) * volume;
     buffer[i] += y;
   }
 }

@@ -11,8 +11,8 @@ export function createInterpolator() {
   let delta = 0;
 
   return {
-    feed(nextValue: number, n: number) {
-      if (value === undefined) {
+    feed(nextValue: number, n: number, reset?: boolean) {
+      if (value === undefined || reset) {
         value = nextValue;
       }
       delta = (nextValue - value) / n;
