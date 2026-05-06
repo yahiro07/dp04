@@ -3,15 +3,33 @@
 import { mapUnaryTo, power3 } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
+import { createPlainSelectorOptions } from "@my/lib/mo/selector-option";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createScriptProcessorSoundEngine } from "@my/lib/mo-music-app/script-processor-engine";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
-import { FeKnob, Knob } from "@my/lib/mo-solid/synth-components";
+import { FeKnob, FeSelectorBox, Knob } from "@my/lib/mo-solid/synth-components";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
 const soundEngine = createScriptProcessorSoundEngine();
+
+type OscWave = "sine" | "triangle" | "square" | "sawtooth";
+
+const oscWaveOptions = createPlainSelectorOptions([
+  "sine",
+  "triangle",
+  "square",
+  "sawtooth",
+]);
+
+type OscShapeMode = "sfm" | "speed" | "accel";
+
+const oscShapeModeOptions = createPlainSelectorOptions([
+  "sfm",
+  "speed",
+  "accel",
+]);
 
 type EgParams = {
   hold: number;
@@ -21,6 +39,8 @@ type EgParams = {
 };
 
 type UnitParameters = {
+  oscWave: OscWave;
+  oscShapeMode: OscShapeMode;
   oscShape: number;
   oscPitch: number;
   oscVolume: number;
@@ -35,6 +55,8 @@ type UnitParameters = {
 type UnitParameterKey = keyof UnitParameters;
 
 type PlainParameterKey =
+  | "oscWave"
+  | "oscShapeMode"
   | "oscShape"
   | "oscPitch"
   | "oscVolume"
@@ -58,6 +80,8 @@ function createDefaultUnitParameters(): UnitParameters {
     amount: 1,
   };
   return {
+    oscWave: "sine",
+    oscShapeMode: "sfm",
     oscShape: 0.5,
     oscPitch: 0.5,
     oscVolume: 0.5,
@@ -107,6 +131,7 @@ function createSynthesizer() {
       paramKey: K,
       value: UnitParameters[K],
     ) {
+      // console.log("setParameter", paramKey, value);
       bus.parameters[paramKey] = value;
     },
     setEgParameter(egKey: EgKey, egFieldKey: EgFieldKey, value: number) {
@@ -247,7 +272,7 @@ function ParameterWithEgRow(props: {
     <div class="flex-ha gap-2">
       <h3 class={"min-w-[100px]"}>{props.label}</h3>
       <Knob
-        value={uiModel.parameters[props.paramKey]}
+        value={uiModel.parameters[props.paramKey] as number}
         onChange={(v) => uiModel.setParameter(props.paramKey, v)}
       />
       <div>|</div>
@@ -260,6 +285,20 @@ function ParameterWithEgRow(props: {
 function ParametersPanel() {
   return (
     <div class="flex-v gap-2">
+      <div class="flex-ha gap-2">
+        <FeSelectorBox
+          label="wave"
+          options={oscWaveOptions}
+          value={uiModel.parameters.oscWave}
+          onChange={(v) => uiModel.setParameter("oscWave", v)}
+        />
+        <FeSelectorBox
+          label="shape mode"
+          options={oscShapeModeOptions}
+          value={uiModel.parameters.oscShapeMode}
+          onChange={(v) => uiModel.setParameter("oscShapeMode", v)}
+        />
+      </div>
       <ParameterWithEgRow
         label="osc shape"
         paramKey="oscShape"

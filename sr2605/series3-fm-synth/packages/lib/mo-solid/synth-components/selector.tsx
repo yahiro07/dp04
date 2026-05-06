@@ -10,7 +10,7 @@ export function SelectorBoxView(props: { valueText: string }) {
   );
 }
 
-export function FeSelectorBox<T extends number>(props: {
+export function FeSelectorBox<T extends string | number>(props: {
   options: SelectorOption<T>[];
   value: T;
   label: string;
