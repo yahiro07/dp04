@@ -52,7 +52,10 @@ export function UiRoot(props: {
     <div class="flex-v border border-[#aaa] p-4">
       <div>fs2 drum synth {props.currentToneId}</div>
       <div>
-        <Button text="kick" onClick={() => vm.playTone("kick")} />
+        <div class="flex-ha gap-2">
+          <Button text="kick" onClick={() => vm.playTone("kick")} />
+          <Button text="dump" onClick={uiModel.dumpParameters} />
+        </div>
         <div class="flex-ha gap-2">
           <h3 class={headerClass}>Wave</h3>
           <FeKnob

@@ -28,6 +28,9 @@ export function createUiModel(unitEngine: UnitEngine) {
     playTone(toneId: DrumKitToneId) {
       unitEngine.handleCommand({ type: "playTone", toneId });
     },
+    dumpParameters() {
+      console.log(JSON.stringify(state.parameters, null, " "));
+    },
   };
   return {
     state,

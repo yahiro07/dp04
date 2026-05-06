@@ -105,3 +105,23 @@ export const kickPresets = {
     noiseVolume: 0,
   },
 } satisfies Record<KickPresetKey, KickParametersSuit>;
+
+export const snarePreset1: KickParametersSuit = {
+  oscOn: false,
+  noiseOn: true,
+  oscShape: 0.3,
+  oscPitch: 0.76,
+  pitchEgWave: 0,
+  pitchEgTime: 0.3,
+  pitchEgShape: 0,
+  pitchEgAmount: 0,
+  ampEgWave: 1,
+  ampEgTime: 0.63,
+  ampEgShape: 0.6,
+  ampDrive: 0,
+  volume: 0,
+  noiseEgWave: 1,
+  noiseEgTime: 0.43,
+  noiseEgShape: 0.38,
+  noiseVolume: 0.47000000000000003,
+};
