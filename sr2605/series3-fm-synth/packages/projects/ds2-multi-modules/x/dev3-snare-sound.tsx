@@ -130,6 +130,8 @@ const bus = {
   gateOnUptime: 0,
   oscPhaseAcc: 0,
   miOscShape: createInterpolator(),
+  miOscVolume: createInterpolator(),
+  miNoiseVolume: createInterpolator(),
   miAmpGain: createInterpolator(),
   egLevels: {
     oscShape: 0,
@@ -138,9 +140,9 @@ const bus = {
     noiseVolume: 0,
     ampDrive: 0,
   },
-  modParams: {
-    oscShape: 0,
-    oscPitch: 0,
+  intermediate: {
+    pmxOscShape: 0,
+    pmxOscPitch: 0,
     oscVolume: 0,
     noiseVolume: 0,
     ampDrive: 0,
@@ -340,19 +342,22 @@ function applyShaper(x: number, shaperMode: OscShapeMode, prLevel: number) {
   return x;
 }
 
-function processOsc(buffer: Float32Array) {
-  const len = buffer.length;
+function processOsc(buffer: Float32Array, len: number) {
   const sp = bus.parameters;
   const noteNumber =
-    bus.noteNumber + mapUnaryTo(bus.modParams.oscPitch, -24, 24);
+    bus.noteNumber + mapUnaryTo(bus.intermediate.pmxOscPitch, -24, 24);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
   if (bus.gateTriggered) {
     bus.miOscShape.reset();
+    bus.miOscVolume.reset();
   }
-  bus.miOscShape.feed(bus.modParams.oscShape, len);
+  bus.miOscShape.feed(bus.intermediate.pmxOscShape, len);
+  bus.miOscVolume.feed(bus.intermediate.oscVolume, len);
+
   for (let i = 0; i < buffer.length; i++) {
     const shape = bus.miOscShape.advance();
+    const volume = bus.miOscVolume.advance();
     bus.oscPhaseAcc += delta;
     bus.oscPhaseAcc -= Math.floor(bus.oscPhaseAcc);
     let phase = bus.oscPhaseAcc;
@@ -361,47 +366,26 @@ function processOsc(buffer: Float32Array) {
     let y = getOscWaveform(sp.oscWave, phase);
     y = applyShaper(y, sp.oscShapeMode, shape);
     y = clampValue(y, -1, 1);
-    buffer[i] += y * sp.oscVolume;
+    buffer[i] += y * volume;
   }
 }
 
-function processNoiseOsc(buffer: Float32Array) {
-  const sp = bus.parameters;
-  for (let i = 0; i < buffer.length; i++) {
-    const y = (Math.random() * 2 - 1) * sp.noiseVolume;
-    buffer[i] += y;
-  }
-}
-
-function processAmp(buffer: Float32Array) {
-  const len = buffer.length;
-  const sp = bus.parameters;
-  let envGain = 0;
-
-  const decay = sp.oscVolumeEg.decay;
-  if (decay === 1) {
-    envGain = bus.gateOn ? 1 : 0;
-  } else {
-    const decayT = Math.max(power2(decay) * 2.0, 0.001);
-    const env = linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
-    envGain = env * env;
-  }
-  {
-    const ampGain = envGain * sp.oscVolume;
-    bus.miAmpGain.feed(ampGain, len);
-  }
+function processNoiseOsc(buffer: Float32Array, len: number) {
+  bus.miNoiseVolume.feed(bus.intermediate.noiseVolume, len);
   for (let i = 0; i < len; i++) {
-    const ampGain = bus.miAmpGain.advance();
-    buffer[i] *= ampGain;
+    const noiseVolume = bus.miNoiseVolume.advance();
+    const y = (Math.random() * 2 - 1) * noiseVolume;
+    buffer[i] += y;
   }
 }
 
 function calcEgLevel(egParams: EgParams): number {
   const decay = egParams.decay;
+  const maxT = 2;
   if (decay === 1) {
-    return 1;
+    return bus.gateOn ? 1 : 0;
   } else {
-    const decayT = Math.max(power2(decay) * 3.0, 0.001);
+    const decayT = Math.max(power2(decay) * maxT, 0.001);
     return linearInterpolate(bus.gateOnUptime, 0, decayT, 1, 0, true);
   }
 }
@@ -416,16 +400,20 @@ function updateEgs() {
   {
     const hi = bus.parameters.oscShape;
     const lo = bus.parameters.oscShape * (1 - bus.parameters.oscShapeEg.amount);
-    bus.modParams.oscShape = mapUnaryTo(bus.egLevels.oscShape, lo, hi);
+    bus.intermediate.pmxOscShape = mapUnaryTo(bus.egLevels.oscShape, lo, hi);
   }
   {
     const hi = bus.parameters.oscPitch;
     const lo = bus.parameters.oscPitch - bus.parameters.oscPitchEg.amount; //could be negative
-    bus.modParams.oscPitch = mapUnaryTo(bus.egLevels.oscPitch, lo, hi);
+    bus.intermediate.pmxOscPitch = mapUnaryTo(bus.egLevels.oscPitch, lo, hi);
   }
+  bus.intermediate.oscVolume =
+    bus.egLevels.oscVolume * bus.parameters.oscVolume;
+  bus.intermediate.noiseVolume =
+    bus.egLevels.noiseVolume * bus.parameters.noiseVolume;
 
   if (bus.gateOn && 0) {
-    console.log(bus.egLevels.oscPitch, bus.modParams.oscPitch);
+    console.log(bus.egLevels.oscPitch, bus.intermediate.pmxOscPitch);
   }
 }
 
@@ -451,11 +439,11 @@ function createSynthesizer() {
       bus.gateOn = false;
     },
     processFrame(buffer: Float32Array) {
+      const len = buffer.length;
       updateEgs();
       buffer.fill(0);
-      processOsc(buffer);
-      processNoiseOsc(buffer);
-      processAmp(buffer);
+      processOsc(buffer, len);
+      processNoiseOsc(buffer, len);
       bus.gateTriggered = false;
       bus.gateOnUptime += buffer.length / bus.sampleRate;
     },
