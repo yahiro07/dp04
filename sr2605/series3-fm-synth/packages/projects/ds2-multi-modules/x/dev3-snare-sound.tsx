@@ -20,16 +20,25 @@ type EgParams = {
 };
 
 type UnitParameters = {
+  oscShape: number;
   oscPitch: number;
   oscVolume: number;
   noiseVolume: number;
-  pitchEg: EgParams;
-  volumeEg: EgParams;
+  ampDrive: number;
+  oscShapeEg: EgParams;
+  oscPitchEg: EgParams;
+  oscVolumeEg: EgParams;
   noiseVolumeEg: EgParams;
+  ampDriveEg: EgParams;
 };
 type UnitParameterKey = keyof UnitParameters;
 
-type EgKey = "pitchEg" | "volumeEg" | "noiseVolumeEg";
+type EgKey =
+  | "oscShapeEg"
+  | "oscPitchEg"
+  | "oscVolumeEg"
+  | "noiseVolumeEg"
+  | "ampDriveEg";
 
 type EgFieldKey = "hold" | "decay1" | "decay2" | "amount";
 
@@ -41,12 +50,16 @@ function createDefaultUnitParameters(): UnitParameters {
     amount: 1,
   };
   return {
+    oscShape: 0.5,
     oscPitch: 0.5,
     oscVolume: 0.5,
     noiseVolume: 0.5,
-    volumeEg: { ...defaultEgParams },
-    pitchEg: { ...defaultEgParams },
+    ampDrive: 0.5,
+    oscShapeEg: { ...defaultEgParams },
+    oscVolumeEg: { ...defaultEgParams },
+    oscPitchEg: { ...defaultEgParams },
     noiseVolumeEg: { ...defaultEgParams },
+    ampDriveEg: { ...defaultEgParams },
   };
 }
 
@@ -182,13 +195,22 @@ function ParametersPanel() {
   return (
     <div class="flex-v gap-2">
       <div class="flex-ha gap-2">
+        <h3 class={h3class}>osc shape</h3>
+        <Knob
+          value={uiModel.parameters.oscShape}
+          onChange={(v) => uiModel.setParameter("oscShape", v)}
+        />
+        <div>|</div>
+        <EgEditKnobs egKey="oscShapeEg" />
+      </div>
+      <div class="flex-ha gap-2">
         <h3 class={h3class}>osc pitch</h3>
         <Knob
           value={uiModel.parameters.oscPitch}
           onChange={(v) => uiModel.setParameter("oscPitch", v)}
         />
         <div>|</div>
-        <EgEditKnobs egKey="pitchEg" />
+        <EgEditKnobs egKey="oscPitchEg" />
       </div>
       <div class="flex-ha gap-2">
         <h3 class={h3class}>osc volume</h3>
@@ -197,7 +219,7 @@ function ParametersPanel() {
           onChange={(v) => uiModel.setParameter("oscVolume", v)}
         />
         <div>|</div>
-        <EgEditKnobs egKey="volumeEg" />
+        <EgEditKnobs egKey="oscVolumeEg" />
       </div>
       <div class="flex-ha gap-2">
         <h3 class={h3class}>noise volume</h3>
@@ -207,6 +229,15 @@ function ParametersPanel() {
         />
         <div>|</div>
         <EgEditKnobs egKey="noiseVolumeEg" />
+      </div>
+      <div class="flex-ha gap-2">
+        <h3 class={h3class}>amp drive</h3>
+        <Knob
+          value={uiModel.parameters.ampDrive}
+          onChange={(v) => uiModel.setParameter("ampDrive", v)}
+        />
+        <div>|</div>
+        <EgEditKnobs egKey="ampDriveEg" />
       </div>
     </div>
   );
