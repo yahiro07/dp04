@@ -29,7 +29,7 @@ function App() {
       async noteCallback(_noteNumber, velocity) {
         await resumeAudioContextIfNeed(audioContext);
         if (velocity > 0) {
-          drumSynthesizer.playTone("kick");
+          drumSynthesizer.playTone(0);
         }
       },
     });

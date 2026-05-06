@@ -5,13 +5,13 @@ import { createUnitEngine } from "./unit-engine";
 
 export * from "./types";
 
-export type DrumSynthesizerUnit = {
+export type DrumSynthesizerUnitV0 = {
   setupEngine(audioContext: AudioContext): Promise<AudioNode>;
   playTone(toneId: DrumKitToneId): void;
   renderUi(props: { currentToneId: DrumKitToneId }): JsxElement;
 };
 
-export function createDrumSynthesizerUnit(): DrumSynthesizerUnit {
+export function createDrumSynthesizerUnit(): DrumSynthesizerUnitV0 {
   const unitEngine = createUnitEngine();
   return {
     async setupEngine(audioContext) {

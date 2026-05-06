@@ -106,6 +106,8 @@ export const kickPresets = {
   },
 } satisfies Record<KickPresetKey, KickParametersSuit>;
 
+export const defaultKickPreset = kickPresets[KickPresetKey.kick1];
+
 export const snarePreset1: KickParametersSuit = {
   oscOn: false,
   noiseOn: true,

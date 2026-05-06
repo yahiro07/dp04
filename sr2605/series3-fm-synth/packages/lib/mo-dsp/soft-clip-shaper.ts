@@ -18,3 +18,15 @@ export function applySoftClip(x: number) {
 export function applySoftClipAt(_x: number, a: number) {
   return applySoftClip(_x / a) * a;
 }
+
+export function applyHardClipBuffer(buffer: Float32Array, len: number) {
+  for (let i = 0; i < len; i++) {
+    buffer[i] = applyHardClip(buffer[i]);
+  }
+}
+
+export function applySoftClipBuffer(buffer: Float32Array, len: number) {
+  for (let i = 0; i < len; i++) {
+    buffer[i] = applySoftClip(buffer[i]);
+  }
+}

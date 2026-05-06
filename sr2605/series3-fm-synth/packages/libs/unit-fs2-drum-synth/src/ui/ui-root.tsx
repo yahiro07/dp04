@@ -6,21 +6,25 @@ import {
   FeToggleBox,
 } from "@my/lib/mo-solid/synth-components";
 import { UnitWaveScope } from "@my/lib/mo-solid/synth-components/unit-wave-scope";
+import { createEffect } from "solid-js";
 import {
   KickEgWaveOptions,
   KickParameterKey,
   KickParametersSuit,
 } from "@/base/parameters";
-import { DrumKitToneId } from "@/base/types";
 import { kickSynthExports_getEgWaveCurveFunction } from "@/dsp/kick-synthesizer-dsp";
 import { UnitEngine } from "@/machine/unit-engine";
 import { createUiModel } from "@/ui/ui-model";
 
 export function UiRoot(props: {
   unitEngine: UnitEngine;
-  currentToneId: DrumKitToneId;
+  currentChannel: number;
 }) {
   const uiModel = createUiModel(props.unitEngine);
+
+  createEffect(() => {
+    uiModel.setCurrentChannel(props.currentChannel);
+  });
 
   const _paramSetters = iife(() => {
     const obj = {} as {
@@ -43,17 +47,17 @@ export function UiRoot(props: {
     paramSetters() {
       return _paramSetters;
     },
-    playTone(toneId: DrumKitToneId) {
-      uiModel.playTone(toneId);
+    playTone() {
+      uiModel.playTone();
     },
   };
   const headerClass = "min-w-[50px]";
   return (
     <div class="flex-v border border-[#aaa] p-4">
-      <div>fs2 drum synth {props.currentToneId}</div>
+      <div>fs2 drum synth {props.currentChannel}</div>
       <div>
         <div class="flex-ha gap-2">
-          <Button text="kick" onClick={() => vm.playTone("kick")} />
+          <Button text="kick" onClick={() => vm.playTone()} />
           <Button text="dump" onClick={uiModel.dumpParameters} />
         </div>
         <div class="flex-ha gap-2">
