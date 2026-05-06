@@ -1,10 +1,13 @@
 /* @refresh reload */
 
 import { iife } from "@my/lib/ax/general-utils";
+import { mapUnaryTo } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
+import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
+import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createScriptProcessorSoundEngine } from "@my/lib/mo-music-app/script-processor-engine";
-import { Button } from "@my/lib/mo-solid/components/button";
+import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
 import { FeKnob } from "@my/lib/mo-solid/synth-components";
 import { createStore } from "solid-js/store";
 
@@ -28,7 +31,9 @@ const bus = {
 let phase = 0;
 
 function processFrame(buffer: Float32Array) {
-  const freq = 440;
+  const sp = bus.parameters;
+  const noteNumber = 48 + mapUnaryTo(sp.oscPitch, -12, 12);
+  const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
   const gain = bus.gateOn ? 1 : 0;
   for (let i = 0; i < buffer.length; i++) {
@@ -53,9 +58,9 @@ function createSynthesizer() {
     },
     playTone() {
       bus.gateOn = true;
-      setTimeout(() => {
-        bus.gateOn = false;
-      }, 1000);
+    },
+    stopTone() {
+      bus.gateOn = false;
     },
   };
 }
@@ -87,6 +92,9 @@ function createUiModel() {
     async playTone() {
       await synthesizer.startOnUserAction();
       synthesizer.playTone();
+    },
+    stopTone() {
+      synthesizer.stopTone();
     },
   };
   return { state, ...actions };
@@ -123,12 +131,25 @@ function MainUi() {
   return (
     <div class="w-dvw h-dvh p-2 flex-vc gap-4">
       <ParametersPanel />
-      <Button text="play" onClick={uiModel.playTone} />
+      <HoldableButton
+        text="play"
+        onDown={uiModel.playTone}
+        onUp={uiModel.stopTone}
+      />
     </div>
   );
 }
 
 function App() {
+  setupMidiKeyboardInput({
+    noteCallback(_noteNumber, velocity) {
+      if (velocity > 0) {
+        uiModel.playTone();
+      } else {
+        uiModel.stopTone();
+      }
+    },
+  });
   return <MainUi />;
 }
 
