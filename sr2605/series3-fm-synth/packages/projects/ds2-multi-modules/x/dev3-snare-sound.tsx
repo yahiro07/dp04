@@ -1,9 +1,11 @@
 /* @refresh reload */
 
-import { mapUnaryTo, power3 } from "@my/lib/ax/number-utils";
+import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
+import { mapUnaryTo, power2, power3 } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createPlainSelectorOptions } from "@my/lib/mo/selector-option";
+import { createInterpolator } from "@my/lib/mo-dsp/interpolator";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createScriptProcessorSoundEngine } from "@my/lib/mo-music-app/script-processor-engine";
@@ -23,10 +25,10 @@ const oscWaveOptions = createPlainSelectorOptions([
   "sawtooth",
 ]);
 
-type OscShapeMode = "sfm" | "speed" | "accel";
+type OscShapeMode = "fmFeed" | "speed" | "accel";
 
 const oscShapeModeOptions = createPlainSelectorOptions([
-  "sfm",
+  "fmFeed",
   "speed",
   "accel",
 ]);
@@ -81,11 +83,11 @@ function createDefaultUnitParameters(): UnitParameters {
   };
   return {
     oscWave: "sine",
-    oscShapeMode: "sfm",
+    oscShapeMode: "fmFeed",
     oscShape: 0.5,
     oscPitch: 0.5,
     oscVolume: 0.5,
-    noiseVolume: 0.5,
+    noiseVolume: 0,
     ampDrive: 0.5,
     oscShapeEg: { ...defaultEgParams },
     oscVolumeEg: { ...defaultEgParams },
@@ -99,26 +101,83 @@ const bus = {
   sampleRate: soundEngine.sampleRate,
   parameters: createDefaultUnitParameters(),
   gateOn: false,
+  oscPhaseAcc: 0,
+  miOscShape: createInterpolator(),
 };
 
-let phase = 0;
+function getOscWaveform(wave: OscWave, phase: number) {
+  switch (wave) {
+    case "sine":
+      return Math.sin(phase * 2 * Math.PI);
+    case "triangle":
+      return 1 - Math.abs(phase - 0.5) * 2;
+    case "square":
+      return phase < 0.5 ? 1 : -1;
+    case "sawtooth":
+      return phase * 2 - 1;
+  }
+}
 
-function processFrame(buffer: Float32Array) {
+function applyPhaseModifier(
+  phase: number,
+  colorMode: OscShapeMode,
+  color: number,
+): number {
+  const color3 = power3(color);
+
+  if (colorMode === "fmFeed") {
+    const fmOscValue = m_sin(phase * m_two_pi);
+    return phase + fmOscValue * color3 * 100;
+  } else if (colorMode === "speed") {
+    const speedRate = 1 + color3 * 100;
+    return phase * speedRate;
+  } else if (colorMode === "accel") {
+    const speedRate = 1 + power2(phase) * color3 * 100;
+    return phase * speedRate;
+  } else {
+    return phase;
+  }
+}
+
+function processOsc(buffer: Float32Array) {
+  const len = buffer.length;
   const sp = bus.parameters;
   const noteNumber = 48 + mapUnaryTo(sp.oscPitch, -12, 12);
   const freq = midiToFrequency(noteNumber);
   const delta = freq / bus.sampleRate;
+  bus.miOscShape.feed(sp.oscShape, len);
+  for (let i = 0; i < buffer.length; i++) {
+    const shape = bus.miOscShape.advance();
+    bus.oscPhaseAcc += delta;
+    bus.oscPhaseAcc -= Math.floor(bus.oscPhaseAcc);
+    let phase = bus.oscPhaseAcc;
+    phase = applyPhaseModifier(phase, sp.oscShapeMode, shape);
+    phase -= Math.floor(phase);
+    const y = getOscWaveform(sp.oscWave, phase) * sp.oscVolume;
+    buffer[i] += y;
+  }
+}
+
+function processNoiseOsc(buffer: Float32Array) {
+  const sp = bus.parameters;
+  for (let i = 0; i < buffer.length; i++) {
+    const y = (Math.random() * 2 - 1) * sp.noiseVolume;
+    buffer[i] += y;
+  }
+}
+
+function processAmp(buffer: Float32Array) {
   const voiceGain = bus.gateOn ? 1 : 0;
   for (let i = 0; i < buffer.length; i++) {
-    phase = phase + delta;
-    phase = phase - Math.floor(phase);
-    // const y = Math.sin(phase * 2 * Math.PI);
-    let y = 0;
-    y += ((1 - phase) * 2 - 1) * sp.oscVolume;
-    y += (Math.random() * 2 - 1) * sp.noiseVolume;
-    y *= voiceGain;
-    buffer[i] = y;
+    buffer[i] *= voiceGain;
   }
+}
+
+function processFrame(buffer: Float32Array) {
+  buffer.fill(0);
+  processOsc(buffer);
+  processNoiseOsc(buffer);
+  processAmp(buffer);
 }
 
 function createSynthesizer() {
