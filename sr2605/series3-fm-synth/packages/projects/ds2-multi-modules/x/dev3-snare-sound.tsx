@@ -1,6 +1,6 @@
 /* @refresh reload */
 
-import { mapUnaryTo } from "@my/lib/ax/number-utils";
+import { mapUnaryTo, power3 } from "@my/lib/ax/number-utils";
 import { mountAppRoot } from "@my/lib/ax-solid/mount-app-root";
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
@@ -8,14 +8,15 @@ import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input
 import { createScriptProcessorSoundEngine } from "@my/lib/mo-music-app/script-processor-engine";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
 import { FeKnob, Knob } from "@my/lib/mo-solid/synth-components";
+import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
 const soundEngine = createScriptProcessorSoundEngine();
 
 type EgParams = {
   hold: number;
-  decay1: number;
-  decay2: number;
+  decay: number;
+  curve: number;
   amount: number;
 };
 
@@ -33,6 +34,13 @@ type UnitParameters = {
 };
 type UnitParameterKey = keyof UnitParameters;
 
+type PlainParameterKey =
+  | "oscShape"
+  | "oscPitch"
+  | "oscVolume"
+  | "noiseVolume"
+  | "ampDrive";
+
 type EgKey =
   | "oscShapeEg"
   | "oscPitchEg"
@@ -40,13 +48,13 @@ type EgKey =
   | "noiseVolumeEg"
   | "ampDriveEg";
 
-type EgFieldKey = "hold" | "decay1" | "decay2" | "amount";
+type EgFieldKey = "hold" | "decay" | "curve" | "amount";
 
 function createDefaultUnitParameters(): UnitParameters {
-  const defaultEgParams = {
+  const defaultEgParams: EgParams = {
     hold: 0,
-    decay1: 0.5,
-    decay2: 0.5,
+    decay: 0.5,
+    curve: 0.5,
     amount: 1,
   };
   return {
@@ -163,6 +171,46 @@ function createUiModel() {
 }
 const uiModel = createUiModel();
 
+function EgShapeGraph(props: { egKey: EgKey }) {
+  const { parameters } = uiModel;
+  const pathD = createMemo(() => {
+    const eg = parameters[props.egKey];
+    const p0x = 0;
+    const p0y = 1;
+    const p1x = eg.hold * 1;
+    const p1y = 1;
+
+    let p2x = p1x + power3(eg.decay) * 50;
+    let p2y = 0;
+    if (eg.decay === 1) {
+      p2x = 4;
+      p2y = 1;
+    }
+    const points = [
+      { x: 0, y: 0 },
+      { x: p0x, y: p0y },
+      { x: p1x, y: p1y },
+      { x: p2x, y: p2y },
+      { x: 4, y: 0 },
+    ];
+    const lineSegs = points.map((p, i) => {
+      const x = (p.x * 200) / 4;
+      const y = (1 - p.y) * 50;
+      const op = i === 0 ? "M" : "L";
+      return `${op}${x},${y}`;
+    });
+    return `${lineSegs.join(" ")} Z`;
+  });
+
+  return (
+    <div class="w-[200px] h-[50px] border border-[#888] overflow-hidden">
+      <svg width="200" height="50">
+        <path d={pathD()} fill="#08f4" stroke="#08f" stroke-width="1" />
+      </svg>
+    </div>
+  );
+}
+
 function EgEditKnobs(props: { egKey: EgKey }) {
   return (
     <div class="flex-ha gap-4">
@@ -172,14 +220,14 @@ function EgEditKnobs(props: { egKey: EgKey }) {
         onChange={(v) => uiModel.setEgParameter(props.egKey, "hold", v)}
       />
       <FeKnob
-        label="decay1"
-        value={uiModel.parameters[props.egKey].decay1}
-        onChange={(v) => uiModel.setEgParameter(props.egKey, "decay1", v)}
+        label="decay"
+        value={uiModel.parameters[props.egKey].decay}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "decay", v)}
       />
       <FeKnob
-        label="decay2"
-        value={uiModel.parameters[props.egKey].decay2}
-        onChange={(v) => uiModel.setEgParameter(props.egKey, "decay2", v)}
+        label="curve"
+        value={uiModel.parameters[props.egKey].curve}
+        onChange={(v) => uiModel.setEgParameter(props.egKey, "curve", v)}
       />
       <FeKnob
         label="amount"
@@ -190,55 +238,53 @@ function EgEditKnobs(props: { egKey: EgKey }) {
   );
 }
 
+function ParameterWithEgRow(props: {
+  label: string;
+  paramKey: PlainParameterKey;
+  egKey: EgKey;
+}) {
+  return (
+    <div class="flex-ha gap-2">
+      <h3 class={"min-w-[100px]"}>{props.label}</h3>
+      <Knob
+        value={uiModel.parameters[props.paramKey]}
+        onChange={(v) => uiModel.setParameter(props.paramKey, v)}
+      />
+      <div>|</div>
+      <EgShapeGraph egKey={props.egKey} />
+      <EgEditKnobs egKey={props.egKey} />
+    </div>
+  );
+}
+
 function ParametersPanel() {
-  const h3class = "min-w-[100px]";
   return (
     <div class="flex-v gap-2">
-      <div class="flex-ha gap-2">
-        <h3 class={h3class}>osc shape</h3>
-        <Knob
-          value={uiModel.parameters.oscShape}
-          onChange={(v) => uiModel.setParameter("oscShape", v)}
-        />
-        <div>|</div>
-        <EgEditKnobs egKey="oscShapeEg" />
-      </div>
-      <div class="flex-ha gap-2">
-        <h3 class={h3class}>osc pitch</h3>
-        <Knob
-          value={uiModel.parameters.oscPitch}
-          onChange={(v) => uiModel.setParameter("oscPitch", v)}
-        />
-        <div>|</div>
-        <EgEditKnobs egKey="oscPitchEg" />
-      </div>
-      <div class="flex-ha gap-2">
-        <h3 class={h3class}>osc volume</h3>
-        <Knob
-          value={uiModel.parameters.oscVolume}
-          onChange={(v) => uiModel.setParameter("oscVolume", v)}
-        />
-        <div>|</div>
-        <EgEditKnobs egKey="oscVolumeEg" />
-      </div>
-      <div class="flex-ha gap-2">
-        <h3 class={h3class}>noise volume</h3>
-        <Knob
-          value={uiModel.parameters.noiseVolume}
-          onChange={(v) => uiModel.setParameter("noiseVolume", v)}
-        />
-        <div>|</div>
-        <EgEditKnobs egKey="noiseVolumeEg" />
-      </div>
-      <div class="flex-ha gap-2">
-        <h3 class={h3class}>amp drive</h3>
-        <Knob
-          value={uiModel.parameters.ampDrive}
-          onChange={(v) => uiModel.setParameter("ampDrive", v)}
-        />
-        <div>|</div>
-        <EgEditKnobs egKey="ampDriveEg" />
-      </div>
+      <ParameterWithEgRow
+        label="osc shape"
+        paramKey="oscShape"
+        egKey="oscShapeEg"
+      />
+      <ParameterWithEgRow
+        label="osc pitch"
+        paramKey="oscPitch"
+        egKey="oscPitchEg"
+      />
+      <ParameterWithEgRow
+        label="osc volume"
+        paramKey="oscVolume"
+        egKey="oscVolumeEg"
+      />
+      <ParameterWithEgRow
+        label="noise volume"
+        paramKey="noiseVolume"
+        egKey="noiseVolumeEg"
+      />
+      <ParameterWithEgRow
+        label="amp drive"
+        paramKey="ampDrive"
+        egKey="ampDriveEg"
+      />
     </div>
   );
 }
