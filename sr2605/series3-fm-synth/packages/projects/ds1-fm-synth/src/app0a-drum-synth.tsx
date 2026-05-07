@@ -11,7 +11,7 @@ const synth = createUnitFs2DrumSynth();
 async function setupApplication() {
   configureAudioSessionPlayback();
   const audioContext = new AudioContext();
-  const outputNode = await synth.setupEngine(audioContext);
+  const outputNode = synth.setupEngine(audioContext);
   outputNode.connect(audioContext.destination);
   setupMidiKeyboardInput({
     async noteCallback(noteNumber, velocity) {

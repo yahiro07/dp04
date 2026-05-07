@@ -1,19 +1,14 @@
-import { JsxElement } from "@my/lib/ax-solid/types";
+import { InstrumentSynthesizerUnit } from "@my/unit-contract";
 import { UiRoot } from "@/ui-root";
 import { createUnitEngine } from "@/unit-engine";
 
-export type MainSynthesizerUnit = {
-  setupEngine(audioContext: AudioContext): Promise<AudioNode>;
-  noteOn(ch: number, noteNumber: number, velocity: number): void;
-  noteOff(ch: number, noteNumber: number): void;
-  renderUi(): JsxElement;
-};
-export function createMainSynthesizerUnit(): MainSynthesizerUnit {
+export function createMainSynthesizerUnit(): InstrumentSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
-    async setupEngine(audioContext) {
+    setupEngine(audioContext) {
       return unitEngine.initialize(audioContext);
     },
+    async loadEngine() {},
     noteOn(ch, noteNumber, velocity) {
       unitEngine.handleCommand({
         type: "noteOn",

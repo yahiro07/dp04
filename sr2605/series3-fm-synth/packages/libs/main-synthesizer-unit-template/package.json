@@ -1,5 +1,5 @@
 {
-  "name": "@my/main-synthesizer-unit",
+  "name": "@my/main-synthesizer-unit-template",
   "exports": {
     ".": "./src/index.tsx"
   }

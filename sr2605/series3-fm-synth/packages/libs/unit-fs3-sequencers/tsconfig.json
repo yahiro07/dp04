@@ -9,6 +9,7 @@
   },
   "include": [
     "./src/**/*",
+    "../unit-contract/**/*",
     "../../lib/**/*"
   ]
 }

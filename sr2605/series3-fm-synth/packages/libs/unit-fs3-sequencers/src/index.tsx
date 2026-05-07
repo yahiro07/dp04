@@ -1,16 +1,12 @@
-import { JsxElement } from "@my/lib/ax-solid/types";
 import { resumeAudioContextIfNeed } from "@my/lib/mo-music-app/audio-context-helper";
 import { Button } from "@my/lib/mo-solid/components/button";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
-import { MainSynthesizerUnit } from "@my/main-synthesizer-unit";
-import { UnitFs2DrumSynth } from "@my/unit-fs2-drum-synth";
+import {
+  DrumSynthesizerUnit,
+  InstrumentSynthesizerUnit,
+  SequencerUnit,
+} from "@my/unit-contract";
 import { createSignal } from "solid-js";
-
-export type SequencerUnit = {
-  setupSequencerEngine(): void;
-  handleMidiInput(noteNumber: number, velocity: number): void;
-  renderUi(): JsxElement;
-};
 
 type DrumKitToneId = "kick" | "snare" | "openHiHat" | "closedHiHat";
 
@@ -21,10 +17,10 @@ const toneIdToChannelMap = {
   closedHiHat: 3,
 };
 
-export function createSequencerUnit(args: {
+export function createUnitFs3Sequencers(args: {
   audioContext: AudioContext;
-  drumSynthesizer: UnitFs2DrumSynth;
-  mainSynthesizer: MainSynthesizerUnit;
+  drumSynthesizer: DrumSynthesizerUnit;
+  mainSynthesizer: InstrumentSynthesizerUnit;
 }): SequencerUnit {
   const { audioContext, drumSynthesizer, mainSynthesizer } = args;
 

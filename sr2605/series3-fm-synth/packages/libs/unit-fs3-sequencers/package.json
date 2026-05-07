@@ -1,5 +1,5 @@
 {
-  "name": "@my/sequencer-unit",
+  "name": "@my/unit-fs3-sequencers",
   "exports": {
     ".": "./src/index.tsx"
   }

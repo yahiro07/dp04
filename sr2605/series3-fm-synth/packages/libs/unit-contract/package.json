@@ -1,0 +1,6 @@
+{
+  "name": "@my/unit-contract",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

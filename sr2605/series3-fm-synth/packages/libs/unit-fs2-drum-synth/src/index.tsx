@@ -1,18 +1,15 @@
-import { JsxElement } from "@my/lib/ax-solid/types";
 import { createUnitEngine } from "@/machine/unit-engine";
 import { UiRoot } from "@/ui/ui-root";
+import { DrumSynthesizerUnit } from "../../unit-contract";
 
-export type UnitFs2DrumSynth = {
-  setupEngine(audioContext: AudioContext): Promise<AudioNode>;
-  playTone(ch: number): void;
-  renderUi(props: { currentChannel: number }): JsxElement;
-};
-
-export function createUnitFs2DrumSynth(): UnitFs2DrumSynth {
+export function createUnitFs2DrumSynth(): DrumSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
     setupEngine(audioContext) {
       return unitEngine.initialize(audioContext);
+    },
+    async loadEngine() {
+      await unitEngine.load();
     },
     playTone(ch) {
       unitEngine.handleCommand({ type: "playTone", ch });
