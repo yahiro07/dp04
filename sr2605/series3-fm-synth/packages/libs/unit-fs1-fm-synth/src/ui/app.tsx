@@ -2,7 +2,10 @@
 
 import { OperatorParameterKey } from "@/base/parameters";
 import { EffectSection } from "@/ui/organisms/effect-section";
-import { OperatorEditor } from "@/ui/organisms/operator-editor";
+import {
+  OperatorEditorH,
+  OperatorEditorL,
+} from "@/ui/organisms/operator-editor";
 import { OperatorSchemeEditor } from "@/ui/organisms/operator-scheme-editor";
 import { OperatorSchemesPresetSelector } from "@/ui/organisms/operator-schemes-preset-selector";
 import { OperatorSummariesPart } from "@/ui/organisms/operator-summaries-part";
@@ -41,11 +44,19 @@ function OperatorEditPart() {
     },
   };
   return (
-    <OperatorEditor
-      isCarrier={vm.isCarrier()}
-      parameters={vm.parameters()}
-      setParameter={vm.setParameter}
-    />
+    <div class="flex-vc gap-1">
+      <OperatorEditorH
+        isCarrier={vm.isCarrier()}
+        parameters={vm.parameters()}
+        setParameter={vm.setParameter}
+      />
+      <OperatorSummariesPart />
+      <OperatorEditorL
+        isCarrier={vm.isCarrier()}
+        parameters={vm.parameters()}
+        setParameter={vm.setParameter}
+      />
+    </div>
   );
 }
 
@@ -55,7 +66,6 @@ function MainUi() {
       <div class="flex-vc gap-6">
         <div class="flex-ha gap-6">
           <FmAlgorithmPart />
-          <OperatorSummariesPart />
           <OperatorEditPart />
           <EffectSection
             parameters={store.commonParameters}

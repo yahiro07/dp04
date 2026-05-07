@@ -1,6 +1,14 @@
 import { seqNumbers } from "@my/lib/ax/array-utils";
-import { Knob, ToggleBox } from "@my/lib/mo-solid/synth-components";
-import { OperatorParameterKey, OperatorParameters } from "@/base/parameters";
+import {
+  FeSelectorBox,
+  Knob,
+  ToggleBox,
+} from "@my/lib/mo-solid/synth-components";
+import {
+  OperatorParameterKey,
+  OperatorParameters,
+  operatorWaveformOptions,
+} from "@/base/parameters";
 import { store, uiOperations } from "@/ui/store";
 
 function OperatorSelectButton(props: {
@@ -35,8 +43,14 @@ function OperatorSummaryRow(props: {
         selected={props.selected}
         onClick={() => uiOperations.selectOperator(props.opIndex)}
       />
+      <FeSelectorBox
+        label="WAVE"
+        options={operatorWaveformOptions}
+        value={props.parameters.wave}
+        onChange={(v) => props.setParameter("wave", v)}
+      />
       <div
-        class="w-[200px] h-[40px] border border-[#ccc] cursor-pointer"
+        class="w-[250px] h-[50px] border border-[#ccc] cursor-pointer"
         onClick={() => uiOperations.selectOperator(props.opIndex)}
       />
       <Knob
