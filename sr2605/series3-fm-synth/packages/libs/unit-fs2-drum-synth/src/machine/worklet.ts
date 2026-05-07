@@ -1,4 +1,5 @@
 import { konsoleEnvs } from "@my/lib/ax/konsole";
+import { checkBufferSignalsValid } from "@my/lib/mo-dsp/debug-waves";
 import {
   createKickSynthesizerDsp,
   KickSynthesizerDsp,
@@ -52,6 +53,7 @@ function createProcessorClass() {
         bufferL.fill(0);
         this.dsp.processSamples(bufferL, bufferL, bufferL.length);
       }
+      checkBufferSignalsValid(bufferL);
       return true;
     }
   };

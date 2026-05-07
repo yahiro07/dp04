@@ -1,3 +1,4 @@
+import { checkBufferSignalsValid } from "@my/lib/mo-dsp/debug-waves";
 import { ISynthesizerRoot } from "@/dsp/api";
 import { dspEnvs } from "@/dsp/konsole";
 import { createSynthesizerRoot } from "@/dsp/synthesizer-root";
@@ -65,6 +66,7 @@ function createProcessorClass() {
         bufferL.fill(0);
         this.synthesizer.processAudio(bufferL, bufferL, bufferL.length);
       }
+      checkBufferSignalsValid(bufferL);
       return true;
     }
   };

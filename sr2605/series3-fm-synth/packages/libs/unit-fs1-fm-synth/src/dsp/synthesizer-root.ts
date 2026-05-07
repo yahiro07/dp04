@@ -424,8 +424,10 @@ export function createSynthesizerRoot(): ISynthesizerRoot {
         voice_processAudio(rc, audioFrame, voice);
         numActiveVoices++;
       }
-      applyBufferGainRms(bufferL, frames, numActiveVoices);
-      applyBufferGainRms(bufferR, frames, numActiveVoices);
+      if (numActiveVoices > 0) {
+        applyBufferGainRms(bufferL, frames, numActiveVoices);
+        applyBufferGainRms(bufferR, frames, numActiveVoices);
+      }
 
       const cp = rc.scene.commonParameters;
       if (cp.delayEnabled) {
