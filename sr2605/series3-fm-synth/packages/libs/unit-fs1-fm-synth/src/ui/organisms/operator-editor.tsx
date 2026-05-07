@@ -3,7 +3,6 @@ import {
   FeNumberSliderBox,
   FeToggleBox,
 } from "@my/lib/mo-solid/synth-components";
-import { Show } from "solid-js";
 import { OperatorParameterKey, OperatorParameters } from "@/base/parameters";
 
 export function OperatorEditorH(props: {
@@ -25,39 +24,40 @@ export function OperatorEditorH(props: {
           value={props.parameters.shape}
           onChange={(v) => props.setParameter("shape", v)}
         /> */}
-        <Show when={props.isCarrier}>
-          <div class="flex-ha gap-4">
-            <FeToggleBox
-              label="UNISON"
-              checked={props.parameters.unisonOn}
-              onChange={(v) => props.setParameter("unisonOn", v)}
-            />
-            <FeNumberSliderBox
-              label="NUM"
-              value={props.parameters.unisonNum}
-              onChange={(v) => props.setParameter("unisonNum", v)}
-              min={1}
-              max={7}
-              step={1}
-              fracDigits={0}
-            />
-            <FeKnob
-              label="DETUNE"
-              value={props.parameters.unisonDetune}
-              onChange={(v) => props.setParameter("unisonDetune", v)}
-            />
-            <FeKnob
-              label="MIX"
-              value={props.parameters.unisonMix}
-              onChange={(v) => props.setParameter("unisonMix", v)}
-            />
-            <FeToggleBox
-              label="RND_PH"
-              checked={props.parameters.unisonRndPhase}
-              onChange={(v) => props.setParameter("unisonRndPhase", v)}
-            />
-          </div>
-        </Show>
+        <div
+          class="flex-ha gap-4"
+          style={{ visibility: props.isCarrier ? "visible" : "hidden" }}
+        >
+          <FeToggleBox
+            label="UNISON"
+            checked={props.parameters.unisonOn}
+            onChange={(v) => props.setParameter("unisonOn", v)}
+          />
+          <FeNumberSliderBox
+            label="NUM"
+            value={props.parameters.unisonNum}
+            onChange={(v) => props.setParameter("unisonNum", v)}
+            min={1}
+            max={7}
+            step={1}
+            fracDigits={0}
+          />
+          <FeKnob
+            label="DETUNE"
+            value={props.parameters.unisonDetune}
+            onChange={(v) => props.setParameter("unisonDetune", v)}
+          />
+          <FeKnob
+            label="MIX"
+            value={props.parameters.unisonMix}
+            onChange={(v) => props.setParameter("unisonMix", v)}
+          />
+          <FeToggleBox
+            label="RND_PH"
+            checked={props.parameters.unisonRndPhase}
+            onChange={(v) => props.setParameter("unisonRndPhase", v)}
+          />
+        </div>
       </div>
       <div class="flex-ha gap-4">
         <FeNumberSliderBox
