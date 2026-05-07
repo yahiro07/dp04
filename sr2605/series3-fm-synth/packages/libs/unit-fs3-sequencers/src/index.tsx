@@ -72,46 +72,51 @@ export function createUnitFs3Sequencers(args: {
               <mainSynthesizer.renderUi />
             </div>
           </div>
-          <div class="w-[600px] flex-vl border border-[#aaa] gap-2 p-4">
-            <div>sequencer</div>
-            <div class="flex-v gap-2">
-              <Button
-                text="Kick"
-                active={vm.isToneActive("kick")}
-                onClick={() => vm.playTone("kick")}
-              />
-              <Button
-                text="Snare"
-                active={vm.isToneActive("snare")}
-                onClick={() => vm.playTone("snare")}
-              />
-              <Button
-                text="HiHat"
-                active={vm.isToneActive("openHiHat")}
-                onClick={() => vm.playTone("openHiHat")}
-              />
-              <Button
-                text="ClHiHat"
-                active={vm.isToneActive("closedHiHat")}
-                onClick={() => vm.playTone("closedHiHat")}
-              />
+          <div class="flex-h">
+            <div class="w-[600px] flex-vl border border-[#aaa] gap-2 p-4">
+              <div>sequencer</div>
+              <div class="flex-v gap-2">
+                <Button
+                  text="Kick"
+                  active={vm.isToneActive("kick")}
+                  onClick={() => vm.playTone("kick")}
+                />
+                <Button
+                  text="Snare"
+                  active={vm.isToneActive("snare")}
+                  onClick={() => vm.playTone("snare")}
+                />
+                <Button
+                  text="HiHat"
+                  active={vm.isToneActive("openHiHat")}
+                  onClick={() => vm.playTone("openHiHat")}
+                />
+                <Button
+                  text="ClHiHat"
+                  active={vm.isToneActive("closedHiHat")}
+                  onClick={() => vm.playTone("closedHiHat")}
+                />
+              </div>
+              <div class="flex-h">
+                <HoldableButton
+                  text="note C"
+                  onDown={() => vm.noteOn(60)}
+                  onUp={() => vm.noteOff(60)}
+                />
+                <HoldableButton
+                  text="note D"
+                  onDown={() => vm.noteOn(62)}
+                  onUp={() => vm.noteOff(62)}
+                />
+                <HoldableButton
+                  text="note E"
+                  onDown={() => vm.noteOn(64)}
+                  onUp={() => vm.noteOff(64)}
+                />
+              </div>
             </div>
-            <div class="flex-h">
-              <HoldableButton
-                text="note C"
-                onDown={() => vm.noteOn(60)}
-                onUp={() => vm.noteOff(60)}
-              />
-              <HoldableButton
-                text="note D"
-                onDown={() => vm.noteOn(62)}
-                onUp={() => vm.noteOff(62)}
-              />
-              <HoldableButton
-                text="note E"
-                onDown={() => vm.noteOn(64)}
-                onUp={() => vm.noteOff(64)}
-              />
+            <div class="w-[700px] h-[350px] flex-vl border border-[#aaa] gap-2 p-4">
+              <div>sequencer 2</div>
             </div>
           </div>
         </div>
