@@ -1,5 +1,5 @@
 import { JsxElement } from "@my/lib/ax-solid/types";
-import { rootMachine } from "@/machine/root-machine";
+import { createRootMachine } from "@/machine/root-machine";
 import { App } from "@/ui/app";
 import { initializeApp } from "@/ui/store";
 
@@ -12,9 +12,13 @@ export type UnitFs1FmSynthUnit = {
 
 export function createUnitFs1FmSynth(): UnitFs1FmSynthUnit {
   console.log("createUnitFs1FmSynth 2114");
+  const rootMachine = createRootMachine();
+
   return {
-    setupEngine(audioContext) {
-      return initializeApp(audioContext);
+    async setupEngine(audioContext) {
+      const outputNode = await rootMachine.initialize(audioContext);
+      initializeApp(rootMachine);
+      return outputNode;
     },
     noteOn(_ch, noteNumber, velocity) {
       rootMachine.handleCommand({

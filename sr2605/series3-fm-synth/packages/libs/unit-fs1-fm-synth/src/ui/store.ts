@@ -14,7 +14,7 @@ import {
   OperatorScheme,
   RootMachineCommand,
 } from "@/base/types";
-import { rootMachine } from "@/machine/root-machine";
+import { RootMachine } from "@/machine/root-machine";
 
 type StoreState = {
   operatorSelectionIndex: number;
@@ -32,11 +32,15 @@ const initialState: StoreState = {
   loading: false,
 };
 
+export const storeDi = {
+  rootMachine: undefined! as RootMachine,
+};
+
 export const [store, setStore] = createStore<StoreState>(initialState);
 const storeMutations = createStoreMutations(setStore, initialState);
 
 function emitMachineCommand(command: RootMachineCommand) {
-  rootMachine.handleCommand(command);
+  storeDi.rootMachine.handleCommand(command);
 }
 
 function calculateModulationFlags(schemes: OperatorScheme[]): number {
@@ -92,7 +96,7 @@ export const uiOperations = {
     emitMachineCommand({ type: "setCommonParameter", paramKey, value });
   },
   async handleNote(noteNumber: number, velocity: number) {
-    await rootMachine.resumeIfNeed();
+    await storeDi.rootMachine.resumeIfNeed();
     if (velocity > 0) {
       emitMachineCommand({ type: "noteOn", noteNumber, velocity });
     } else {
@@ -101,10 +105,8 @@ export const uiOperations = {
   },
 };
 
-export async function initializeApp(audioContext: AudioContext) {
-  storeMutations.setLoading(true);
-  const outputNode = await rootMachine.initialize(audioContext);
-  storeMutations.setLoading(false);
+export function initializeApp(rootMachine: RootMachine) {
+  storeDi.rootMachine = rootMachine;
   const scene = rootMachine.getSceneState();
   storeMutations.setOperatorParameters(scene.operatorParameters);
   storeMutations.setCommonParameters(scene.commonParameters);
@@ -117,5 +119,4 @@ export async function initializeApp(audioContext: AudioContext) {
     // uiOperations.setOperatorParameter(3, "wave", OperatorWave.Saw);
     uiOperations.setOperatorParameter(3, "unisonNum", 5);
   }
-  return outputNode;
 }

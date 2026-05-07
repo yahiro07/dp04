@@ -46,4 +46,3 @@ export function createRootMachine(): RootMachine {
     },
   };
 }
-export const rootMachine = createRootMachine();
