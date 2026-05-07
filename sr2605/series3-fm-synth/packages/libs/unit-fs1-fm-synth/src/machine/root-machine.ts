@@ -7,6 +7,7 @@ import { createDefaultScene } from "@/machine/default-scene";
 import {
   WorkletInputMessage,
   WorkletOutputMessage,
+  workletProcessorName,
 } from "@/machine/worklet-types";
 import workletUrl from "./worklet.ts?worker&url";
 
@@ -26,7 +27,11 @@ export function createRootMachine(): RootMachine {
   let nodeWrapper: MyWorkletNodeWrapper;
   return {
     async initialize(audioContext) {
-      nodeWrapper = createWorkletNodeWrapper(audioContext, workletUrl);
+      nodeWrapper = createWorkletNodeWrapper(
+        audioContext,
+        workletUrl,
+        workletProcessorName,
+      );
       await nodeWrapper.initialize();
       return nodeWrapper.outputNode;
     },

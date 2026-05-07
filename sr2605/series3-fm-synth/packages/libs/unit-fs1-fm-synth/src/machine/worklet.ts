@@ -1,7 +1,10 @@
 import { ISynthesizerRoot } from "@/dsp/api";
 import { dspEnvs } from "@/dsp/konsole";
 import { createSynthesizerRoot } from "@/dsp/synthesizer-root";
-import { WorkletInputMessage } from "@/machine/worklet-types";
+import {
+  WorkletInputMessage,
+  workletProcessorName,
+} from "@/machine/worklet-types";
 
 dspEnvs.isDebug = import.meta.env.DEV;
 
@@ -67,4 +70,4 @@ function createProcessorClass() {
   };
 }
 
-registerProcessor("my-processor", createProcessorClass());
+registerProcessor(workletProcessorName, createProcessorClass());

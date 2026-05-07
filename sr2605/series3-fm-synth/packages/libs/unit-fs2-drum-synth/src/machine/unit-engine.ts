@@ -7,6 +7,7 @@ import { defaultKickPreset, snarePreset1 } from "@/base/presets";
 import {
   WorkletInputMessage,
   WorkletOutputMessage,
+  workletProcessorName,
 } from "@/machine/worklet-types";
 import workletUrl from "./worklet.ts?worker&url";
 
@@ -49,7 +50,11 @@ export function createUnitEngine(): UnitEngine {
   }
   return {
     async initialize(audioContext) {
-      nodeWrapper = createWorkletNodeWrapper(audioContext, workletUrl);
+      nodeWrapper = createWorkletNodeWrapper(
+        audioContext,
+        workletUrl,
+        workletProcessorName,
+      );
       await nodeWrapper.initialize();
       sendInitialParameters();
       return nodeWrapper.outputNode;

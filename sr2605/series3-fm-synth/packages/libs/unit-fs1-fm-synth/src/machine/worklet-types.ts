@@ -29,3 +29,5 @@ export type WorkletWrapper = {
   sendMessage(msg: WorkletInputMessage): void;
   subscribeMessage(fn: (ev: WorkletOutputMessage) => void): void;
 };
+
+export const workletProcessorName = "fs1-fm-synth-processor";

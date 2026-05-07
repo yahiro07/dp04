@@ -11,3 +11,5 @@ export type WorkletInputMessage =
   | { type: "playTone"; ch: number }
   | { type: "stopTone"; ch: number };
 export type WorkletOutputMessage = { type: "dummy" };
+
+export const workletProcessorName = "fs2-drum-synth-processor";

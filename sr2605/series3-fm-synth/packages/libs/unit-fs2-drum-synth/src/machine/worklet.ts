@@ -3,7 +3,10 @@ import {
   createKickSynthesizerDsp,
   KickSynthesizerDsp,
 } from "@/dsp/kick-synthesizer-dsp";
-import { WorkletInputMessage } from "@/machine/worklet-types";
+import {
+  WorkletInputMessage,
+  workletProcessorName,
+} from "@/machine/worklet-types";
 
 konsoleEnvs.isDebug = import.meta.env.DEV;
 
@@ -54,4 +57,4 @@ function createProcessorClass() {
   };
 }
 
-registerProcessor("my-processor", createProcessorClass());
+registerProcessor(workletProcessorName, createProcessorClass());

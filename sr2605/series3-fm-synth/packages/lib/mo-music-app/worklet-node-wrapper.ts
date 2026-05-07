@@ -12,6 +12,7 @@ export function createWorkletNodeWrapper<
 >(
   audioContext: AudioContext,
   workerUrl: string,
+  processorName: string,
 ): WorkletNodeWrapper<TMessageIn, TMessageOut> {
   const outputNode = audioContext.createGain();
   outputNode.gain.value = 1;
@@ -25,7 +26,7 @@ export function createWorkletNodeWrapper<
   async function loadWorklet() {
     try {
       await audioContext.audioWorklet.addModule(workerUrl);
-      worklet = new AudioWorkletNode(audioContext, "my-processor", {
+      worklet = new AudioWorkletNode(audioContext, processorName, {
         channelCount: 2,
       });
       worklet.port.onmessage = (ev) => eventReceiver?.(ev.data);
