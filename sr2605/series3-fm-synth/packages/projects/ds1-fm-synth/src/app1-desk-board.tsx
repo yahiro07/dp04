@@ -5,15 +5,15 @@ import {
   resumeAudioContextIfNeed,
 } from "@my/lib/mo-music-app/audio-context-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
-import { createMainSynthesizerUnit } from "@my/main-synthesizer-unit";
 import { createSequencerUnit } from "@my/sequencer-unit";
+import { createUnitFs1FmSynth } from "@my/unit-fs1-fm-synth";
 import { createUnitFs2DrumSynth } from "@my/unit-fs2-drum-synth";
 
 function App() {
   configureAudioSessionPlayback();
   const audioContext = new AudioContext();
   const drumSynthesizer = createUnitFs2DrumSynth();
-  const mainSynthesizer = createMainSynthesizerUnit();
+  const mainSynthesizer = createUnitFs1FmSynth();
   const sequencer = createSequencerUnit({
     audioContext,
     drumSynthesizer,

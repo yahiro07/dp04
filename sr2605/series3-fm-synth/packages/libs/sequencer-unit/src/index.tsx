@@ -68,11 +68,13 @@ export function createSequencerUnit(args: {
       };
       return (
         <div class="w-dvw h-dvh flex-vc">
-          <div>
+          <div class="flex-h">
             <drumSynthesizer.renderUi
               currentChannel={toneIdToChannelMap[currentToneId()]}
             />
-            <mainSynthesizer.renderUi />
+            <div class="border border-[#ccc]">
+              <mainSynthesizer.renderUi />
+            </div>
           </div>
           <div class="w-[600px] flex-vl border border-[#aaa] gap-2 p-4">
             <div>sequencer</div>

@@ -62,18 +62,16 @@ function OperatorEditPart() {
 
 function MainUi() {
   return (
-    <div class="w-dvw h-dvh flex-c">
-      <div class="flex-vc gap-6">
-        <div class="flex-ha gap-6">
-          <FmAlgorithmPart />
-          <OperatorEditPart />
-          <EffectSection
-            parameters={store.commonParameters}
-            setParameter={uiOperations.setCommonParameter}
-          />
-        </div>
-        <div class="flex-ha gap-6"></div>
+    <div class="flex-vc gap-6">
+      <div class="flex-ha gap-6">
+        <FmAlgorithmPart />
+        <OperatorEditPart />
+        <EffectSection
+          parameters={store.commonParameters}
+          setParameter={uiOperations.setCommonParameter}
+        />
       </div>
+      <div class="flex-ha gap-6"></div>
     </div>
   );
 }
