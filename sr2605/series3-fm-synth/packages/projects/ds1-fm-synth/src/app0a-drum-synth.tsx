@@ -5,6 +5,7 @@ import {
 } from "@my/lib/mo-music-app/audio-context-helper";
 import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input";
 import { createUnitFs2DrumSynth } from "@my/unit-fs2-drum-synth";
+import { onCleanup } from "solid-js";
 
 const synth = createUnitFs2DrumSynth();
 
@@ -14,9 +15,9 @@ async function setupApplication() {
   const outputNode = synth.setupEngine(audioContext);
   outputNode.connect(audioContext.destination);
   void synth.loadEngine();
-  setupMidiKeyboardInput({
+  const closeMidiIn = setupMidiKeyboardInput({
     async noteCallback(noteNumber, velocity) {
-      console.log("midi note", noteNumber, velocity);
+      // console.log("midi note", noteNumber, velocity);
       await resumeAudioContextIfNeed(audioContext);
       const ch = noteNumber % 12;
       if (velocity > 0) {
@@ -24,6 +25,7 @@ async function setupApplication() {
       }
     },
   });
+  onCleanup(closeMidiIn);
 }
 
 function App() {

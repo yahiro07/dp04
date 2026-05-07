@@ -30,17 +30,15 @@ function App() {
     await mainSynthesizer.loadEngine();
   });
 
-  const closeMidiInput = setupMidiKeyboardInput({
+  const closeMidiIn = setupMidiKeyboardInput({
     async noteCallback(noteNumber, velocity) {
-      console.log("note", noteNumber, velocity);
+      // console.log("note", noteNumber, velocity);
       await resumeAudioContextIfNeed(audioContext);
       sequencer.handleMidiInput(noteNumber, velocity);
     },
   });
+  onCleanup(closeMidiIn);
 
-  onCleanup(() => {
-    closeMidiInput();
-  });
   return <sequencer.renderUi />;
 }
 
