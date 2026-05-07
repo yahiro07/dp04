@@ -8,6 +8,7 @@ import { setupMidiKeyboardInput } from "@my/lib/mo-music-app/midi-keyboard-input
 import { createUnitFs1FmSynth } from "@my/unit-fs1-fm-synth";
 import { createUnitFs2DrumSynth } from "@my/unit-fs2-drum-synth";
 import { createUnitFs3Sequencers } from "@my/unit-fs3-sequencers";
+import { onCleanup } from "solid-js";
 
 function App() {
   configureAudioSessionPlayback();
@@ -24,17 +25,22 @@ function App() {
   sequencer.setupSequencerEngine();
   drumSynthOutputNode.connect(audioContext.destination);
   mainSynthOutputNode.connect(audioContext.destination);
+
+  let midiInputCloseFn: () => void = () => {};
   iife(async () => {
     await drumSynthesizer.loadEngine();
     await mainSynthesizer.loadEngine();
+    midiInputCloseFn = (await setupMidiKeyboardInput({
+      async noteCallback(noteNumber, velocity) {
+        console.log("note", noteNumber, velocity);
+        await resumeAudioContextIfNeed(audioContext);
+        sequencer.handleMidiInput(noteNumber, velocity);
+      },
+    }))!;
   });
 
-  setupMidiKeyboardInput({
-    async noteCallback(noteNumber, velocity) {
-      console.log("note", noteNumber, velocity);
-      await resumeAudioContextIfNeed(audioContext);
-      sequencer.handleMidiInput(noteNumber, velocity);
-    },
+  onCleanup(() => {
+    midiInputCloseFn?.();
   });
   return <sequencer.renderUi />;
 }

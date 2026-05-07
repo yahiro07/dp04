@@ -7,7 +7,7 @@ export async function setupMidiKeyboardInput(options: {
   connectionStateCallback?: (connected: boolean) => void;
   eventCallback?: (e: MidiKeyboardInputEvent) => void;
   noteCallback?: (noteNumber: number, velocity: number) => void;
-}) {
+}): Promise<(() => void) | undefined> {
   const midiAccess = await navigator.requestMIDIAccess();
   if (!midiAccess) return;
   console.log("midi inputs", Array.from(midiAccess.inputs.values()).length);
