@@ -13,8 +13,10 @@ async function setupApplication() {
   const audioContext = new AudioContext();
   const outputNode = synth.setupEngine(audioContext);
   outputNode.connect(audioContext.destination);
+  void synth.loadEngine();
   setupMidiKeyboardInput({
     async noteCallback(noteNumber, velocity) {
+      console.log("midi note", noteNumber, velocity);
       await resumeAudioContextIfNeed(audioContext);
       const ch = noteNumber % 12;
       if (velocity > 0) {

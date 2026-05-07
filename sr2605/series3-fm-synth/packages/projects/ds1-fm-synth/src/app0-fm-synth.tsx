@@ -11,10 +11,12 @@ const synth = createUnitFs1FmSynth();
 async function setupApplication() {
   configureAudioSessionPlayback();
   const audioContext = new AudioContext();
-  const outputNode = await synth.setupEngine(audioContext);
+  const outputNode = synth.setupEngine(audioContext);
   outputNode.connect(audioContext.destination);
+  void synth.loadEngine();
   setupMidiKeyboardInput({
     async noteCallback(noteNumber, velocity) {
+      console.log("midi note", noteNumber, velocity);
       await resumeAudioContextIfNeed(audioContext);
       if (velocity > 0) {
         synth.noteOn(0, noteNumber, velocity);
