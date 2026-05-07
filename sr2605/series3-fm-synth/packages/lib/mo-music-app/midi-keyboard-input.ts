@@ -1,20 +1,26 @@
+import { iife } from "../ax/general-utils";
+
 export type MidiKeyboardInputEvent = {
   type: "note";
   noteNumber: number;
   velocity: number; //0 for note off
 };
 
-export async function setupMidiKeyboardInput(options: {
+type MidiKeyboardInputOptions = {
   connectionStateCallback?: (connected: boolean) => void;
   eventCallback?: (e: MidiKeyboardInputEvent) => void;
   noteCallback?: (noteNumber: number, velocity: number) => void;
-}): Promise<(() => void) | undefined> {
-  const midiAccess = await navigator.requestMIDIAccess();
-  if (!midiAccess) return;
-  console.log("midi inputs", Array.from(midiAccess.inputs.values()).length);
-  const midiInput = Array.from(midiAccess.inputs.values())[0];
-  if (!midiInput) return;
+};
 
+type MidiKeyboardInputCore = {
+  open(): void;
+  close(): void;
+};
+
+function createMidiKeyboardInputCore(
+  midiInput: MIDIInput,
+  options: MidiKeyboardInputOptions,
+) {
   const handlers = {
     onStateChange() {
       const isConnected = midiInput.connection === "open";
@@ -43,12 +49,44 @@ export async function setupMidiKeyboardInput(options: {
     },
   };
 
-  midiInput.addEventListener("statechange", handlers.onStateChange);
-  midiInput.addEventListener("midimessage", handlers.onMidiMessage);
+  return {
+    open() {
+      midiInput.addEventListener("statechange", handlers.onStateChange);
+      midiInput.addEventListener("midimessage", handlers.onMidiMessage);
+    },
+    close() {
+      midiInput.removeEventListener("statechange", handlers.onStateChange);
+      midiInput.removeEventListener("midimessage", handlers.onMidiMessage);
+      void midiInput.close();
+    },
+  };
+}
+
+async function getFirstMidiInput() {
+  const midiAccess = await navigator.requestMIDIAccess();
+  if (!midiAccess) return;
+  console.log("midi inputs", Array.from(midiAccess.inputs.values()).length);
+  const midiInput = Array.from(midiAccess.inputs.values())[0];
+  return midiInput;
+}
+
+export function setupMidiKeyboardInput(
+  options: MidiKeyboardInputOptions,
+): () => void {
+  let core: MidiKeyboardInputCore | undefined;
+  let disposed = false;
+
+  iife(async () => {
+    const midiInput = await getFirstMidiInput();
+    if (disposed) return;
+    if (midiInput) {
+      core = createMidiKeyboardInputCore(midiInput, options);
+      core.open();
+    }
+  });
 
   return () => {
-    midiInput.removeEventListener("statechange", handlers.onStateChange);
-    midiInput.removeEventListener("midimessage", handlers.onMidiMessage);
-    void midiInput.close();
+    core?.close();
+    disposed = true;
   };
 }

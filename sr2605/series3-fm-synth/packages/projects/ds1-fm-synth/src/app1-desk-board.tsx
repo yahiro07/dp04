@@ -25,21 +25,21 @@ function App() {
   drumSynthOutputNode.connect(audioContext.destination);
   mainSynthOutputNode.connect(audioContext.destination);
 
-  let midiInputCloseFn: (() => void) | undefined;
   onMount(async () => {
     await drumSynthesizer.loadEngine();
     await mainSynthesizer.loadEngine();
-    midiInputCloseFn = await setupMidiKeyboardInput({
-      async noteCallback(noteNumber, velocity) {
-        console.log("note", noteNumber, velocity);
-        await resumeAudioContextIfNeed(audioContext);
-        sequencer.handleMidiInput(noteNumber, velocity);
-      },
-    });
+  });
+
+  const closeMidiInput = setupMidiKeyboardInput({
+    async noteCallback(noteNumber, velocity) {
+      console.log("note", noteNumber, velocity);
+      await resumeAudioContextIfNeed(audioContext);
+      sequencer.handleMidiInput(noteNumber, velocity);
+    },
   });
 
   onCleanup(() => {
-    midiInputCloseFn?.();
+    closeMidiInput();
   });
   return <sequencer.renderUi />;
 }
