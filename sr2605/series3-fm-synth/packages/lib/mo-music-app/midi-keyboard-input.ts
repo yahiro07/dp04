@@ -3,6 +3,7 @@ export type MidiKeyboardInputEvent = {
   noteNumber: number;
   velocity: number; //0 for note off
 };
+
 export async function setupMidiKeyboardInput(options: {
   connectionStateCallback?: (connected: boolean) => void;
   eventCallback?: (e: MidiKeyboardInputEvent) => void;
@@ -42,11 +43,12 @@ export async function setupMidiKeyboardInput(options: {
     },
   };
 
-  midiInput.onstatechange = handlers.onStateChange;
-  midiInput.onmidimessage = handlers.onMidiMessage;
+  midiInput.addEventListener("statechange", handlers.onStateChange);
+  midiInput.addEventListener("midimessage", handlers.onMidiMessage);
 
   return () => {
-    midiInput.onstatechange = null;
-    midiInput.onmidimessage = null;
+    midiInput.removeEventListener("statechange", handlers.onStateChange);
+    midiInput.removeEventListener("midimessage", handlers.onMidiMessage);
+    void midiInput.close();
   };
 }
