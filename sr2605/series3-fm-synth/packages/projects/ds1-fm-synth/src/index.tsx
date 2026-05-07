@@ -1,4 +1,5 @@
-import "./app-entry";
+import "./app0-fm-synth";
+// import "./app1-desk-board";
 //
 // import "./x/dev0a-algo-edit";
 // import "./x/dev0b-algo-edit";

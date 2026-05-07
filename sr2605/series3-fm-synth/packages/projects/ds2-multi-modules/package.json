@@ -1,6 +1,0 @@
-{
-  "name": "@my/ds2-multi-modules",
-  "exports": {
-    ".": "./index.tsx"
-  }
-}

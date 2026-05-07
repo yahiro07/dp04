@@ -171,7 +171,7 @@ function applyPhaseModifier(
   colorMode: OscShapeMode,
   color: number,
 ): number {
-  const color2 = power2(color);
+  // const color2 = power2(color);
   const color3 = power3(color);
 
   if (colorMode === "fmFeed") {

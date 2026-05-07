@@ -1,4 +1,5 @@
 /* @refresh reload */
+/** biome-ignore-all lint/correctness/noUnusedVariables: experimental code */
 
 import { m_sin, m_two_pi } from "@my/lib/ax/math-utils";
 import {
@@ -78,7 +79,7 @@ function createSynthesizer() {
           const offset = inputOffset >>> 0;
           for (let i = 0; i < grainDur; i++) {
             const pp = i / grainDur;
-            let y = m_sin(pp * m_two_pi) * 0.5;
+            const y = m_sin(pp * m_two_pi) * 0.5;
             // if (pp > 0.5) y = 0;
             buffer[offset + i] += y;
           }
