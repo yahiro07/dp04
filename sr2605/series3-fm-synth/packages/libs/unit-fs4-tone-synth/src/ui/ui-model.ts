@@ -4,14 +4,15 @@ import { UnitParameters } from "@/core/parameters";
 import { UnitEngine } from "@/core/unit-engine";
 
 export function createUiModel(unitEngine: UnitEngine) {
-  const initialChannel = 0;
+  const initialChannel = unitEngine.getCurrentChannel();
+  const initialParameters = unitEngine.getParameters(initialChannel);
   type StoreState = {
     currentChannel: number;
     parameters: UnitParameters;
   };
   const initialState: StoreState = {
     currentChannel: initialChannel,
-    parameters: unitEngine.getParameters(initialChannel),
+    parameters: initialParameters,
   };
   const [state, setState] = createStore<StoreState>(initialState);
   const storeMutations = createStoreMutations(setState, initialState);
@@ -24,6 +25,7 @@ export function createUiModel(unitEngine: UnitEngine) {
     selectChannel(ch: number) {
       storeMutations.setCurrentChannel(ch);
       storeMutations.setParameters(unitEngine.getParameters(ch));
+      unitEngine.setCurrentChannel(ch);
     },
     noteOn(ch: number, noteNumber: number): void {
       unitEngine.noteOn(ch, noteNumber);

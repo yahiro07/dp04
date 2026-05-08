@@ -10,9 +10,11 @@ export function createUnitFs4ToneSynth(): InstrumentSynthesizerUnit {
     },
     async loadEngine() {},
     noteOn(ch, noteNumber) {
+      if (ch === -1) ch = unitEngine.getCurrentChannel();
       unitEngine.noteOn(ch, noteNumber);
     },
     noteOff(ch, noteNumber) {
+      if (ch === -1) ch = unitEngine.getCurrentChannel();
       unitEngine.noteOff(ch, noteNumber);
     },
     renderUi() {

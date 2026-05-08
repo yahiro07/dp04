@@ -18,6 +18,8 @@ export type UnitEngine = {
     key: K,
     value: UnitParameters[K],
   ): void;
+  getCurrentChannel(): number;
+  setCurrentChannel(ch: number): void;
   noteOn(ch: number, noteNumber: number): void;
   noteOff(ch: number, noteNumber: number): void;
 };
@@ -28,6 +30,7 @@ export function createUnitEngine(): UnitEngine {
     { ...createDefaultParameters(), oscWave: OscWave.Rect },
   ];
   let outputNode: GainNode;
+  let currentChannel = 0;
 
   const noteNodes: Record<string, OscillatorNode> = {};
   return {
@@ -40,6 +43,12 @@ export function createUnitEngine(): UnitEngine {
     },
     setParameter(ch, key, value) {
       parameters[ch][key] = value;
+    },
+    getCurrentChannel() {
+      return currentChannel;
+    },
+    setCurrentChannel(ch: number) {
+      currentChannel = ch;
     },
     noteOn(ch: number, noteNumber: number) {
       const sp = parameters[ch];

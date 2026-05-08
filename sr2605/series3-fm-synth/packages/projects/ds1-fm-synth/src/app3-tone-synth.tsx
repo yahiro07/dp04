@@ -20,9 +20,9 @@ async function setupApplication() {
       // console.log("midi note", noteNumber, velocity);
       await resumeAudioContextIfNeed(audioContext);
       if (velocity > 0) {
-        synth.noteOn(0, noteNumber, velocity);
+        synth.noteOn(-1, noteNumber, velocity);
       } else {
-        synth.noteOff(0, noteNumber);
+        synth.noteOff(-1, noteNumber);
       }
     },
   });
