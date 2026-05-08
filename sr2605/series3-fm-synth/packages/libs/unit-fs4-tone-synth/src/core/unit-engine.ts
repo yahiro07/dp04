@@ -36,7 +36,7 @@ export function createUnitEngine(): UnitEngine {
       return outputNode;
     },
     getParameters(ch: number) {
-      return parameters[ch];
+      return { ...parameters[ch] };
     },
     setParameter(ch, key, value) {
       parameters[ch][key] = value;

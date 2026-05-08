@@ -46,13 +46,13 @@ export function UiRoot(props: { unitEngine: UnitEngine }) {
           />
           <HoldableButton
             text="note C"
-            onDown={() => vm.noteOn(0, 60)}
-            onUp={() => vm.noteOff(0, 60)}
+            onDown={() => vm.noteOn(vm.currentChannel(), 60)}
+            onUp={() => vm.noteOff(vm.currentChannel(), 60)}
           />
           <HoldableButton
             text="note C"
-            onDown={() => vm.noteOn(1, 60)}
-            onUp={() => vm.noteOff(1, 60)}
+            onDown={() => vm.noteOn(vm.currentChannel(), 60)}
+            onUp={() => vm.noteOff(vm.currentChannel(), 60)}
           />
         </div>
         <div class="flex-h gap-1">
