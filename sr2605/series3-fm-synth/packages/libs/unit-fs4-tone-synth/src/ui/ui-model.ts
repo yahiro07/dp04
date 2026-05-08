@@ -1,7 +1,7 @@
 import { createStoreMutations } from "@my/lib/ax-solid/store-mutations";
 import { createStore } from "solid-js/store";
-import { UnitParameters } from "@/parameters";
-import { UnitEngine } from "@/unit-engine";
+import { UnitParameters } from "@/core/parameters";
+import { UnitEngine } from "@/core/unit-engine";
 
 export function createUiModel(unitEngine: UnitEngine) {
   const initialChannel = 0;

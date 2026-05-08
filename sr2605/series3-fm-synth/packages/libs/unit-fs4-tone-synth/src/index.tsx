@@ -1,6 +1,6 @@
 import { InstrumentSynthesizerUnit } from "@my/unit-contract";
-import { UiRoot } from "@/ui-root";
-import { createUnitEngine } from "@/unit-engine";
+import { createUnitEngine } from "@/core/unit-engine";
+import { UiRoot } from "@/ui/ui-root";
 
 export function createUnitFs4ToneSynth(): InstrumentSynthesizerUnit {
   const unitEngine = createUnitEngine();

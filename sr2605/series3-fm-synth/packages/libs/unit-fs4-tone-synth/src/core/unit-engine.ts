@@ -1,6 +1,10 @@
 import { linearInterpolate } from "@my/lib/ax/number-utils";
 import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
-import { createDefaultParameters, OscWave, UnitParameters } from "@/parameters";
+import {
+  createDefaultParameters,
+  OscWave,
+  UnitParameters,
+} from "@/core/parameters";
 
 export type UnitEngineCommand =
   | { type: "noteOn"; channel: number; noteNumber: number; velocity: number }

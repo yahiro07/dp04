@@ -1,9 +1,9 @@
 import { Button } from "@my/lib/mo-solid/components/button";
 import { HoldableButton } from "@my/lib/mo-solid/components/holdable-button";
 import { FeKnob, FeSelectorBox } from "@my/lib/mo-solid/synth-components";
-import { oscWaveOptions } from "@/parameters";
-import { createUiModel } from "@/ui-model";
-import { UnitEngine } from "@/unit-engine";
+import { oscWaveOptions } from "@/core/parameters";
+import { UnitEngine } from "@/core/unit-engine";
+import { createUiModel } from "@/ui/ui-model";
 
 export function UiRoot(props: { unitEngine: UnitEngine }) {
   const uiModel = createUiModel(props.unitEngine);
