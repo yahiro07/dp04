@@ -8,8 +8,9 @@ export type UnitEngineCommand =
 
 export type UnitEngine = {
   initialize(audioContext: AudioContext): AudioNode;
-  getParameters(): UnitParameters;
+  getParameters(ch: number): UnitParameters;
   setParameter<K extends keyof UnitParameters>(
+    ch: number,
     key: K,
     value: UnitParameters[K],
   ): void;
@@ -18,28 +19,29 @@ export type UnitEngine = {
 };
 
 export function createUnitEngine(): UnitEngine {
-  const parameters = createDefaultParameters();
+  const parameters = [
+    createDefaultParameters(),
+    { ...createDefaultParameters(), oscWave: OscWave.Rect },
+  ];
   let outputNode: GainNode;
 
   const noteNodes: Record<string, OscillatorNode> = {};
   return {
-    initialize(audioContext: AudioContext): AudioNode {
+    initialize(audioContext) {
       outputNode = new GainNode(audioContext);
       return outputNode;
     },
-    getParameters(): UnitParameters {
-      return parameters;
+    getParameters(ch: number) {
+      return parameters[ch];
     },
-    setParameter<K extends keyof UnitParameters>(
-      key: K,
-      value: UnitParameters[K],
-    ) {
-      parameters[key] = value;
+    setParameter(ch, key, value) {
+      parameters[ch][key] = value;
     },
     noteOn(ch: number, noteNumber: number) {
+      const sp = parameters[ch];
       const audioContext = outputNode.context;
-      const relNote = linearInterpolate(parameters.oscPitch, 0, 1, -12, 12);
-      const wave = parameters.oscWave;
+      const relNote = linearInterpolate(sp.oscPitch, 0, 1, -12, 12);
+      const wave = sp.oscWave;
       const freq = midiToFrequency(noteNumber + relNote);
 
       const oscillatorNode = audioContext.createOscillator();
