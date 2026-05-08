@@ -1,4 +1,6 @@
-import { createDefaultParameters, UnitParameters } from "@/parameters";
+import { linearInterpolate } from "@my/lib/ax/number-utils";
+import { midiToFrequency } from "@my/lib/mo-dsp/synthesis-helper";
+import { createDefaultParameters, OscWave, UnitParameters } from "@/parameters";
 
 export type UnitEngineCommand =
   | { type: "noteOn"; channel: number; noteNumber: number; velocity: number }
@@ -17,10 +19,13 @@ export type UnitEngine = {
 
 export function createUnitEngine(): UnitEngine {
   const parameters = createDefaultParameters();
+  let outputNode: GainNode;
+
+  const noteNodes: Record<string, OscillatorNode> = {};
   return {
     initialize(audioContext: AudioContext): AudioNode {
-      const node = new GainNode(audioContext);
-      return node;
+      outputNode = new GainNode(audioContext);
+      return outputNode;
     },
     getParameters(): UnitParameters {
       return parameters;
@@ -32,10 +37,33 @@ export function createUnitEngine(): UnitEngine {
       parameters[key] = value;
     },
     noteOn(ch: number, noteNumber: number) {
-      console.log("noteOn", ch, noteNumber);
+      const audioContext = outputNode.context;
+      const relNote = linearInterpolate(parameters.oscPitch, 0, 1, -12, 12);
+      const wave = parameters.oscWave;
+      const freq = midiToFrequency(noteNumber + relNote);
+
+      const oscillatorNode = audioContext.createOscillator();
+      oscillatorNode.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscillatorNode.type = oscWaveToOscillatorTypeMap[wave];
+      oscillatorNode.connect(outputNode);
+      oscillatorNode.start();
+      const noteKey = `${ch}-${noteNumber}`;
+      noteNodes[noteKey] = oscillatorNode;
     },
     noteOff(ch: number, noteNumber: number) {
-      console.log("noteOff", ch, noteNumber);
+      const noteKey = `${ch}-${noteNumber}`;
+      const oscillatorNode = noteNodes[noteKey];
+      if (oscillatorNode) {
+        oscillatorNode.stop();
+        delete noteNodes[noteKey];
+      }
     },
   };
 }
+
+const oscWaveToOscillatorTypeMap = {
+  [OscWave.Saw]: "sawtooth",
+  [OscWave.Rect]: "square",
+  [OscWave.Tri]: "triangle",
+  [OscWave.Sine]: "sine",
+} as const;
