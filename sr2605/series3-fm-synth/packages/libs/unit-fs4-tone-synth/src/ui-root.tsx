@@ -22,7 +22,7 @@ export function UiRoot(props: { unitEngine: UnitEngine }) {
   };
   return (
     <div class="flex-c gap-4 border border-[#aaa] p-4">
-      <div>main synth</div>
+      <div>tone synth</div>
 
       <div class="flex-h gap-2">
         <FeSelectorBox

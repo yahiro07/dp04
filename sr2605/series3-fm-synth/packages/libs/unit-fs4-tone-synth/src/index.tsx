@@ -2,7 +2,7 @@ import { InstrumentSynthesizerUnit } from "@my/unit-contract";
 import { UiRoot } from "@/ui-root";
 import { createUnitEngine } from "@/unit-engine";
 
-export function createUnit00MainSynth(): InstrumentSynthesizerUnit {
+export function createUnitFs4ToneSynth(): InstrumentSynthesizerUnit {
   const unitEngine = createUnitEngine();
   return {
     setupEngine(audioContext) {
